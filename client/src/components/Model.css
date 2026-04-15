@@ -1,0 +1,37 @@
+.arrow-button {
+  font-size: 30px;
+}
+
+.model-box {
+  background-color: #f9f9f9;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 8px 0 0 8px;
+}
+
+.model-content {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+/* Custom Scrollbar */
+.model-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.model-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.model-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.open {
+  right: 0;
+}
+
+.closed {
+  right: -220px;
+}

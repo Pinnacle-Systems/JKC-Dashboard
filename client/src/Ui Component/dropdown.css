@@ -1,0 +1,26 @@
+.custom-dropdown .p-dropdown-label {
+    background-color: white;
+    border-radius: 2px;
+    font-size: 12px;
+    width: 100%;
+    /* Adjust as needed */
+}
+
+.custom-dropdown .p-dropdown-trigger {
+    border-radius: 2px;
+}
+
+.custom-dropdown .p-dropdown-items {
+    width: 25rem !important;
+    /* Set the desired width for the dropdown panel */
+}
+
+.custom-dropdown .p-dropdown-items .p-dropdown-item {
+    font-size: 10px;
+}
+
+.dropdown-panel-black .p-dropdown-items {
+    background-color: white;
+
+
+}

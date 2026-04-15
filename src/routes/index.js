@@ -1,0 +1,13 @@
+export { default as poRegister } from "./poRegister.js";
+export { default as commonMast } from "./commonMasters.js";
+export { default as supplier } from "./supplier.js";
+export { default as poData } from "./poData.js";
+export { default as misDashboard } from "./misDashboard.js";
+export { default as misDashboardERP } from "./misDashboardERP.js";
+export { default as ordManagement } from "./orderManagement.js";
+export { default as user } from "./user.js";
+export { default as role } from "./RoleMaster.js";
+export { default as freeLookFabric } from "./freeLookFabric.js";
+export { default as fabricOutward } from "./fabricOutward.js";
+export { default as purchaseOrder } from "./purchaseOrder.js";
+export { default as purchase } from "./purchase.route.js";
