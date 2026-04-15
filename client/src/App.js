@@ -13,18 +13,44 @@ import { ToastContainer } from "react-toastify";
 
 import ScrollToTop from "./components/ScrollTop.js";
 import useIdleLogout from "./utils/useIdleLogout.js";
+import { BASE_URL } from "./constants/apiUrl";
+import axios from "axios";
 
 function App({ isCollapsed }) {
   const [theme, colorMode] = useMode();
   const [color, setColor] = useState("#CA8717");
-  const [permissions, setPermissions] = useState({});
-  const handleLogout = () => {
-    // localStorage.removeItem("userName");
+const [permissions, setPermissions] = useState({});
+
+axios.defaults.baseURL = BASE_URL;
+
+  // const handleLogout = () => {
+  //   // localStorage.removeItem("userName");
+  //   secureLocalStorage.clear();
+  //   sessionStorage.clear();
+  //   window.location.href = "/";
+  // };
+const handleLogout = async () => {
+  try {
+    const sessionId = sessionStorage.getItem("sessionId");
+
+    // 1. notify backend
+    await axios.post("users/logout", { sessionId });
+
+    // 2. clear frontend storage
+    secureLocalStorage.clear();
+    sessionStorage.clear();
+
+    // 3. redirect
+    window.location.href = "/";
+  } catch (error) {
+    console.log(error);
+
+    // even if API fails → force logout locally
     secureLocalStorage.clear();
     sessionStorage.clear();
     window.location.href = "/";
-  };
-
+  }
+};
   const isLoggedIn = !!sessionStorage.getItem("sessionId");
   useIdleLogout(handleLogout, isLoggedIn);
 

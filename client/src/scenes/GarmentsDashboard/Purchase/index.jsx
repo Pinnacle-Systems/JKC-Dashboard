@@ -56,7 +56,8 @@ const PurchaseIndex = ({
   const responseData = response?.data ?? [];
 
   /* ---------------- LAST MONTH AUTO SET ---------------- */
-  const { data: lastmonth } = useGetsallastmonthQuery();
+  // const { data: lastmonth } = useGetsallastmonthQuery();
+  let lastmonth;
   const Year = lastmonth?.data?.find((x) => x.Year);
 
   useEffect(() => {

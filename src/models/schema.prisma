@@ -9,12 +9,10 @@ datasource db {
 }
 
 model Role {
-  id         Int            @id @default(autoincrement())
-  rolename   String?        @unique
-  active     Boolean?       @default(true)
-  User       User[]
-  
-  
+  id       Int      @id @default(autoincrement())
+  rolename String?  @unique
+  active   Boolean? @default(true)
+  User     User[]
 }
 
 model User {
@@ -27,6 +25,8 @@ model User {
   password      String?
   COMPCODE      String?
   createdbyId   Int?
+  isLoggedIn    Boolean?         @default(false)
+  sessionId   String? @unique
   Useronpage    Useronpage[]
   Useroncompany Useroncompany[]
 }
@@ -36,7 +36,6 @@ model Useroncompany {
   companyName String?
   User        User?   @relation(fields: [userId], references: [id])
   userId      Int?
-  
 }
 
 model Useronpage {
@@ -51,5 +50,4 @@ model Useronpage {
   isdefault Boolean? @default(false)
   User      User?    @relation(fields: [userId], references: [id])
   userId    Int?
-  
 }

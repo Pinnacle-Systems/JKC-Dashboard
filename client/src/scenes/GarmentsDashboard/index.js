@@ -9,7 +9,7 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import HeadCount from "./Headcount/HeadCount.jsx";
 import HomeAttrition from "./Attrition/HomeAttrition.jsx";
 import HomePF from "./PFdata/HomePF.jsx";
-import TurnOver from "./salarydata/TurnOver.jsx";
+// import TurnOver from "./salarydata/TurnOver.jsx";
 import PurchaseIndex from "./Purchase/index.jsx";
 import { useGetYearlyCompQuery } from "../../redux/service/misDashboardService";
 import { useEffect, useLayoutEffect, useState } from "react";
@@ -76,7 +76,9 @@ const GarmentsDashboard = () => {
   const { data: finYrData } = useGetFinYearQuery();
   console.log(finYrData, "finYrData");
 
-  const { data: result } = useGetYearlyCompQuery({ params: {} });
+  // const { data: result } = useGetYearlyCompQuery({ params: {} });
+
+  let result
   useEffect(() => {
     if (finYrData?.data?.length) {
       dispatch(setFinYr(finYrData));

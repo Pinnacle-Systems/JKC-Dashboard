@@ -58,7 +58,9 @@ const TurnOver = ({
     { skip: !filterYear },
   );
 
-  const { data: lastmonth } = useGetsallastmonthQuery();
+  // const { data: lastmonth } = useGetsallastmonthQuery();
+let lastmonth;
+
   const Year = lastmonth?.data?.find((x) => x.Year);
 
   /* ---------------- MONTH AUTO SET ---------------- */

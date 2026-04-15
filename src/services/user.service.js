@@ -2,6 +2,48 @@ import bcrypt from "bcrypt";
 // import { prisma_Connector } from "../../index.js";
 import { getConnection } from "../constants/db.connection.js";
 import { prisma_Connector } from "../../index.js";
+import crypto from "crypto";
+// export async function login(req, res) {
+//   const { username, password } = req.body;
+
+//   if (!username || !password) {
+//     return res.status(400).json({
+//       statusCode: 1,
+//       message: "Username and password required",
+//     });
+//   }
+
+//   try {
+//     const user = await prisma_Connector.user.findUnique({
+//       where: { username },
+//       include: { Useronpage: true, Useroncompany: true },
+//     });
+
+//     console.log(user);
+
+//     if (!user) {
+//       return res
+//         .status(401)
+//         .json({ statusCode: 1, message: "Username doesn't exist" });
+//     }
+
+//     const passwordMatch = await bcrypt.compare(password, user.password);
+//     if (!passwordMatch)
+//       return res
+//         .status(401)
+//         .json({ statusCode: 1, message: "Invalid Password" });
+
+//     return res.status(200).json({
+//       statusCode: 0,
+//       message: "Login Successful",
+//       userInfo: user,
+//     });
+//   } catch (err) {
+//     console.error("Prisma error:", err.message);
+//     res.status(500).json({ error: err.message });
+//   }
+// }
+
 
 export async function login(req, res) {
   const { username, password } = req.body;
@@ -19,28 +61,77 @@ export async function login(req, res) {
       include: { Useronpage: true, Useroncompany: true },
     });
 
-    console.log(user);
-
     if (!user) {
-      return res
-        .status(401)
-        .json({ statusCode: 1, message: "Username doesn't exist" });
+      return res.status(401).json({
+        statusCode: 1,
+        message: "Username doesn't exist",
+      });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch)
-      return res
-        .status(401)
-        .json({ statusCode: 1, message: "Invalid Password" });
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        statusCode: 1,
+        message: "Invalid Password",
+      });
+    }
+    // 🚨 CHECK ACTIVE SESSION
+    if (user.isLoggedIn) {
+      return res.status(409).json({
+        statusCode: 2,
+        message: "User already has an active session",
+      });
+    }
+const sessionId = crypto.randomUUID();
+
+    // ✅ mark user as logged in
+    await prisma_Connector.user.update({
+      where: { username },
+      data: {     sessionId,
+isLoggedIn: true },
+    });
 
     return res.status(200).json({
       statusCode: 0,
       message: "Login Successful",
+       sessionId, 
       userInfo: user,
     });
   } catch (err) {
     console.error("Prisma error:", err.message);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+export async function logout(req, res) {
+  const { sessionId } = req.body;
+
+  if (!sessionId) {
+    return res.status(400).json({
+      statusCode: 1,
+      message: "SessionId required",
+    });
+  }
+
+  try {
+    await prisma_Connector.user.updateMany({
+      where: { sessionId },
+      data: {
+        sessionId: null,
+        isLoggedIn: false,
+      },
+    });
+
+    return res.status(200).json({
+      statusCode: 0,
+      message: "Logged out successfully",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 1,
+      message: err.message,
+    });
   }
 }
 
