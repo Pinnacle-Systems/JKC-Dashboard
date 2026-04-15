@@ -25,8 +25,8 @@ model User {
   password      String?
   COMPCODE      String?
   createdbyId   Int?
-  isLoggedIn    Boolean?         @default(false)
-  sessionId   String? @unique
+  sessionToken  String?
+  date           String?
   Useronpage    Useronpage[]
   Useroncompany Useroncompany[]
 }

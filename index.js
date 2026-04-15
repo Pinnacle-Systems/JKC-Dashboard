@@ -32,9 +32,35 @@ import {
   purchase,
 } from "./src/routes/index.js";
 import { PrismaClient } from "@prisma/client";
-import { checkDbConnectionOnStartup } from "./src/constants/db.connection.js";
-
+import { initPool, checkDbConnectionOnStartup } from "./src/constants/db.connection.js";
 export const prisma_Connector = new PrismaClient();
+
+
+const gracefulAppShutdown = async () => {
+  console.log("Application shutting down...");
+
+  try {
+    console.log("Closing database pool...");
+
+    let pool;
+    try {
+      pool = oracledb.getPool();
+    } catch (err) {
+      pool = null;
+    }
+
+    if (pool) {
+      await pool.close(10);
+    }
+
+    console.log("Database pool closed successfully");
+    process.exit(0);
+
+  } catch (err) {
+    console.error("Error during shutdown:", err);
+    process.exit(1);
+  }
+};
 
 const app = express();
 app.use(express.json());
@@ -96,16 +122,27 @@ app.use("/purchase", purchase);
 // const PORT = 9008;
 const PORT = process.env.PORT || 9080;
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
+export const io = new Server(httpServer, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
+        credentials: false,    
   },
 });
 
 io.on("connection", socketMain);
 httpServer.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}.`);
-  await checkDbConnectionOnStartup();
 
+  await initPool(); // 👈 MUST CREATE POOL FIRST
+  await checkDbConnectionOnStartup();
+});
+process.on("SIGINT", async () => {
+  await prisma_Connector.$disconnect();
+  await gracefulAppShutdown();
+});
+
+process.on("SIGTERM", async () => {
+  await prisma_Connector.$disconnect();
+  await gracefulAppShutdown();
 });

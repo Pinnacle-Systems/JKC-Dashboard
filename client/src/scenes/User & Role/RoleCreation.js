@@ -77,7 +77,7 @@ const RoleCreation = ({
 
       if (response) {
         Swal.fire({
-          title: `User ${edit ? "Updated" : "Created"} Successfully`,
+          title: `Role ${edit ? "Updated" : "Created"} Successfully`,
           icon: "success",
         });
         // toast.success(`User ${edit ? "Updated" : "Created"} Successfully`);

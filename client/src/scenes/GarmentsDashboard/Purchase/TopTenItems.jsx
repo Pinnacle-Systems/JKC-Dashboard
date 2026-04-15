@@ -36,75 +36,7 @@ const formatINR = (value) =>
   })}`;
 
 // Reusable single pie chart
-const SupplierPieChart = ({ title, data, onChartClick }) => {
-  const theme = useTheme();
 
-  const option = useMemo(
-    () => ({
-      backgroundColor: "#FFFFFF",
-      tooltip: {
-        trigger: "item",
-        formatter: ({ name, value, percent }) =>
-          `${name}<br/>Purchase: <b>${formatINR(value)}</b><br/>(${percent}%)`,
-      },
-      legend: { show: false },
-      series: [
-        {
-          name: "Purchase",
-          type: "pie",
-          radius: ["45%", "70%"],
-          avoidLabelOverlap: false,
-          itemStyle: { borderRadius: 8, borderColor: "#fff", borderWidth: 2 },
-          label: {
-            show: true,
-            position: "outside",
-            formatter: ({ name }) => {
-              const maxLineLength = 28;
-              const words = name.split(" ");
-              let lines = [],
-                currentLine = "";
-              words.forEach((word) => {
-                if ((currentLine + " " + word).trim().length <= maxLineLength) {
-                  currentLine = (currentLine + " " + word).trim();
-                } else {
-                  if (currentLine) lines.push(currentLine);
-                  currentLine = word;
-                }
-              });
-              if (currentLine) lines.push(currentLine);
-              return lines.join("\n");
-            },
-            fontSize: 11,
-            fontWeight: "bold",
-          },
-          labelLine: { show: true, length: 10, length2: 5 },
-          data: data.map((d, idx) => ({
-            ...d,
-            itemStyle: { color: colorArray[idx % colorArray.length] },
-          })),
-        },
-      ],
-    }),
-    [data],
-  );
-
-  return (
-    <Card sx={{ backgroundColor: "#f5f5f5", m: 1 }}>
-      <CardHeader
-        title={title}
-        titleTypographyProps={{ sx: { fontSize: ".85rem", fontWeight: 600 } }}
-        sx={{ p: 1, borderBottom: `2px solid ${theme.palette.divider}` }}
-      />
-      <CardContent sx={{ p: 1 }}>
-        <ReactECharts
-          option={option}
-          style={{ height: 320 }}
-          onEvents={{ click: onChartClick }}
-        />
-      </CardContent>
-    </Card>
-  );
-};
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 const TopTenItemsYear = ({
@@ -312,7 +244,7 @@ legend: { show: false },
           itemStyle: { borderRadius: 6 },
           label: {
             show: true,
-            fontSize: 11,
+            fontSize: "10px",
             fontWeight: "bold",
             formatter: ({ name }) => {
               const maxLineLength = 18; // adjust based on space
@@ -407,8 +339,8 @@ legend: { show: false },
                       itemStyle: { borderRadius: 6 },
                       label: {
                         show: true,
-                        fontSize: 11,
-                        fontWeight: "bold",
+                        fontSize: "10px",
+            fontWeight: "bold",
                         formatter: ({ name }) => {
                           const maxLineLength = 18; // adjust based on space
                           const words = name.split(" ");

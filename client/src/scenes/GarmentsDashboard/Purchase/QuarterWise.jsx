@@ -224,7 +224,7 @@ const QuarterWise = ({
             align: "center",
             y: -8,
             verticalAlign: "middle",
-            style: { fontSize: "13px", fontWeight: "600", color: "black" },
+            style: { fontSize: "11px", fontWeight: "bold", color: "black" },
             formatter() {
               return formatINRShort(this.y);
             },

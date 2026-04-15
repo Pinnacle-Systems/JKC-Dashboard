@@ -1,52 +1,45 @@
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const oracledb = require("oracledb");
-// oracledb.initOracleClient({ libDir: process.env.ORACLE_CLIENT_PATH });
-oracledb.initOracleClient({ libDir: "C:/oracle/instantclient_19_20"});
+import dotenv from "dotenv";
+dotenv.config();
+oracledb.initOracleClient({ libDir: process.env.ORACLE_CLIENT_PATH });
 
-// const dbConfig = {
-//       user: "PSSJWIN",
-//       password: "PSSJWIN_OCT2023",
-//       connectString: "203.95.216.155:1555/AVT05p",
-
-// };
-// const dbConfig = {
-//       user: "PSSDEMOGAR",
-//       password: "PSSDEMOGAR_MAY2023",
-//       connectString: "203.95.216.155:1555/AVT05p",
-// };
-// const dbConfig = {
-//       user: "pssbsa",
-//       password: "PSSBSA_MAY2023",
-//       connectString: "203.95.216.155:1556/AVT06p",
-// };
-// const dbConfig = {
-//       user: "pssbsa",
-//       password: "PSSBSA_MAY2023",
-//       connectString: "203.95.216.155:1556/AVT06p",
-// };
 
 const dbConfig = {
   user: "PSSJKC",
   password: "PSSJKC_FEB2025",
   connectString: "203.95.216.155:1555/avt05p",
 };
-
-
-export async function getConnection() {
+// ✅ CREATE POOL ONCE
+export async function initPool() {
   try {
-    const connection = await oracledb.getConnection({
+    await oracledb.createPool({
       user: dbConfig.user,
       password: dbConfig.password,
       connectString: dbConfig.connectString,
+
+      // 🔥 pool tuning (important)
+      poolMin: 2,
+      poolMax: 10,
+      poolIncrement: 3,
+      poolTimeout: 180,
     });
 
-    console.log("✅ OracleDB Connection Successful!");
-    return connection;
+    console.log("✅ Oracle Pool Created Successfully");
+  } catch (err) {
+    console.error("❌ Pool Creation Failed:", err);
+    throw err;
+  }
+}
 
+export async function getConnection() {
+  try {
+    const connection = await oracledb.getConnection(); // 👈 FROM POOL
+    return connection;
   } catch (err) {
     console.error("❌ DB Connection Error:", err);
-    throw err; // ✅ IMPORTANT: throw instead of res.json
+    throw err;
   }
 }
 
@@ -54,12 +47,7 @@ export async function checkDbConnectionOnStartup() {
   let connection;
 
   try {
-    connection = await oracledb.getConnection({
-      user: dbConfig.user,
-      password: dbConfig.password,
-      connectString: dbConfig.connectString,
-    });
-
+    connection = await getConnection();
 
     const result = await connection.execute(`SELECT 1 FROM DUAL`);
 
@@ -71,12 +59,6 @@ export async function checkDbConnectionOnStartup() {
     console.error(err.message);
 
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (e) {
-        console.error("⚠️ Error closing connection:", e.message);
-      }
-    }
+    if (connection) await connection.close();
   }
 }

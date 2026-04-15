@@ -11,11 +11,10 @@ import {
   UpdateUserOnPage,
   Add_Company,
   get_UserOne,
-  getfname,logout
+  getfname
 } from "../services/user.service.js";
 
 router.post("/login", login);
-router.post("/logout", logout);
 
 router.post("/", create);
 router.get("/getUserBasicDetails", getUserDetails);

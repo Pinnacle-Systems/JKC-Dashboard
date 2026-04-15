@@ -6,7 +6,7 @@ export async function Add_role(req, res) {
   const connection = await getConnection(res);
   const { rolename, active } = req.body;
   try {
-    if (!rolename || active) {
+    if (!rolename ) {
       return res.status(400).json({
         status: 0,
         message: "Fill required fields",
@@ -49,19 +49,32 @@ export async function get_Role(req, res) {
 }
 
 export async function getUserPages(req, res) {
- 
+  const userIdRaw = req.query.userId;
 
-  const userId = parseInt(req.query.userId);
+  // 🚨 ignore invalid values
+  if (!userIdRaw || userIdRaw === "false" || userIdRaw === false) {
+    return res.status(400).json({
+      message: "Invalid userId",
+    });
+  }
+
+  const userId = parseInt(userIdRaw);
+
+  if (isNaN(userId)) {
+    return res.status(400).json({
+      message: "userId must be a number",
+    });
+  }
 
   try {
     const result = await prisma_Connector.useronpage.findMany({
-      where: { userId: userId },
+      where: { userId },
     });
 
-    return res.status(200).json(result); // 200 instead of 201
+    return res.status(200).json(result);
   } catch (err) {
     console.error("Error retrieving data:", err);
-    return res.status(500).json({ error: "Internal Server Error" }); // ✅ return added
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 }
 

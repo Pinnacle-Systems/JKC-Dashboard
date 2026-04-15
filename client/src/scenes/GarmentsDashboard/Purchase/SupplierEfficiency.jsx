@@ -311,7 +311,7 @@ const SupplierEfficiency = ({
         label: {
           show: true,
           position: "top",
-          fontSize: 10,
+          fontSize: "10px",
           fontWeight: "bold",
           color: "#555",
           formatter: ({ value }) => value,

@@ -246,7 +246,7 @@ const UOM_DECIMALS = {
   NOS: 0,
   SET: 0,
   DOZEN: 1,
-
+PCS:0,
   MTR: 2,
   FEET: 3,
   YARD: 3,

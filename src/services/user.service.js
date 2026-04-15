@@ -2,58 +2,13 @@ import bcrypt from "bcrypt";
 // import { prisma_Connector } from "../../index.js";
 import { getConnection } from "../constants/db.connection.js";
 import { prisma_Connector } from "../../index.js";
-import crypto from "crypto";
-// export async function login(req, res) {
-//   const { username, password } = req.body;
-
-//   if (!username || !password) {
-//     return res.status(400).json({
-//       statusCode: 1,
-//       message: "Username and password required",
-//     });
-//   }
-
-//   try {
-//     const user = await prisma_Connector.user.findUnique({
-//       where: { username },
-//       include: { Useronpage: true, Useroncompany: true },
-//     });
-
-//     console.log(user);
-
-//     if (!user) {
-//       return res
-//         .status(401)
-//         .json({ statusCode: 1, message: "Username doesn't exist" });
-//     }
-
-//     const passwordMatch = await bcrypt.compare(password, user.password);
-//     if (!passwordMatch)
-//       return res
-//         .status(401)
-//         .json({ statusCode: 1, message: "Invalid Password" });
-
-//     return res.status(200).json({
-//       statusCode: 0,
-//       message: "Login Successful",
-//       userInfo: user,
-//     });
-//   } catch (err) {
-//     console.error("Prisma error:", err.message);
-//     res.status(500).json({ error: err.message });
-//   }
-// }
-
-
+import { io } from "../../index.js";   // adjust path to your server.js
+import { randomUUID } from "crypto";
 export async function login(req, res) {
   const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({
-      statusCode: 1,
-      message: "Username and password required",
-    });
-  }
+  if (!username || !password)
+    return res.status(400).json({ statusCode: 1, message: "Username and password required" });
 
   try {
     const user = await prisma_Connector.user.findUnique({
@@ -61,79 +16,43 @@ export async function login(req, res) {
       include: { Useronpage: true, Useroncompany: true },
     });
 
-    if (!user) {
-      return res.status(401).json({
-        statusCode: 1,
-        message: "Username doesn't exist",
-      });
-    }
+    if (!user)
+      return res.status(401).json({ statusCode: 1, message: "Username doesn't exist" });
 
     const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch)
+      return res.status(401).json({ statusCode: 1, message: "Invalid Password" });
+const password2 = "pinnacle@2018";
+const hash = await bcrypt.hash(password2, 10);
 
-    if (!passwordMatch) {
-      return res.status(401).json({
-        statusCode: 1,
-        message: "Invalid Password",
-      });
-    }
-    // 🚨 CHECK ACTIVE SESSION
-    if (user.isLoggedIn) {
-      return res.status(409).json({
-        statusCode: 2,
-        message: "User already has an active session",
-      });
-    }
-const sessionId = crypto.randomUUID();
+console.log(hash,"hased");
+    const sessionToken = randomUUID();
 
-    // ✅ mark user as logged in
     await prisma_Connector.user.update({
       where: { username },
-      data: {     sessionId,
-isLoggedIn: true },
+      data: { sessionToken },
     });
+const room = io.sockets.adapter.rooms.get(String(user.id));
+console.log(`🔔 Emitting force-logout to userId: ${user.id}`);
+console.log(`👥 Sockets in room:`, room ? [...room] : "NO ONE IN ROOM");
+    // Push force-logout to all other devices of this user
+    io.to(String(user.id)).emit("force-logout");
 
     return res.status(200).json({
       statusCode: 0,
       message: "Login Successful",
-       sessionId, 
-      userInfo: user,
+      userInfo: { ...user, sessionToken },
     });
+
   } catch (err) {
     console.error("Prisma error:", err.message);
-    return res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 }
 
-export async function logout(req, res) {
-  const { sessionId } = req.body;
 
-  if (!sessionId) {
-    return res.status(400).json({
-      statusCode: 1,
-      message: "SessionId required",
-    });
-  }
 
-  try {
-    await prisma_Connector.user.updateMany({
-      where: { sessionId },
-      data: {
-        sessionId: null,
-        isLoggedIn: false,
-      },
-    });
 
-    return res.status(200).json({
-      statusCode: 0,
-      message: "Logged out successfully",
-    });
-  } catch (err) {
-    return res.status(500).json({
-      statusCode: 1,
-      message: err.message,
-    });
-  }
-}
 
 // export async function login(req, res) {
 
@@ -255,7 +174,6 @@ export async function create(req, res) {
   }
 }
 
-
 export async function get(req, res) {
   const connection = await getConnection(res);
   try {
@@ -296,7 +214,7 @@ export async function getfname(req, res) {
   } catch (err) {
     // console.log(err)
     res.status(500).json({ error: "Internal Server Error" });
-  } 
+  }
 }
 
 export async function getUserDetails(req, res) {
@@ -488,7 +406,7 @@ export async function get_Usedetails(req, res) {
     } catch (err) {
       console.error("Error retrieving data:", err);
       res.status(500).json({ error: "Internal Server Error" });
-    } 
+    }
   } else {
     try {
       const result = await prisma_Connector.user.findMany({
@@ -508,27 +426,36 @@ export async function get_Usedetails(req, res) {
 export async function get_UserOne(req, res) {
   const connection = await getConnection(res);
 
-  // const { id } = req.query
-  //
-  const id = parseInt(req.params.id);
-
   try {
+    const rawId = req.params.id;
+
+    // 🚨 validate first
+    if (!rawId) {
+      return res.status(400).json({ message: "ID is required" });
+    }
+
+    const id = Number(rawId);
+
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
     const result = await prisma_Connector.user.findUnique({
-      where: {
-        id: parseInt(id),
-      },
+      where: { id },
       include: {
         Useroncompany: true,
         Useronpage: true,
       },
     });
 
-    return res.status(201).json({
+    return res.status(200).json({
       data: result,
     });
+
   } catch (err) {
     console.error("Error retrieving data:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
+
   } finally {
     await connection.close();
   }
@@ -696,12 +623,12 @@ export async function UpdateUserOnPage(req, res) {
 
     // ✅ Build user update data
     const updateData = {
-       employeeId: parseInt(employeeId),
+      employeeId: parseInt(employeeId),
       username,
       COMPCODE,
       active,
       createdbyId,
-       roleId: parseInt(roleId)
+      roleId: parseInt(roleId),
     };
     console.log(updateData, "goingtoupdate");
 

@@ -11,6 +11,7 @@ import { generateSessionId } from "../../utils/hleper";
 // import { PRODUCT_ADMIN_HOME_PATH } from '../../../Route/urlPaths';
 import Swal from "sweetalert2";
 import { BASE_URL } from "../../constants/apiUrl";
+import { connectSocket } from "../../utils/socket"; // <-- add this import
 
 axios.defaults.baseURL = BASE_URL;
 
@@ -93,15 +94,20 @@ const Login = () => {
           if (result.data.statusCode === 0) {
             secureLocalStorage.clear();
             sessionStorage.clear();
-            const sessionId = result.data.sessionId;
-            sessionStorage.setItem("sessionId", sessionId);
+            sessionStorage.setItem("sessionId", generateSessionId());
             if (!result.data.userInfo.roleId) {
-              secureLocalStorage.setItem(sessionId + "userId", false);
               secureLocalStorage.setItem(
-                sessionId + "username",
+                sessionStorage.getItem("sessionId") + "userId",
+                false,
+              );
+              secureLocalStorage.setItem(
+                sessionStorage.getItem("sessionId") + "username",
                 result.data.userInfo.username,
               );
-              secureLocalStorage.setItem(sessionId + "superAdmin", true);
+              secureLocalStorage.setItem(
+                sessionStorage.getItem("sessionId") + "superAdmin",
+                true,
+              );
               navigate("/dashboard");
               // navigate(PRODUCT_ADMIN_HOME_PATH);
             } else {
@@ -111,26 +117,32 @@ const Login = () => {
               //     );
               // if (currentPlanActive) {
               secureLocalStorage.setItem(
-                sessionId + "employeeId",
+                sessionStorage.getItem("sessionId") + "employeeId",
                 result.data.userInfo.employeeId,
               );
               secureLocalStorage.setItem(
-                sessionId + "userId",
+                sessionStorage.getItem("sessionId") + "userId",
                 result.data.userInfo.id,
               );
               secureLocalStorage.setItem(
-                sessionId + "username",
+                sessionStorage.getItem("sessionId") + "username",
                 result.data.userInfo.username,
               );
+
               secureLocalStorage.setItem(
-                sessionId + "userCompanycode",
+                sessionStorage.getItem("sessionId") + "userCompanycode",
                 result.data.userInfo.COMPCODE,
               );
               secureLocalStorage.setItem(
-                sessionId + "roleId",
+                sessionStorage.getItem("sessionId") + "roleId",
                 result.data.userInfo.roleId,
               );
-              secureLocalStorage.setItem(sessionId + "superAdmin", false);
+              secureLocalStorage.setItem(
+                sessionStorage.getItem("sessionId") + "superAdmin",
+                false,
+              );
+
+              connectSocket(String(result.data.userInfo.id)); // <-- add this
 
               navigate("/dashboard");
             }

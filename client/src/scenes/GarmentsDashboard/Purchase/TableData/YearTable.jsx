@@ -2766,17 +2766,17 @@ const YearWiseTable = ({
               </>
             ) : localPoType === "Order" && selectedOrderType === "ACCESSORY" ? (
               <>
-                <table className="w-[1970px] overflow-x-auto border-collapse text-[11px] table-fixed">
+                <table className="w-[2060px] overflow-x-auto border-collapse text-[11px] table-fixed">
                   <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
                     <tr>
                       <th className="border p-1 text-center w-8">S.No</th>
                       {/* <th className="border p-1 text-center w-8">Year</th> */}
-                      <th className="border p-1 text-center w-[110px]">
+                      <th className="border p-1 text-center w-32">
                         Doc No
                       </th>
                       <th className="border p-1 text-center w-16">Doc Date</th>
 
-                      <th className="border p-1 text-center w-28">Order No</th>
+                      <th className="border p-1 text-center w-32">Order No</th>
                       <th className="border p-1 text-center w-96">Supplier</th>
                       <th className="border p-1 text-center w-32">
                         Accessory Group Name
