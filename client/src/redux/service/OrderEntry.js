@@ -1,0 +1,73 @@
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { BASE_URL, ORDER_ENTRY } from "../../constants/apiUrl";
+
+const purchase = createApi({
+  reducerPath: "orderEntry",
+  baseQuery: fetchBaseQuery({
+    baseUrl: BASE_URL,
+  }),
+  tagTypes: ["orderEntry"],
+  endpoints: (builder) => ({
+    getOrderEntryCount: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryCount",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+    getOrderEntryStatus: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryStatus",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+    getOrderEntryBuyerStatus: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryBuyerStatus",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+    getOrderEntryStatusTable: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryStatusTable",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+  }),
+});
+
+export const {
+  useGetOrderEntryCountQuery,
+  useGetOrderEntryStatusQuery,
+  useGetOrderEntryBuyerStatusQuery,
+  useGetOrderEntryStatusTableQuery,
+} = purchase;
+
+export default purchase;

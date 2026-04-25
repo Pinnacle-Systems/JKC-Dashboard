@@ -30,11 +30,14 @@ import {
   fabricOutward,
   purchaseOrder,
   purchase,
+  orderEntry,
 } from "./src/routes/index.js";
 import { PrismaClient } from "@prisma/client";
-import { initPool, checkDbConnectionOnStartup } from "./src/constants/db.connection.js";
+import {
+  initPool,
+  checkDbConnectionOnStartup,
+} from "./src/constants/db.connection.js";
 export const prisma_Connector = new PrismaClient();
-
 
 const gracefulAppShutdown = async () => {
   console.log("Application shutting down...");
@@ -55,7 +58,6 @@ const gracefulAppShutdown = async () => {
 
     console.log("Database pool closed successfully");
     process.exit(0);
-
   } catch (err) {
     console.error("Error during shutdown:", err);
     process.exit(1);
@@ -119,6 +121,8 @@ app.use("/purchaseOrder", purchaseOrder);
 
 app.use("/purchase", purchase);
 
+app.use("/orderEntry", orderEntry);
+
 // const PORT = 9008;
 const PORT = process.env.PORT || 9080;
 const httpServer = createServer(app);
@@ -126,7 +130,7 @@ export const io = new Server(httpServer, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-        credentials: false,    
+    credentials: false,
   },
 });
 

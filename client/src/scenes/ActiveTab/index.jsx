@@ -33,6 +33,7 @@ import FabricInward from "../FreelookDyeing/FabricInward/FabricInward.jsx";
 import GarmentDashboard from "../GarmentsDashboard/index";
 import OutwardOverview from "../FreelookDyeing/FabricOutward/OutwardOverview.jsx";
 import PurchaseHome from "../GarmentsDashboard/Purchase/PurchaseHome.jsx";
+import OrderEntryHome from "../GarmentsDashboard/OrderEntry/OrderEntryHome.jsx";
 
 const ActiveTabList = () => {
   const { color } = useContext(ColorContext);
@@ -137,7 +138,22 @@ const ActiveTabList = () => {
         user={tabData?.user}
         selectMonths={tabData?.selectMonths}
         filterBuyerList={tabData?.filterBuyerList}
-        finYr={tabData?.finYr} poType={tabData?.poType}
+        finYr={tabData?.finYr}
+        poType={tabData?.poType}
+        autoFocusBuyer={tabData?.autoFocusBuyer}
+      />
+    ),
+    OrderEntry: (tabData) => (
+      <OrderEntryHome
+        companyName={tabData?.companyName}
+        finYear={tabData?.finYear}
+        selectedYear={tabData?.selectedYear}
+        filterBuyer={tabData?.filterBuyer}
+        user={tabData?.user}
+        selectMonths={tabData?.selectMonths}
+        filterBuyerList={tabData?.filterBuyerList}
+        finYr={tabData?.finYr}
+        poType={tabData?.poType}
         autoFocusBuyer={tabData?.autoFocusBuyer}
       />
     ),

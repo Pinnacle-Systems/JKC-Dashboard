@@ -11,6 +11,8 @@ import HomeAttrition from "./Attrition/HomeAttrition.jsx";
 import HomePF from "./PFdata/HomePF.jsx";
 // import TurnOver from "./salarydata/TurnOver.jsx";
 import PurchaseIndex from "./Purchase/index.jsx";
+import OrderEntryIndex from "./OrderEntry/index.jsx";
+
 import { useGetYearlyCompQuery } from "../../redux/service/misDashboardService";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { getCommonParams } from "../../utils/hleper";
@@ -78,7 +80,7 @@ const GarmentsDashboard = () => {
 
   // const { data: result } = useGetYearlyCompQuery({ params: {} });
 
-  let result
+  let result;
   useEffect(() => {
     if (finYrData?.data?.length) {
       dispatch(setFinYr(finYrData));
@@ -194,7 +196,24 @@ const GarmentsDashboard = () => {
             onOpen={() => dispatch(setLastSection("turnover"))}
           />
         </Grid> */}
-        <Grid item xs={12} md={7}>
+
+        <Grid item xs={12} md={6}>
+          <OrderEntryIndex
+            filterBuyer={filterBuyer}
+            selectedYear={selectedYear}
+            selectMonths={selectMonths}
+            finYr={finYr}
+            user={user}
+            onFilterBuyerChange={(val) => dispatch(setFilterBuyer(val))}
+            onYearChange={(val) => dispatch(setSelectedYear(val))}
+            onMonthChange={(val) => dispatch(setSelectMonths(val))}
+            filterBuyerList={filterBuyerListPurchase}
+            poType={poType}
+            setPoType={setPoType}
+            onOpen={() => dispatch(setLastSection("orderEntry"))}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
           <PurchaseIndex
             filterBuyer={filterBuyer}
             selectedYear={selectedYear}
@@ -209,23 +228,6 @@ const GarmentsDashboard = () => {
             setPoType={setPoType}
             onOpen={() => dispatch(setLastSection("purchase"))}
           />
-        </Grid>
-        {/* <Grid item xs={12} md={4}>
-          <HomePF />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <HeadCount />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <HomeAttrition />
-        </Grid> */}
-        <Grid item xs={12} md={6}>
-          {/* <HomeRegion /> */}
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          {/* <Table /> */}
-          {/* <HomeOTWages/> */}
         </Grid>
       </Grid>
     </div>
