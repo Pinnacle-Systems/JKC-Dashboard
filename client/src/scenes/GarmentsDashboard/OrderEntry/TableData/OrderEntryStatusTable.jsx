@@ -11,7 +11,11 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { useGetOrderEntryStatusTableQuery } from "../../../../redux/service/OrderEntry";
 import moment from "moment";
-import { formatQtyByUOM } from "../../../../utils/hleper";
+import {
+  addInsightsRowTurnOver,
+  formatQtyByUOM,
+  getExcelQtyFormatByUOM,
+} from "../../../../utils/hleper";
 
 const ORDER_TYPES = [
   { label: "INTERNAL ORDER", value: "INTERNAL ORDER" },
@@ -63,7 +67,6 @@ const Pagination = ({ page, total, setPage }) => (
   </div>
 );
 
-/* ── SearchBar ───────────────────────────────────────────────────────────── */
 const SearchBar = ({ keys, state, setState }) => (
   <div className="flex gap-x-4 mb-3">
     {keys.map((key) => (
@@ -147,7 +150,7 @@ const OrderEntryStatusTable = ({
           textMatch(r, "buyerCode", search.buyerCode) &&
           textMatch(r, "buyerName", search.buyerName) &&
           textMatch(r, "styleRefNo", search.styleRefNo) &&
-          textMatch(r, "color5", search.color5),
+          textMatch(r, "color", search.color5),
       ),
     [rawData, search],
   );
@@ -178,33 +181,62 @@ const OrderEntryStatusTable = ({
       currency: "INR",
     }).format(v);
   /* ── Excel ── */
+  /* ── Excel ── */
   const handleExport = async () => {
     if (!filtered.length) {
-      alert("No data to export");
+      alert("No data");
       return;
     }
+
     const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet("Order Entry");
-    ws.columns = [
+    const ws = wb.addWorksheet("Order Entry Status");
+
+    const columns = [
       { header: "S.No", key: "sno", width: 6 },
-      { header: "Fin Year", key: "finYear", width: 10 },
-      { header: "Comp Code", key: "compCode", width: 10 },
-      { header: "Type", key: "typeName", width: 20 },
-      { header: "Order No", key: "orderNo", width: 22 },
+
+      { header: "Order No", key: "orderNo", width: 24 },
       { header: "Order Date", key: "orderDate", width: 14 },
-      { header: "User Date", key: "userDate", width: 14 },
+      { header: "Buyer Name", key: "buyerName", width: 32 },
       { header: "Buyer PO Date", key: "buyerPoDate", width: 14 },
       { header: "Buyer Code", key: "buyerCode", width: 12 },
-      { header: "Buyer Name", key: "buyerName", width: 30 },
-      { header: "Get BPO No", key: "getBpoNo", width: 20 },
-      { header: "Style Ref No", key: "styleRefNo", width: 16 },
-      { header: "Color", key: "color5", width: 18 },
+
+      { header: "BPO No", key: "getBpoNo", width: 22 },
+      { header: "Style Ref No", key: "styleRefNo", width: 18 },
+      { header: "Color", key: "color5", width: 20 },
       { header: "UOM", key: "orderUom", width: 8 },
-      { header: "Order Qty", key: "orderQty", width: 12 },
-      { header: "Tot Prod Qty", key: "totProdQty", width: 14 },
-      { header: "Amount", key: "amount", width: 14 },
+      { header: "Order Qty", key: "orderQty", width: 14 },
+      { header: "Production Qty", key: "totProdQty", width: 14 },
+      { header: "Amount", key: "amount", width: 16 },
     ];
-    const hr = ws.getRow(1);
+    ws.columns = columns;
+
+    // ── Row 1: Merged Title ──
+    ws.insertRow(1, [`Order Entry Status Report`]);
+    ws.mergeCells(`A1:Q1`);
+    const titleCell = ws.getCell("A1");
+    titleCell.font = { bold: true, size: 14 };
+    titleCell.alignment = { horizontal: "center", vertical: "middle" };
+    titleCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF1D4ED8" },
+    };
+    titleCell.font = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
+    ws.getRow(1).height = 30;
+
+    // ── Row 2: Insights / Info row ──
+    addInsightsRowTurnOver({
+      worksheet: ws,
+      startRow: 2,
+      totalColumns: 4,
+      selectedYear,
+      localCompany: selectedComp,
+      dynamicField: "Order Type",
+      dynamicValue: selectedType,
+    });
+
+    // ── Row 3: Column Headers ──
+    const hr = ws.getRow(3);
     hr.height = 26;
     hr.eachCell((cell) => {
       cell.font = { bold: true };
@@ -221,33 +253,121 @@ const OrderEntryStatusTable = ({
         right: { style: "thin" },
       };
     });
+
+    // ── Data Rows ──
     filtered.forEach((r, i) => {
       ws.addRow({
         sno: i + 1,
-        finYear: r.finYear,
-        compCode: r.compCode,
-        typeName: r.typeName,
+
         orderNo: r.orderNo,
-        orderDate: r.orderDate,
-        userDate: r.userDate,
-        buyerPoDate: r.buyerPoDate,
+        orderDate: fmtDate(r.orderDate),
+        // userDate: r.userDate,
+        buyerPoDate: fmtDate(r.buyerPODate),
         buyerCode: r.buyerCode,
         buyerName: r.buyerName,
-        getBpoNo: r.getBpoNo,
+        getBpoNo: r.getbpoNo,
         styleRefNo: r.styleRefNo,
         color5: r.color5,
         orderUom: r.orderUom,
-        orderQty: r.orderQty,
-        totProdQty: r.totProdQty,
-        amount: r.amount,
+        orderQty: Number(r.orderQty || 0),
+        totProdQty: Number(r.totProdQty || 0),
+        amount: Number(r.amount || 0),
       });
     });
+
+    // ── Style Data Rows ──
+    // ── Style Data Rows ──
+    ws.eachRow((row, rn) => {
+      if (rn <= 3) return;
+      row.height = 22;
+      const rowData = filtered[rn - 4]; // row 4 = filtered[0], offset by 3 header rows
+      const uom = rowData?.orderUom || "";
+
+      row.eachCell((cell, cn) => {
+        const key = columns[cn - 1]?.key;
+        cell.alignment = {
+          horizontal: ["sno"].includes(key)
+            ? "center"
+            : ["orderQty", "totProdQty", "amount"].includes(key)
+              ? "right"
+              : "left",
+          vertical: "middle",
+          indent: 1,
+        };
+
+        if (["orderQty", "totProdQty"].includes(key)) {
+          cell.numFmt = getExcelQtyFormatByUOM(uom); // ← UOM-based format per row
+          cell.font = { bold: true, color: { argb: "FF1D4ED8" } };
+        }
+        if (key === "amount") {
+          cell.font = { bold: true, color: { argb: "FF16A34A" } };
+          cell.numFmt = "#,##0.00";
+        }
+        if (key === "orderNo") {
+          cell.font = { color: { argb: "FF2563EB" } };
+        }
+      });
+    });
+
+    // ── Totals Row ──
+    const totalOrderQty = filtered.reduce(
+      (s, r) => s + Number(r.orderQty || 0),
+      0,
+    );
+    const totalTotProdQty = filtered.reduce(
+      (s, r) => s + Number(r.totProdQty || 0),
+      0,
+    );
+    const totalAmount = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
+    const fallbackUom = filtered[0]?.orderUom || "";
+
+    const totalRow = ws.addRow({
+      orderNo: "",
+      orderDate: "",
+      // userDate: "",
+      buyerPoDate: "",
+      buyerCode: "",
+      buyerName: "",
+      getBpoNo: "",
+      styleRefNo: "",
+      color5: "TOTAL",
+      orderUom: "",
+      orderQty: totalOrderQty,
+      totProdQty: totalTotProdQty,
+      amount: totalAmount,
+    });
+    totalRow.height = 24;
+    totalRow.eachCell((cell, cn) => {
+      const key = columns[cn - 1]?.key;
+      cell.font = { bold: true };
+      cell.border = { top: { style: "thin" } };
+      cell.alignment = {
+        horizontal: ["orderQty", "totProdQty", "amount"].includes(key)
+          ? "right"
+          : "center",
+        vertical: "middle",
+        indent: 1,
+      };
+
+      if (["orderQty", "totProdQty"].includes(key)) {
+        cell.numFmt = getExcelQtyFormatByUOM(fallbackUom); // ← UOM format on totals too
+        cell.font = { bold: true, color: { argb: "FF1D4ED8" } };
+      }
+      if (key === "amount") {
+        cell.font = { bold: true, color: { argb: "FF16A34A" } };
+        cell.numFmt = "#,##0.00";
+      }
+    });
+
+    // ── Freeze header rows ──
+    ws.views = [{ state: "frozen", ySplit: 3 }];
+
     const buf = await wb.xlsx.writeBuffer();
     saveAs(
       new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }),
-      `OrderEntry_${selectedType.replace(/ /g, "_")}_${selectedYear}.xlsx`,
+      `OrderEntry_Status_Report.xlsx`,
     );
   };
 
@@ -305,7 +425,7 @@ const OrderEntryStatusTable = ({
                     buyerCode: "",
                     buyerName: "",
                     styleRefNo: "",
-                    color5: "",
+                    color: "",
                   });
                   resetPage();
                 }}
@@ -354,7 +474,7 @@ const OrderEntryStatusTable = ({
                 "buyerCode",
                 "buyerName",
                 "styleRefNo",
-                "color5",
+                "color",
               ]}
               state={search}
               setState={(val) => {
@@ -390,7 +510,7 @@ const OrderEntryStatusTable = ({
                   <TH cls="w-44">Color</TH>
                   <TH cls="w-12">UOM</TH>
                   <TH cls="w-20">Order Qty</TH>
-                  <TH cls="w-20">Tot Prod Qty</TH>
+                  <TH cls="w-20">Production Qty</TH>
                   <TH cls="w-24">Amount</TH>
                 </tr>
               </thead>
@@ -410,19 +530,21 @@ const OrderEntryStatusTable = ({
                       </td>
 
                       <td className="border p-1 pl-2  ">{row.orderNo}</td>
-                      <td className="border p-1 text-center">
+                      <td className="border p-1 text-left pl-1">
                         {fmtDate(row.orderDate)}
                       </td>
                       <td className="border p-1 pl-2 ">{row.buyerName}</td>
-                      {/* <td className="border p-1 text-center">{row.userDate}</td> */}
-                      <td className="border p-1 text-center">
+                      {/* <td className="border p-1 text-left pl-1">{row.userDate}</td> */}
+                      <td className="border p-1 text-left pl-1">
                         {fmtDate(row.buyerPODate)}
                       </td>
 
                       <td className="border p-1 pl-2 ">{row.getbpoNo}</td>
                       <td className="border p-1 pl-2 ">{row.styleRefNo}</td>
                       <td className="border p-1 pl-2 ">{row.color5}</td>
-                      <td className="border p-1 text-center">{row.orderUom}</td>
+                      <td className="border p-1 text-left pl-1">
+                        {row.orderUom}
+                      </td>
                       <td className="border p-1 pr-2 text-right ">
                         {formatQtyByUOM(row.orderQty, row.orderUom)}
                       </td>
