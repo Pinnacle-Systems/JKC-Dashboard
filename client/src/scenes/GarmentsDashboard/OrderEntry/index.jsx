@@ -89,72 +89,146 @@ const OrderEntryIndex = ({
   );
 
   /* ---------------- HIGHCHARTS OPTIONS ---------------- */
-  const options = {
-    chart: { type: "column", height: 288 },
-    title: { text: null },
-    xAxis: {
-      categories: companies,
-      crosshair: true,
-      labels: { style: { fontSize: "13px" } },
-    },
-    yAxis: { min: 0, title: { text: "Internal Order Entry" } },
-    tooltip: {
-      shared: true,
-      useHTML: true,
-      formatter() {
-        const val = Number(this.y);
+  // const options = {
+  //   chart: { type: "column", height: 288 },
+  //   title: { text: null },
+  //   xAxis: {
+  //     categories: companies,
+  //     crosshair: true,
+  //     labels: { style: { fontSize: "13px" } },
+  //   },
+  //   yAxis: { min: 0, title: { text: "Internal Order Entry" } },
+  //   tooltip: {
+  //     shared: true,
+  //     useHTML: true,
+  //     formatter() {
+  //       const val = Number(this.y);
 
-        return `<b>${this.x}</b><br/>Internal Order Entry: ${val}`;
+  //       return `<b>${this.x}</b><br/>Internal Order Entry: ${val}`;
+  //     },
+  //   },
+  //   plotOptions: {
+  //     column: {
+  //       borderRadius: 5,
+  //       pointPadding: 0.2,
+  //       groupPadding: 0.1,
+  //       minPointLength: 20,
+  //       cursor: "pointer",
+  //       dataLabels: {
+  //         enabled: true,
+  //         formatter() {
+  //           return this.y;
+  //         },
+  //         style: { fontSize: "9px" },
+  //       },
+  //       point: {
+  //         events: {
+  //           click() {
+  //             const companyName = chartData[this.index]?.compCode;
+  //             dispatch(setFilterBuyer(companyName));
+  //             dispatch(
+  //               push({
+  //                 id: `OrderEntry`,
+  //                 name: "OrderEntry",
+  //                 component: "OrderEntryHome",
+  //                 data: {
+  //                   companyName,
+  //                   selectedYear,
+  //                   filterBuyer,
+  //                   user,
+  //                   selectMonths,
+  //                   filterBuyerList,
+  //                   finYr,
+  //                   poType,
+  //                 },
+  //               }),
+  //             );
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  //   series: [
+  //     { name: "Order Entry", data: companypurchaseValue, colorByPoint: true },
+  //   ],
+  //   legend: { enabled: false },
+  //   credits: { enabled: false },
+  // };
+const options = {
+  chart: {
+    type: "pie",
+    height: 288,
+  },
+ colors: [ "#22c55e", "#ef4444", "#f59e0b", "#8b5cf6"],
+  title: {
+    text: null,
+  },
+
+  tooltip: {
+    pointFormatter() {
+      return `<br/>Order Entry: ₹ ${this.y.toLocaleString("en-IN")}`;
+    },
+  },
+
+  plotOptions: {
+    pie: {
+      innerSize: "60%", // 🔥 makes it donut
+      borderRadius: 6,
+      cursor: "pointer",
+      dataLabels: {
+        enabled: true,
+        formatter() {
+          return `${this.point.name}: ${this.y}`;
+        },
+        style: { fontSize: "10px" },
+      },
+      point: {
+        events: {
+          click() {
+            const companyName = this.name;
+
+            dispatch(setFilterBuyer(companyName));
+            dispatch(
+              push({
+                id: `OrderEntry`,
+                name: "OrderEntry",
+                component: "OrderEntryHome",
+                data: {
+                  companyName,
+                  selectedYear,
+                  filterBuyer,
+                  user,
+                  selectMonths,
+                  filterBuyerList,
+                  finYr,
+                  poType,
+                },
+              }),
+            );
+          },
+        },
       },
     },
-    plotOptions: {
-      column: {
-        borderRadius: 5,
-        pointPadding: 0.2,
-        groupPadding: 0.1,
-        minPointLength: 20,
-        cursor: "pointer",
-        dataLabels: {
-          enabled: true,
-          formatter() {
-            return this.y;
-          },
-          style: { fontSize: "9px" },
-        },
-        point: {
-          events: {
-            click() {
-              const companyName = chartData[this.index]?.compCode;
-              dispatch(setFilterBuyer(companyName));
-              dispatch(
-                push({
-                  id: `OrderEntry`,
-                  name: "OrderEntry",
-                  component: "OrderEntryHome",
-                  data: {
-                    companyName,
-                    selectedYear,
-                    filterBuyer,
-                    user,
-                    selectMonths,
-                    filterBuyerList,
-                    finYr,
-                    poType,
-                  },
-                }),
-              );
-            },
-          },
-        },
-      },
-    },
-    series: [
-      { name: "Order Entry", data: companypurchaseValue, colorByPoint: true },
-    ],
-    legend: { enabled: false },
-    credits: { enabled: false },
-  };
+  },
 
+  series: [
+    {
+      name: "Order Entry",
+      data: chartData.map((x) => ({
+        name: x.compCode,
+        y: Number(x.completed || 0),
+      })),
+    },
+  ],
+
+  legend: {
+    enabled: true,
+    align: "center",
+    verticalAlign: "bottom",
+  },
+
+  credits: { enabled: false },
+};
   /* ---------------- RENDER ---------------- */
   if (isLoading) {
     return (

@@ -65,9 +65,17 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
 
   /* ---------------- CLICK EVENT ---------------- */
   const handleChartClick = (params) => {
-    const typeName = params.name; // e.g. "INTERNAL ORDER"
-    setTableConfig({ typeName, finYear, compCode: companyName });
-  };
+  // 🚫 Block Pending clicks
+  if (params.seriesName === "Pending") return;
+
+  const typeName = params.name;
+
+  setTableConfig({
+    typeName,
+    finYear,
+    compCode: companyName, buyerCode: selectedBuyer, // 
+  });
+};
 
   /* ---------------- CHART OPTIONS ---------------- */
   const options = {
@@ -224,9 +232,9 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
         <OrderEntryStatusTable
           typeName={tableConfig.typeName}
           finYear={tableConfig.finYear}
-          compCode={tableConfig.compCode}
+          compCode={tableConfig.compCode} buyerCode={tableConfig.buyerCode} // ← new 
           closeTable={() => setTableConfig(null)}
-          finYr={finYr}
+          finYr={finYr}  buyerCodes={buyerCodes}  
         />
       )}
     </>

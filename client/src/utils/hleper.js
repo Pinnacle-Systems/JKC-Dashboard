@@ -251,7 +251,7 @@ PCS:0,
   FEET: 3,
   YARD: 3,
   SQFT: 3,
-  LTRS:3,
+  LTRS:3,"2 PCS PACK":0,
   KGS: 3,REEM:0,POCKET:0,ROLL:0,BOX:0,"MET.TON":3
 }
 export const formatQtyByUOM = (qty, uom) => {
