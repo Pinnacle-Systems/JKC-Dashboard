@@ -4,7 +4,7 @@ import {
   getOrderEntryStatus,
   getOrderEntryBuyerStatus,
 } from "../services/orderEntry.service.js";
-import { getOrderEntryStatusTable,getfabricProcessPlanTable,getAccessoriesPlanTable,getCMTPlanTable,getPreBudjetTable } from "../services/orderEntryTable.service.js";
+import { getOrderEntryStatusTable,getfabricProcessPlanTable,getAccessoriesPlanTable,getCMTPlanTable,getPreBudjetTable,getOrderEntryBuyerWiseStatusTable } from "../services/orderEntryTable.service.js";
 
 const router = Router();
 
@@ -19,5 +19,6 @@ router.get("/getfabricProcessPlanTable", getfabricProcessPlanTable);
 router.get("/getAccessoriesPlanTable", getAccessoriesPlanTable);
 router.get("/getCMTPlanTable", getCMTPlanTable);
 router.get("/getPreBudjetTable", getPreBudjetTable);
+router.get("/getOrderEntryBuyerWiseStatusTable", getOrderEntryBuyerWiseStatusTable);
 
 export default router;

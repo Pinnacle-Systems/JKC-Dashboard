@@ -166,7 +166,7 @@ const options = {
 
   tooltip: {
     pointFormatter() {
-      return `<br/>Order Entry: ₹ ${this.y.toLocaleString("en-IN")}`;
+      return `<br/>Order Entry:  ${this.y.toLocaleString("en-IN")}`;
     },
   },
 

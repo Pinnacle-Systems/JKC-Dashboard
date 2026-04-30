@@ -1,7 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, useTheme, Box } from "@mui/material";
 import ReactECharts from "echarts-for-react";
 import { useGetOrderEntryBuyerStatusQuery } from "../../../redux/service/OrderEntry";
+import OrderEntryBuyerWiseStatusTable from "./TableData/OrderEntryBuyerWiseStatusTable";
 
 const STATUS_COLORS = {
   Running: { top: "#6366f1", bottom: "#a5b4fc" }, // indigo
@@ -25,14 +26,33 @@ const gradientColor = (top, bottom) => ({
   ],
 });
 
-const OrderBuyerStatus = ({ companyName, finYear }) => {
+const OrderBuyerStatus = ({ companyName, finYear,finYr }) => {
   const theme = useTheme();
+  const [tableConfig, setTableConfig] = useState(null); // { typeName, finYear, compCode }
 
   /* ---------------- FETCH DATA ---------------- */
   const { data: response, isLoading } = useGetOrderEntryBuyerStatusQuery(
     { params: { finYear, companyName } },
     { skip: !finYear || !companyName },
   );
+// 1. Remove typeName from tableConfig — pass buyerCode from params.name (X-axis is buyerCode)
+const handleChartClick = (params) => {
+
+  setTableConfig({
+    finYear,
+    compCode: companyName,
+    buyerCode: params.name, // ← X-axis IS the buyerCode
+  });
+};
+
+
+  const buyerCodes = useMemo(() => {
+    if (!response?.data) return [];
+    const codes = [
+      ...new Set(response.data.map((item) => item.buyerCode)),
+    ].sort();
+    return ["ALL", ...codes];
+  }, [response]);
 
   /* ---------------- PREPARE DATA ---------------- */
   const { buyers, statuses, seriesList } = useMemo(() => {
@@ -79,9 +99,7 @@ const OrderBuyerStatus = ({ companyName, finYear }) => {
   }, [response]);
 
   /* ---------------- CLICK ---------------- */
-  const handleChartClick = (params) => {
-    console.log("Clicked:", params.seriesName, params.name, params.value);
-  };
+ 
 
   /* ---------------- OPTIONS ---------------- */
   const options = {
@@ -144,6 +162,7 @@ const OrderBuyerStatus = ({ companyName, finYear }) => {
 
   /* ---------------- RENDER ---------------- */
   return (
+    <>
     <Card
       sx={{
         mt: 1,
@@ -154,7 +173,7 @@ const OrderBuyerStatus = ({ companyName, finYear }) => {
       }}
     >
       <CardHeader
-        title="Order Entry — Buyer Status"
+        title="Order Entry — Buyer Wise Status"
         titleTypographyProps={{
           sx: { fontSize: ".9rem", fontWeight: 700, color: "#1e293b" },
         }}
@@ -179,6 +198,16 @@ const OrderBuyerStatus = ({ companyName, finYear }) => {
         )}
       </CardContent>
     </Card>
+      {tableConfig && (
+        <OrderEntryBuyerWiseStatusTable
+          
+          finYear={tableConfig.finYear}
+          compCode={tableConfig.compCode} buyerCode={tableConfig.buyerCode} // ← new 
+          closeTable={() => setTableConfig(null)}
+          finYr={finYr}  buyerCodes={buyerCodes}  
+        />
+      )}
+      </>
   );
 };
 
