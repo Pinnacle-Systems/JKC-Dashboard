@@ -3,13 +3,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { DropdownWithSearch } from "../../../input/inputcomponent";
 import FinYear from "../../../components/FinYear";
 
-import Form from "./MonthWiseReport";
-import RawMeterialWiseReport from "./RawMeterialWiseReport";
-import ItemGroupWise from "./ItemGroupWise";
-import TopTenSupplierYear from "./TopTenSupplierYear";
-import QuarterWise from "./QuarterWise";
-import MonthChart from "./MonthChart";
-import TopTenItemsYear from "./TopTenItems";
 import {
   setSelectedYear,
   setFilterBuyer,
@@ -17,11 +10,11 @@ import {
   setPoType,
 } from "../../../redux/features/dashboardFiltersSlice";
 import { useGetCompanyQuery } from "../../../redux/service/purchaseService";
-import SupplierDelay from "./SupplierDelay";
 import { useEffect, useRef, useState } from "react";
-import SupplierEfficiency from "./SupplierEfficiency";
 import OrderEntryStatus from "./OrderEntryStatus";
 import OrderBuyerStatus from "./OrderBuyerStatus";
+import OrderBuyerWiseQty from "./OrderBuyerWiseQty";
+import OrderBuyerPONowiseQty from "./OrderBuyerPONowiseQty";
 
 const PurchaseHome = ({ companyName, autoFocusBuyer, filterBuyerList }) => {
   const dispatch = useDispatch();
@@ -271,6 +264,32 @@ const PurchaseHome = ({ companyName, autoFocusBuyer, filterBuyerList }) => {
       <Grid container className="">
         <Grid item xs={12} md={12}>
           <OrderBuyerStatus
+            key={filterBuyer}
+            companyName={filterBuyer}
+            finYear={selectedYear}
+            finYr={finYr}
+            poType={poType}
+            companyList={companyList}
+            filterBuyerList={filterBuyerList}
+          />
+        </Grid>
+      </Grid>
+      <Grid container className="">
+        <Grid item xs={12} md={12}>
+          <OrderBuyerWiseQty
+            key={filterBuyer}
+            companyName={filterBuyer}
+            finYear={selectedYear}
+            finYr={finYr}
+            poType={poType}
+            companyList={companyList}
+            filterBuyerList={filterBuyerList}
+          />
+        </Grid>
+      </Grid>
+      <Grid container className="">
+        <Grid item xs={12} md={12}>
+          <OrderBuyerPONowiseQty
             key={filterBuyer}
             companyName={filterBuyer}
             finYear={selectedYear}

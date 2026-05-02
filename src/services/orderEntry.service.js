@@ -141,14 +141,13 @@ export async function getOrderEntryBuyerStatus(req, res) {
   try {
     const { finYear, companyName } = req.query;
 
-
-// SELECT D.FINYR,B.COMPCODE,C.BUYERCODE,NVL(A.SC,'Running') STA,COUNT(*) CNT FROM GTNORDERENTRY A 
-// JOIN GTCOMPMAST B ON A.COMPCODE = B.GTCOMPMASTID
-// JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.BUYER
-// JOIN GTFINANCIALYEAR D ON D.GTFINANCIALYEARID = A.FINYEAR
-// WHERE B.COMPCODE = '${companyName}' AND D.FINYR = '${finYear}'
-// GROUP BY D.FINYR,B.COMPCODE,C.BUYERCODE,A.SC
-// ORDER BY 1,2,3,4
+    // SELECT D.FINYR,B.COMPCODE,C.BUYERCODE,NVL(A.SC,'Running') STA,COUNT(*) CNT FROM GTNORDERENTRY A
+    // JOIN GTCOMPMAST B ON A.COMPCODE = B.GTCOMPMASTID
+    // JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.BUYER
+    // JOIN GTFINANCIALYEAR D ON D.GTFINANCIALYEARID = A.FINYEAR
+    // WHERE B.COMPCODE = '${companyName}' AND D.FINYR = '${finYear}'
+    // GROUP BY D.FINYR,B.COMPCODE,C.BUYERCODE,A.SC
+    // ORDER BY 1,2,3,4
 
     const sql = `
 
@@ -158,7 +157,7 @@ JOIN GTCOMPMAST B ON A.COMPCODE = B.GTCOMPMASTID
 JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.BUYER
 JOIN GTFINANCIALYEAR D ON D.GTFINANCIALYEARID = A.FINYEAR
 LEFT JOIN (SELECT DISTINCT ZA.ORDERNO FROM GTPRODPENTRY ZA) ZA ON A.GTNORDERENTRYID = ZA.ORDERNO
-WHERE B.COMPCODE = 'JKC' AND D.FINYR = '26-27'
+WHERE B.COMPCODE = '${companyName}' AND D.FINYR = '${finYear}'
 GROUP BY D.FINYR,B.COMPCODE,C.BUYERCODE,A.SC,ZA.ORDERNO
 ORDER BY 1,2,3,4
      `;
@@ -170,6 +169,123 @@ ORDER BY 1,2,3,4
       buyerCode: po[2],
       status: po[3],
       count: po[4],
+    }));
+    return res.json({ statusCode: 0, data: resp });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await connection.close();
+  }
+}
+
+export async function getOrderEntryBuyerQtyWise(req, res) {
+  const connection = await getConnection(res);
+  try {
+    const { finYear, companyName } = req.query;
+
+    const sql = `
+
+SELECT 
+    D.FINYR,
+    B.COMPCODE,
+    C.BUYERCODE,
+SUM(CASE 
+        WHEN ZA.ORDERNO IS NULL THEN NVL(OAD.SHIPQTY, 0)
+        ELSE 0 
+    END) AS RUNNING_QTY,
+SUM(CASE 
+        WHEN ZA.ORDERNO IS NOT NULL THEN NVL(OAD.SHIPQTY, 0)
+        ELSE 0 
+    END) AS COMPLETED_QTY
+FROM GTNORDERENTRY A
+JOIN ORDERALLOWDET OAD 
+    ON OAD.GTNORDERENTRYID = A.GTNORDERENTRYID   
+JOIN GTCOMPMAST B 
+    ON A.COMPCODE = B.GTCOMPMASTID
+JOIN GTBUYERMAST C 
+    ON C.GTBUYERMASTID = A.BUYER
+JOIN GTFINANCIALYEAR D 
+    ON D.GTFINANCIALYEARID = A.FINYEAR
+LEFT JOIN (
+    SELECT ORDERNO
+    FROM GTPRODPENTRY
+    GROUP BY ORDERNO
+) ZA 
+    ON A.GTNORDERENTRYID = ZA.ORDERNO
+WHERE 
+    B.COMPCODE = '${companyName}' 
+    AND D.FINYR = '${finYear}'
+GROUP BY 
+    D.FINYR,
+    B.COMPCODE,
+    C.BUYERCODE
+ORDER BY 
+    D.FINYR,
+    B.COMPCODE,
+    C.BUYERCODE
+     `;
+
+    const result = await connection.execute(sql);
+    let resp = result.rows?.map((po) => ({
+      finYear: po[0],
+      compCode: po[1],
+      buyerCode: po[2],
+      runningQty: po[3],
+      completedQty: po[4],
+    }));
+    return res.json({ statusCode: 0, data: resp });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await connection.close();
+  }
+}
+
+export async function getOrderEntryBuyerWisePoNoQty(req, res) {
+  const connection = await getConnection(res);
+  try {
+    const { finYear, companyName } = req.query;
+
+    const sql = `
+ SELECT 
+    D.FINYR,
+    B.COMPCODE,
+    C.BUYERCODE,
+    OAD.BPONO,
+    SUM(NVL(OAD.SHIPQTY, 0)) AS TOTAL_QTY
+FROM GTNORDERENTRY A
+JOIN ORDERALLOWDET OAD 
+    ON OAD.GTNORDERENTRYID = A.GTNORDERENTRYID   
+JOIN GTCOMPMAST B 
+    ON A.COMPCODE = B.GTCOMPMASTID
+JOIN GTBUYERMAST C 
+    ON C.GTBUYERMASTID = A.BUYER
+JOIN GTFINANCIALYEAR D 
+    ON D.GTFINANCIALYEARID = A.FINYEAR
+WHERE 
+    B.COMPCODE = '${companyName}'
+    AND D.FINYR = '${finYear}'
+GROUP BY 
+    D.FINYR,
+    B.COMPCODE,
+    C.BUYERCODE,
+    OAD.BPONO
+ORDER BY 
+    D.FINYR,
+    B.COMPCODE,
+    C.BUYERCODE,
+    OAD.BPONO
+     `;
+
+    const result = await connection.execute(sql);
+    let resp = result.rows?.map((po) => ({
+      finYear: po[0],
+      compCode: po[1],
+      buyerCode: po[2],
+      bpono: po[3],
+      totalQty: po[4],
     }));
     return res.json({ statusCode: 0, data: resp });
   } catch (err) {

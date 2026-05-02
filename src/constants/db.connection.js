@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 dotenv.config();
 oracledb.initOracleClient({ libDir: process.env.ORACLE_CLIENT_PATH });
 
-
 const dbConfig = {
   user: "PSSJKC",
   password: "PSSJKC_FEB2025",
@@ -20,10 +19,11 @@ export async function initPool() {
       connectString: dbConfig.connectString,
 
       // 🔥 pool tuning (important)
-      poolMin: 2,
-      poolMax: 10,
-      poolIncrement: 3,
+      poolMin: 5,
+      poolMax: 13,
+      poolIncrement: 5,
       poolTimeout: 180,
+      queueTimeout: 120000,
     });
 
     console.log("✅ Oracle Pool Created Successfully");
@@ -53,11 +53,9 @@ export async function checkDbConnectionOnStartup() {
 
     console.log("✅ DATABASE CONNECTED SUCCESSFULLY");
     console.log("🔎 Test Query Result:", result.rows);
-
   } catch (err) {
     console.error("❌ DATABASE CONNECTION FAILED");
     console.error(err.message);
-
   } finally {
     if (connection) await connection.close();
   }

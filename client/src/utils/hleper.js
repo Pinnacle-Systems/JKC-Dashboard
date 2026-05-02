@@ -167,7 +167,7 @@ export const addInsightsPurchaseOrderRow = ({
     `Fin Year :  ${selectedYear || ""}    |    ` +
     (selectQuarter ? `Quarter : ${selectQuarter}    |    ` : "") +
     `Month :  ${selectedMonth || ""}   |   ` +
-    (formattedDate ? `Date : ${formattedDate}    ` : "") 
+    (formattedDate ? `Date : ${formattedDate}    ` : "");
   // Insert insights row
   worksheet.insertRow(startRow, [insightText]);
 
@@ -200,7 +200,10 @@ export const addInsightsRowTurnOver = ({
   disableFinYear,
   secondDynamicField,
   seconddynamicValue,
-  thirdDynamicField,thirdDynamicValue,fourthDynamicField,fourthDynamicValue
+  thirdDynamicField,
+  thirdDynamicValue,
+  fourthDynamicField,
+  fourthDynamicValue,
 }) => {
   const insightText =
     `${disableFinYear ? "" : `FinYear -  ${selectedYear}    |    `}` +
@@ -220,7 +223,7 @@ export const addInsightsRowTurnOver = ({
       fourthDynamicField
         ? `${fourthDynamicField}: ${fourthDynamicValue}    |    `
         : ""
-    }` ;
+    }`;
 
   // Insert insights row
   worksheet.insertRow(startRow, [insightText]);
@@ -246,25 +249,39 @@ const UOM_DECIMALS = {
   NOS: 0,
   SET: 0,
   DOZEN: 1,
-PCS:0,
+  PCS: 0,
   MTR: 2,
   FEET: 3,
   YARD: 3,
   SQFT: 3,
-  LTRS:3,"2 PCS PACK":0,
-  KGS: 3,REEM:0,POCKET:0,ROLL:0,BOX:0,"MET.TON":3
-}
+  LTRS: 3,
+  "2 PCS SET": 0,
+  "4 PCS SET": 0,
+  "6 PCS SET": 0,
+  "8 PCS SET": 0,
+  "10 PCS SET": 0,
+  "2 PCS PACK": 0,
+  "4 PCS PACK": 0,
+  KGS: 3,
+  REEM: 0,
+  POCKET: 0,
+  ROLL: 0,
+  BOX: 0,
+  "MET.TON": 3,
+};
+const normalizeUOM = (uom) => uom?.toUpperCase().replace(/\s+/g, " ").trim();
 export const formatQtyByUOM = (qty, uom) => {
   if (qty === null || qty === undefined) return "-";
 
-  const decimals = UOM_DECIMALS[uom?.toUpperCase()] ?? 2;
+  const normalized = normalizeUOM(uom);
+  const decimals = UOM_DECIMALS[normalized] ?? 2;
 
   return Number(qty).toFixed(decimals);
 };
 export const getExcelQtyFormatByUOM = (uom) => {
-  const decimals = UOM_DECIMALS[uom?.toUpperCase()] ?? 2;
+  const normalized = normalizeUOM(uom);
+  const decimals = UOM_DECIMALS[normalized] ?? 2;
 
-  // Build Excel number format dynamically
   if (decimals === 0) return "#,##,##0";
 
   return `#,##,##0.${"0".repeat(decimals)}`;
@@ -310,13 +327,13 @@ export function findDateInRange(fromDate, toDate, checkDate) {
 
 export function latestExpireDateWithinNDays(
   latesExpireDate = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "latestActivePlanExpireDate"
+    sessionStorage.getItem("sessionId") + "latestActivePlanExpireDate",
   ),
-  n = 20
+  n = 20,
 ) {
   if (
     differenceInTimeToInDays(
-      differenceInTime(new Date(latesExpireDate), new Date())
+      differenceInTime(new Date(latesExpireDate), new Date()),
     ) <= n
   ) {
     return true;
@@ -363,28 +380,30 @@ export function hasPermission(permission) {
   if (
     Boolean(
       secureLocalStorage.getItem(
-        sessionStorage.getItem("sessionId") + "superAdmin"
-      )
+        sessionStorage.getItem("sessionId") + "superAdmin",
+      ),
     )
   ) {
     return true;
   }
   return JSON.parse(
-    secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userRole")
+    secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userRole",
+    ),
   ).role.RoleOnPage.find(
     (item) =>
       item.pageId ===
       parseInt(
         secureLocalStorage.getItem(
-          sessionStorage.getItem("sessionId") + "currentPage"
-        )
-      )
+          sessionStorage.getItem("sessionId") + "currentPage",
+        ),
+      ),
   )[permission];
 }
 
 export function getYearShortCode(fromDate, toDate) {
   return `${new Date(fromDate).getFullYear().toString().slice(2)}-${new Date(
-    toDate
+    toDate,
   )
     .getFullYear()
     .toString()
@@ -548,7 +567,7 @@ export function getAllowableReturnQty(inwardedQty, returnedQty, stockQty) {
     returnedQty,
     "returnedQty",
     stockQty,
-    "stockQty"
+    "stockQty",
   );
   let balanceReturnQty = parseFloat(inwardedQty) + parseFloat(returnedQty);
   console.log(
@@ -556,7 +575,7 @@ export function getAllowableReturnQty(inwardedQty, returnedQty, stockQty) {
     "balanceReturnQty",
     balanceReturnQty,
     "stockQty",
-    stockQty
+    stockQty,
   );
   return balanceReturnQty < parseFloat(stockQty)
     ? balanceReturnQty
@@ -601,40 +620,40 @@ export function filterGodown(store, itemShortCode) {
 
 export const params = {
   companyId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   ),
   branchId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   ),
   userId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userId"
+    sessionStorage.getItem("sessionId") + "userId",
   ),
   finYearId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentFinYear"
+    sessionStorage.getItem("sessionId") + "currentFinYear",
   ),
 };
 
 export const getCommonParams = () => ({
   companyId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   ),
   branchId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   ),
   userId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userId"
+    sessionStorage.getItem("sessionId") + "userId",
   ),
   finYearId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentFinYear"
+    sessionStorage.getItem("sessionId") + "currentFinYear",
   ),
   isSuperAdmin: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "superAdmin"
+    sessionStorage.getItem("sessionId") + "superAdmin",
   ),
   employeeId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "employeeId"
+    sessionStorage.getItem("sessionId") + "employeeId",
   ),
   roleId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "roleId"
+    sessionStorage.getItem("sessionId") + "roleId",
   ),
 });
 
@@ -645,13 +664,13 @@ export function convertSpaceToUnderScore(str) {
 export function isGridDatasValid(
   datas,
   isRequiredAllData,
-  mandatoryFields = []
+  mandatoryFields = [],
 ) {
   if (isRequiredAllData) {
     let gridDatasValid = datas.every((obj) =>
       Object.values(obj).every(
-        (value) => value !== "" && value !== null && value !== 0
-      )
+        (value) => value !== "" && value !== null && value !== 0,
+      ),
     );
     return gridDatasValid;
   } else {
@@ -661,8 +680,8 @@ export function isGridDatasValid(
           obj[field] &&
           obj[field] !== "" &&
           obj[field] !== null &&
-          parseFloat(obj[field]) !== 0
-      )
+          parseFloat(obj[field]) !== 0,
+      ),
     );
     return gridDatasValid;
   }
@@ -678,13 +697,13 @@ export const groupBy = function (xs, key) {
 export function sumArray(arr, property) {
   return arr?.reduce(
     (total, current) => parseFloat(total) + parseFloat(current[property]),
-    0
+    0,
   );
 }
 
 export function getBalanceBillQty(inwardQty, returnQty, alreadyBilledQty) {
   return substract(substract(inwardQty, returnQty), alreadyBilledQty).toFixed(
-    3
+    3,
   );
 }
 
@@ -734,8 +753,8 @@ export async function classListData(data) {
       num = num
         ? parseInt(num, 10)
         : order[prefix] !== undefined
-        ? order[prefix]
-        : Infinity;
+          ? order[prefix]
+          : Infinity;
 
       return [order[prefix] !== undefined ? order[prefix] : num, num, suffix];
     };
@@ -1180,7 +1199,7 @@ export const handleOnChange = (event, setValue) => {
   setValue(
     valueBeforeCursor +
       inputValue.slice(inputSelectionStart, inputSelectionEnd) +
-      valueAfterCursor
+      valueAfterCursor,
   );
 
   // Set the cursor position to the end of the input value
@@ -1189,7 +1208,7 @@ export const handleOnChange = (event, setValue) => {
       valueBeforeCursor.length +
         inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
       valueBeforeCursor.length +
-        inputValue.slice(inputSelectionStart, inputSelectionEnd).length
+        inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
     );
   });
 };
@@ -1315,7 +1334,7 @@ export const DateInput = forwardRef(
       inputHead = null,
       autoFocus,
     },
-    ref
+    ref,
   ) => {
     return (
       <div className="flex flex-col gap-1 w-full">
@@ -1354,7 +1373,7 @@ export const DateInput = forwardRef(
         </div>
       </div>
     );
-  }
+  },
 );
 
 export const customStyles = {
@@ -1423,8 +1442,8 @@ export const customStyles = {
     backgroundColor: state.isSelected
       ? "#d1d5db" // gray-200
       : state.isFocused
-      ? "#e5e7eb" // gray-100
-      : "white",
+        ? "#e5e7eb" // gray-100
+        : "white",
     color: "black",
   }),
 

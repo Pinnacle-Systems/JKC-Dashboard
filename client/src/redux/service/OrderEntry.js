@@ -47,6 +47,35 @@ const purchase = createApi({
       },
       providesTags: ["orderEntry"],
     }),
+    getOrderEntryBuyerWiseQty: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryBuyerWiseQty",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+    getOrderEntryBuyerWisePoNoQty: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryBuyerWisePoNoQty",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+
+    // table
+
     getOrderEntryStatusTable: builder.query({
       query: ({ params }) => {
         return {
@@ -112,10 +141,23 @@ const purchase = createApi({
       },
       providesTags: ["orderEntry"],
     }),
-       getOrderEntryBuyerWiseStatusTable: builder.query({
+    getOrderEntryBuyerWiseStatusTable: builder.query({
       query: ({ params }) => {
         return {
           url: ORDER_ENTRY + "/getOrderEntryBuyerWiseStatusTable",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+    getOrderEntryBuyerPoNoWiseStatusTable: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryBuyerPoNoWiseStatusTable",
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
@@ -132,12 +174,18 @@ export const {
   useGetOrderEntryCountQuery,
   useGetOrderEntryStatusQuery,
   useGetOrderEntryBuyerStatusQuery,
+  useGetOrderEntryBuyerWiseQtyQuery,
+  useGetOrderEntryBuyerWisePoNoQtyQuery,
+
+  // table
+
   useGetOrderEntryStatusTableQuery,
   useGetfabricProcessPlanTableQuery,
   useGetAccessoriesPlanTableQuery,
   useGetCMTPlanTableQuery,
-  useGetPreBudjetTableQuery,useGetOrderEntryBuyerWiseStatusTableQuery
-  
+  useGetPreBudjetTableQuery,
+  useGetOrderEntryBuyerWiseStatusTableQuery,
+  useGetOrderEntryBuyerPoNoWiseStatusTableQuery,
 } = purchase;
 
 export default purchase;

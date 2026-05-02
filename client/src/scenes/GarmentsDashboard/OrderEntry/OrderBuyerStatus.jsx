@@ -1,5 +1,7 @@
-import React, { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, useTheme, Box } from "@mui/material";
+import React, { useMemo, useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, useTheme, Box, IconButton } from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ReactECharts from "echarts-for-react";
 import { useGetOrderEntryBuyerStatusQuery } from "../../../redux/service/OrderEntry";
 import OrderEntryBuyerWiseStatusTable from "./TableData/OrderEntryBuyerWiseStatusTable";
@@ -29,6 +31,8 @@ const gradientColor = (top, bottom) => ({
 const OrderBuyerStatus = ({ companyName, finYear,finYr }) => {
   const theme = useTheme();
   const [tableConfig, setTableConfig] = useState(null); // { typeName, finYear, compCode }
+  const [startIndex, setStartIndex] = useState(0);
+  const itemsPerPage = 10;
 
   /* ---------------- FETCH DATA ---------------- */
   const { data: response, isLoading } = useGetOrderEntryBuyerStatusQuery(
@@ -55,12 +59,15 @@ const handleChartClick = (params) => {
   }, [response]);
 
   /* ---------------- PREPARE DATA ---------------- */
-  const { buyers, statuses, seriesList } = useMemo(() => {
-    if (!response?.data) return { buyers: [], statuses: [], seriesList: [] };
+  const { buyers, statuses, seriesList, hasNext, hasPrev } = useMemo(() => {
+    if (!response?.data) return { buyers: [], statuses: [], seriesList: [], hasNext: false, hasPrev: false };
 
     // Unique buyers (X-axis) and statuses (one series each)
-    const buyers = [...new Set(response.data.map((d) => d.buyerCode))].sort();
-    const statuses = [...new Set(response.data.map((d) => d.status))];
+    const allBuyers = [...new Set(response.data.map((d) => d.buyerCode))].sort();
+    const paginatedBuyers = allBuyers.slice(startIndex, startIndex + itemsPerPage);
+    
+    // Ensure "Running" and "Completed" are always counted/shown
+    const statuses = [...new Set(["Running", "Completed", ...response.data.map((d) => d.status)])];
 
     // Build a lookup: { "PEP||Running": 7, ... }
     const lookup = {};
@@ -91,12 +98,25 @@ const handleChartClick = (params) => {
             shadowColor: "rgba(0,0,0,0.2)",
           },
         },
-        data: buyers.map((b) => lookup[`${b}||${status}`] ?? 0),
+        data: paginatedBuyers.map((b) => lookup[`${b}||${status}`] ?? 0),
       };
     });
 
-    return { buyers, statuses, seriesList };
-  }, [response]);
+    return { 
+      buyers: paginatedBuyers, 
+      statuses, 
+      seriesList,
+      hasPrev: startIndex > 0,
+      hasNext: startIndex + itemsPerPage < allBuyers.length
+    };
+  }, [response, startIndex]);
+
+  useEffect(() => {
+    setStartIndex(0);
+  }, [response?.data]);
+
+  const handleNext = () => setStartIndex((prev) => prev + itemsPerPage);
+  const handlePrev = () => setStartIndex((prev) => prev - itemsPerPage);
 
   /* ---------------- CLICK ---------------- */
  
@@ -190,11 +210,47 @@ const handleChartClick = (params) => {
             Loading...
           </Box>
         ) : (
-          <ReactECharts
-            option={options}
-            style={{ height: 380 }}
-            onEvents={{ click: handleChartClick }}
-          />
+          <Box position="relative">
+            {hasPrev && (
+              <IconButton
+                onClick={handlePrev}
+                sx={{
+                  position: "absolute",
+                  left: 0,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  zIndex: 10,
+                  bgcolor: "background.paper",
+                  boxShadow: 1,
+                  "&:hover": { bgcolor: "grey.100" },
+                }}
+              >
+                <ChevronLeftIcon fontSize="small" />
+              </IconButton>
+            )}
+            <ReactECharts
+              option={options}
+              style={{ height: 380 }}
+              onEvents={{ click: handleChartClick }}
+            />
+            {hasNext && (
+              <IconButton
+                onClick={handleNext}
+                sx={{
+                  position: "absolute",
+                  right: 0,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  zIndex: 10,
+                  bgcolor: "background.paper",
+                  boxShadow: 1,
+                  "&:hover": { bgcolor: "grey.100" },
+                }}
+              >
+                <ChevronRightIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
         )}
       </CardContent>
     </Card>

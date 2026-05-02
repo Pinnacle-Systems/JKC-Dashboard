@@ -254,6 +254,14 @@ const OrderEntryStatusTable = ({
     );
   }, [rawData, search, selectedType]);
 
+  const totals = useMemo(() => {
+    return {
+      orderQty: filtered.reduce((sum, r) => sum + Number(r.orderQty || 0), 0),
+      excessQty: filtered.reduce((sum, r) => sum + Number(r.excessQty || 0), 0),
+      amount: filtered.reduce((sum, r) => sum + Number(r.amount || 0), 0),
+    };
+  }, [filtered]);
+
   /* ── Pagination ── */
   const totalPages = Math.ceil(filtered.length / RECORDS) || 1;
   const currentRows = filtered.slice((page - 1) * RECORDS, page * RECORDS);
@@ -455,9 +463,6 @@ const OrderEntryStatusTable = ({
 
     // ── Totals row (IO only) ──
     if (isIO) {
-      const totQty = filtered.reduce((s, r) => s + Number(r.orderQty || 0), 0);
-      const totExc = filtered.reduce((s, r) => s + Number(r.excessQty || 0), 0);
-      const totAmt = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
       const tr = ws.addRow({
         sno: "",
         orderNo: "",
@@ -466,9 +471,9 @@ const OrderEntryStatusTable = ({
         bpoNo: "TOTAL",
         styleRefNo: "",
         orderPackType: "",
-        orderQty: totQty,
-        excessQty: totExc,
-        amount: totAmt,
+        orderQty: totals.orderQty,
+        excessQty: totals.excessQty,
+        amount: totals.amount,
       });
       tr.height = 24;
       tr.eachCell((cell, cn) => {
@@ -598,11 +603,33 @@ const OrderEntryStatusTable = ({
           </div>
         </div>
 
-        {/* RECORD COUNT */}
-        <p className="text-xs font-semibold text-gray-600 mt-0.5">
-          Total Records:{" "}
-          <span className="text-blue-600">{filtered.length}</span>
-        </p>
+        {/* RECORD COUNT & TOTALS */}
+        <div className="flex gap-6 mt-0.5">
+          <p className="text-xs font-semibold text-gray-600">
+            Total Records:{" "}
+            <span className="text-blue-600">{filtered.length}</span>
+          </p>
+          {selectedType === "INTERNAL ORDER" && (
+            <>
+              <p className="text-xs font-semibold text-gray-600">
+                Total Order Qty:{" "}
+                <span className="text-green-600">
+                  {Number(totals.orderQty).toLocaleString("en-IN")}
+                </span>
+              </p>
+              <p className="text-xs font-semibold text-gray-600">
+                Total Excess Qty:{" "}
+                <span className="text-red-600">
+                  {Number(totals.excessQty).toLocaleString("en-IN")}
+                </span>
+              </p>
+              <p className="text-xs font-semibold text-gray-600">
+                Total Amount:{" "}
+                <span className="text-purple-600">{INR(totals.amount)}</span>
+              </p>
+            </>
+          )}
+        </div>
 
         {/* SEARCH */}
         <div className="flex justify-between items-start mt-2">

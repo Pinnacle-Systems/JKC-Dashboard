@@ -135,12 +135,25 @@ export const io = new Server(httpServer, {
 });
 
 io.on("connection", socketMain);
-httpServer.listen(PORT, async () => {
-  console.log(`Server is running on port ${PORT}.`);
 
-  await initPool(); // 👈 MUST CREATE POOL FIRST
-  await checkDbConnectionOnStartup();
-});
+async function startServer() {
+  try {
+    // ✅ Step 1: Initialize DB pool FIRST
+    await initPool();
+    await checkDbConnectionOnStartup();
+
+    // ✅ Step 2: Then start server
+    httpServer.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT}.`);
+    });
+  } catch (err) {
+    console.error("❌ Failed to start server:", err);
+    process.exit(1);
+  }
+}
+
+startServer();
+
 process.on("SIGINT", async () => {
   await prisma_Connector.$disconnect();
   await gracefulAppShutdown();

@@ -233,3 +233,53 @@ GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.S
     await connection.close();
   }
 }
+
+
+export async function getOrderEntryBuyerPoNoWiseQtyStatusTable(req, res) {
+  const connection = await getConnection(res);
+  try {
+    const { finYear, companyName, buyerCode, bpoNo } = req.query;
+    const buyerFilter = buyerCode && buyerCode !== "ALL" 
+      ? `AND C.BUYERCODE = '${buyerCode}'` : "";
+    const bpoNoFilter = bpoNo && bpoNo !== "ALL" 
+      ? `AND A.BPONO = '${bpoNo}'` : "";
+
+
+
+    const sql = `SELECT A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,
+A.BUYERNAME,LISTAGG(A.BPONO,',') WITHIN GROUP (ORDER BY A.BPONO) BPONO,A.STYLEREFNO,A.ORDERPACKTYPE,
+SUM(A.ORDERQTY) ORDERQTY,SUM(A.EXCESSQTY) EXCESSQTY,SUM(A.AMOUNT) AMOUNT FROM (
+SELECT A.COMPCODE,'INTERNAL ORDER' TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYER BUYERCODE,
+C.BUYERNAME,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,
+SUM(A.SHIPQTY) ORDERQTY,SUM(A.PRODQTY) EXCESSQTY,SUM(A.SHIPQTY* A.BUYERPRICE * A.CONVALUE) AMOUNT FROM ORDERALLOWDET A
+JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID 
+WHERE A.COMPCODE = '${companyName}' AND A.FINYR = '${finYear}' ${buyerFilter} ${bpoNoFilter}
+GROUP BY A.COMPCODE,A.ORDERNO,A.ORDERDATE,A.BUYER,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,A.BUYER,C.BUYERNAME
+) A
+GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.STYLEREFNO,A.ORDERPACKTYPE`
+
+ const result = await connection.execute(sql);
+
+
+    let resp = result.rows?.map((po) => ({
+  compCode: po[0],
+  typeName: po[1],
+  orderNo: po[2],
+  orderDate: po[3],
+  buyerCode: po[4],
+  buyerName: po[5],
+  bpoNo: po[6],
+  styleRefNo: po[7],
+  orderPackType: po[8],
+  orderQty: po[9],
+  excessQty: po[10],
+  amount: po[11],
+}));
+    return res.json({ statusCode: 0, data: resp });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await connection.close();
+  }
+}
