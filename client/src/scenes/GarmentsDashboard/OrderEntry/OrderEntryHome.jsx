@@ -15,6 +15,8 @@ import OrderEntryStatus from "./OrderEntryStatus";
 import OrderBuyerStatus from "./OrderBuyerStatus";
 import OrderBuyerWiseQty from "./OrderBuyerWiseQty";
 import OrderBuyerPONowiseQty from "./OrderBuyerPONowiseQty";
+import OrderEntryStyleWiseQty from "./OrderEntryStyleWiseQty";
+import OrderEntryColorWiseQty from "./OrderEntryColorWiseQty";
 
 const PurchaseHome = ({ companyName, autoFocusBuyer, filterBuyerList }) => {
   const dispatch = useDispatch();
@@ -290,6 +292,32 @@ const PurchaseHome = ({ companyName, autoFocusBuyer, filterBuyerList }) => {
       <Grid container className="">
         <Grid item xs={12} md={12}>
           <OrderBuyerPONowiseQty
+            key={filterBuyer}
+            companyName={filterBuyer}
+            finYear={selectedYear}
+            finYr={finYr}
+            poType={poType}
+            companyList={companyList}
+            filterBuyerList={filterBuyerList}
+          />
+        </Grid>
+      </Grid>
+      <Grid container className="">
+        <Grid item xs={12} md={12}>
+          <OrderEntryStyleWiseQty
+            key={filterBuyer}
+            companyName={filterBuyer}
+            finYear={selectedYear}
+            finYr={finYr}
+            poType={poType}
+            companyList={companyList}
+            filterBuyerList={filterBuyerList}
+          />
+        </Grid>
+      </Grid>
+      <Grid container className="">
+        <Grid item xs={12} md={12}>
+          <OrderEntryColorWiseQty
             key={filterBuyer}
             companyName={filterBuyer}
             finYear={selectedYear}

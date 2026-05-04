@@ -5,6 +5,8 @@ import {
   getOrderEntryBuyerStatus,
   getOrderEntryBuyerQtyWise,
   getOrderEntryBuyerWisePoNoQty,
+  getOrderEntryStyleWisePoNoQty,
+  getOrderEntryColorWiseQty,
 } from "../services/orderEntry.service.js";
 import {
   getOrderEntryStatusTable,
@@ -14,6 +16,8 @@ import {
   getPreBudjetTable,
   getOrderEntryBuyerWiseStatusTable,
   getOrderEntryBuyerPoNoWiseQtyStatusTable,
+  getOrderEntryStyleItemGroupWiseQtyTable,
+  getOrderEntryColorWiseQtyTable,
 } from "../services/orderEntryTable.service.js";
 
 const router = Router();
@@ -23,6 +27,8 @@ router.get("/getOrderEntryStatus", getOrderEntryStatus);
 router.get("/getOrderEntryBuyerStatus", getOrderEntryBuyerStatus);
 router.get("/getOrderEntryBuyerWiseQty", getOrderEntryBuyerQtyWise);
 router.get("/getOrderEntryBuyerWisePoNoQty", getOrderEntryBuyerWisePoNoQty);
+router.get("/getOrderEntryStyleWiseQty", getOrderEntryStyleWisePoNoQty);
+router.get("/getOrderEntryColorWiseQty", getOrderEntryColorWiseQty);
 
 // Table Services
 
@@ -39,5 +45,10 @@ router.get(
   "/getOrderEntryBuyerPoNoWiseStatusTable",
   getOrderEntryBuyerPoNoWiseQtyStatusTable,
 );
+router.get(
+  "/getOrderEntryStyleWiseTable",
+  getOrderEntryStyleItemGroupWiseQtyTable,
+);
+router.get("/getOrderEntryColorWiseTable", getOrderEntryColorWiseQtyTable);
 
 export default router;

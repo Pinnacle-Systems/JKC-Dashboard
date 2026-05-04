@@ -295,3 +295,78 @@ ORDER BY
     await connection.close();
   }
 }
+
+export async function getOrderEntryStyleWisePoNoQty(req, res) {
+  const connection = await getConnection(res);
+  try {
+    const { finYear, companyName } = req.query;
+
+    const sql = `
+SELECT D.FINYR,B.COMPCODE,C.BUYERCODE,Z.STYLEGROUP,Z.STYLESUBGROUP,OAD.STYLEITEM,SUM(NVL(OAD.SHIPQTY, 0)) AS TOTAL_QTY
+FROM GTNORDERENTRY A 
+JOIN ORDERALLOWDET OAD ON OAD.GTNORDERENTRYID = A.GTNORDERENTRYID   
+JOIN GTCOMPMAST B ON A.COMPCODE = B.GTCOMPMASTID
+JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.BUYER
+JOIN GTFINANCIALYEAR D ON D.GTFINANCIALYEARID = A.FINYEAR
+JOIN (
+SELECT A.STYLEITEM,B.STYLEGROUP,C.STYLESUBGROUP FROM GTSTYLEITEMMAST A
+JOIN GTSTYLEGROUPMAST B ON A.STYLEGROUP = B.GTSTYLEGROUPMASTID
+JOIN GTSTYLESUBGROUPMAST C ON C.GTSTYLESUBGROUPMASTID = A.STYLESUBGROUP
+) Z ON Z.STYLEITEM = OAD.STYLEITEM
+WHERE B.COMPCODE = '${companyName}' AND D.FINYR = '${finYear}'
+GROUP BY D.FINYR,B.COMPCODE,OAD.STYLEITEM,C.BUYERCODE,Z.STYLEGROUP,Z.STYLESUBGROUP
+ORDER BY D.FINYR,B.COMPCODE,BUYERCODE,STYLEGROUP,STYLESUBGROUP,STYLEITEM
+     `;
+
+    const result = await connection.execute(sql);
+    let resp = result.rows?.map((po) => ({
+      finYear: po[0],
+      compCode: po[1],
+      buyerCode: po[2],
+      styleGroup: po[3],
+      styleSubGroup: po[4],
+      styleItem: po[5],
+      totalQty: po[6],
+    }));
+    return res.json({ statusCode: 0, data: resp });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await connection.close();
+  }
+}
+
+export async function getOrderEntryColorWiseQty(req, res) {
+  const connection = await getConnection(res);
+  try {
+    const { finYear, companyName } = req.query;
+
+    const sql = `
+SELECT D.FINYR,B.COMPCODE,C.BUYERCODE,OAD.COLOR,SUM(NVL(OAD.SHIPQTY, 0)) AS TOTAL_QTY
+FROM GTNORDERENTRY A 
+JOIN ORDERALLOWDET OAD ON OAD.GTNORDERENTRYID = A.GTNORDERENTRYID   
+JOIN GTCOMPMAST B ON A.COMPCODE = B.GTCOMPMASTID
+JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.BUYER
+JOIN GTFINANCIALYEAR D ON D.GTFINANCIALYEARID = A.FINYEAR
+WHERE B.COMPCODE = '${companyName}' AND D.FINYR = '${finYear}'
+GROUP BY D.FINYR,B.COMPCODE,OAD.COLOR,C.BUYERCODE
+ORDER BY D.FINYR,B.COMPCODE,BUYERCODE,COLOR
+     `;
+
+    const result = await connection.execute(sql);
+    let resp = result.rows?.map((po) => ({
+      finYear: po[0],
+      compCode: po[1],
+      buyerCode: po[2],
+      color: po[3],
+      totalQty: po[4],
+    }));
+    return res.json({ statusCode: 0, data: resp });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await connection.close();
+  }
+}

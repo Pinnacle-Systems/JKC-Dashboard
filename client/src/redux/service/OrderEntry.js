@@ -73,6 +73,32 @@ const purchase = createApi({
       },
       providesTags: ["orderEntry"],
     }),
+    getOrderEntryStyleWiseQty: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryStyleWiseQty",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+    getOrderEntryColorWiseQty: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryColorWiseQty",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
 
     // table
 
@@ -167,6 +193,32 @@ const purchase = createApi({
       },
       providesTags: ["orderEntry"],
     }),
+    getOrderEntryStyleWiseTable: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryStyleWiseTable",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+    getOrderEntryColorWiseTable: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryColorWiseTable",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
   }),
 });
 
@@ -176,6 +228,8 @@ export const {
   useGetOrderEntryBuyerStatusQuery,
   useGetOrderEntryBuyerWiseQtyQuery,
   useGetOrderEntryBuyerWisePoNoQtyQuery,
+  useGetOrderEntryStyleWiseQtyQuery,
+  useGetOrderEntryColorWiseQtyQuery,
 
   // table
 
@@ -186,6 +240,8 @@ export const {
   useGetPreBudjetTableQuery,
   useGetOrderEntryBuyerWiseStatusTableQuery,
   useGetOrderEntryBuyerPoNoWiseStatusTableQuery,
+  useGetOrderEntryStyleWiseTableQuery,
+  useGetOrderEntryColorWiseTableQuery,
 } = purchase;
 
 export default purchase;

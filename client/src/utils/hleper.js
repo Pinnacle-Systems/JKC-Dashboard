@@ -262,6 +262,7 @@ const UOM_DECIMALS = {
   "10 PCS SET": 0,
   "2 PCS PACK": 0,
   "4 PCS PACK": 0,
+  "4 PART SET": 0,
   KGS: 3,
   REEM: 0,
   POCKET: 0,
