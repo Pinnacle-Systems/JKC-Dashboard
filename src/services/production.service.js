@@ -1,0 +1,117 @@
+import oracledb from "oracledb";
+import { getConnection } from "../constants/db.connection.js";
+
+export async function getProduction(req, res) {
+  const connection = await getConnection(res);
+
+  try {
+    const { compCode, fromDate, toDate } = req.query;
+
+    const sql = `
+SELECT 
+    'CUTTING' PROCESSNAME,
+    DD.COMPCODE,
+    AB.LOCID STOREID,
+    AA.DOCDATE,
+    AB.TP QTY,
+    FF.ORDERNO,
+    CASE 
+        WHEN FF.STYLEREF IS NULL 
+        THEN FF.STYLEREFNO 
+        ELSE FF.STYLEREF 
+    END STYLEREFNO,
+    GG.BUYERCODE,
+    CC.COLORNAME
+FROM CTPRODUCTION AA
+JOIN CTPRODDET AB 
+    ON AA.CTPRODUCTIONID = AB.CTPRODUCTIONID
+JOIN GTCOLORMAST CC 
+    ON CC.GTCOLORMASTID = AB.COLOR
+JOIN GTCOMPMAST DD 
+    ON DD.GTCOMPMASTID = AA.COMPCODE
+JOIN GTLOCMAST EE 
+    ON EE.GTLOCMASTID = AA.CPSTOREID
+JOIN GTNORDERENTRY FF 
+    ON FF.ORDERNO = AA.FILENO
+JOIN GTBUYERMAST GG 
+    ON GG.GTBUYERMASTID = FF.BUYER
+WHERE AA.DOCDATE BETWEEN TO_DATE(:FROMDATE, 'YYYY-MM-DD') 
+                     AND TO_DATE(:TODATE, 'YYYY-MM-DD')
+  AND DD.COMPCODE = :COMPCODE
+  AND AA.RIB = 'NO'
+
+UNION ALL
+
+SELECT 
+    E.PROCESSNAME,
+    C.COMPCODE,
+    A.LOCID STOREID,
+    A.PEDATE DOCDATE,
+    CC.DAILYPROD QTY,
+    FF.ORDERNO,
+    CASE 
+        WHEN FF.STYLEREF IS NULL 
+        THEN FF.STYLEREFNO 
+        ELSE FF.STYLEREF 
+    END STYLEREFNO,
+    GG.BUYERCODE,
+    D.COLORNAME
+FROM GTGINPROD A
+JOIN GTGINPRODDET B 
+    ON A.GTGINPRODID = B.GTGINPRODID
+JOIN GTGINPRODSUBDET CC 
+    ON CC.GTGINPRODID = A.GTGINPRODID
+   AND CC.GTGINPRODDETID = B.GTGINPRODDETID
+JOIN GTCOMPMAST C 
+    ON C.GTCOMPMASTID = A.COMPCODE
+JOIN GTCOLORMAST D 
+    ON D.GTCOLORMASTID = B.COLOR
+JOIN GTPROCESSMAST E 
+    ON E.GTPROCESSMASTID = A.DEPARTMENT
+JOIN GTNORDERENTRY FF 
+    ON FF.ORDERNO = B.ORDERNO
+JOIN GTBUYERMAST GG 
+    ON GG.GTBUYERMASTID = FF.BUYER
+WHERE A.PEDATE BETWEEN TO_DATE(:FROMDATE, 'YYYY-MM-DD') 
+                   AND TO_DATE(:TODATE, 'YYYY-MM-DD')
+  AND C.COMPCODE = :COMPCODE
+`;
+
+    const binds = {
+      FROMDATE: fromDate,
+      TODATE: toDate,
+      COMPCODE: compCode,
+    };
+
+    const result = await connection.execute(sql, binds);
+
+    const resp =
+      result.rows?.map((row) => ({
+        PROCESSNAME: row[0],
+        COMPCODE: row[1],
+        STOREID: row[2],
+        DOCDATE: row[3],
+        QTY: row[4],
+        ORDERNO: row[5],
+        STYLEREFNO: row[6],
+        BUYERCODE: row[7],
+        COLORNAME: row[8],
+      })) || [];
+
+    return res.json({
+      statusCode: 0,
+      data: resp,
+    });
+  } catch (err) {
+    console.error("Error retrieving production data:", err);
+
+    return res.status(500).json({
+      statusCode: 1,
+      error: err.message,
+    });
+  } finally {
+    if (connection) {
+      await connection.close();
+    }
+  }
+}
