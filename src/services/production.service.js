@@ -115,3 +115,58 @@ WHERE A.PEDATE BETWEEN TO_DATE(:FROMDATE, 'YYYY-MM-DD')
     }
   }
 }
+
+export async function getUnit(req, res) {
+  const connection = await getConnection(res);
+
+  try {
+    const { compCode } = req.query;
+
+    const sql = `
+SELECT DISTINCT STOREID
+FROM (SELECT AB.LOCID AS STOREID
+    FROM CTPRODUCTION AA 
+    JOIN CTPRODDET AB 
+        ON AA.CTPRODUCTIONID = AB.CTPRODUCTIONID
+    JOIN GTCOMPMAST DD 
+        ON DD.GTCOMPMASTID = AA.COMPCODE
+    WHERE DD.COMPCODE = :COMPCODE
+      AND AA.RIB = 'NO'
+    UNION
+    SELECT A.LOCID AS STOREID
+    FROM GTGINPROD A
+    JOIN GTCOMPMAST C 
+        ON C.GTCOMPMASTID = A.COMPCODE
+    WHERE C.COMPCODE = :COMPCODE
+      ) X
+ORDER BY STOREID
+`;
+
+    const binds = {
+      COMPCODE: compCode,
+    };
+
+    const result = await connection.execute(sql, binds);
+
+    const resp =
+      result.rows?.map((row) => ({
+        storeName: row[0],
+      })) || [];
+
+    return res.json({
+      statusCode: 0,
+      data: resp,
+    });
+  } catch (err) {
+    console.error("Error retrieving production data:", err);
+
+    return res.status(500).json({
+      statusCode: 1,
+      error: err.message,
+    });
+  } finally {
+    if (connection) {
+      await connection.close();
+    }
+  }
+}

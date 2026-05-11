@@ -9,20 +9,11 @@ import {
 } from "react-icons/fa";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { useGetOrderEntryBuyerWiseStatusTableQuery } from "../../../../redux/service/OrderEntry";
+import { useGetProductionTableQuery } from "../../../../redux/service/production";
 import moment from "moment";
-import {
-  addInsightsRowTurnOver,
-  formatQtyByUOM,
-  getExcelQtyFormatByUOM,
-} from "../../../../utils/hleper";
 
 const RECORDS = 34;
 const fmtDate = (d) => (d ? moment(d).format("DD-MM-YYYY") : "");
-const INR = (v) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
-    v || 0,
-  );
 
 /* ── Pagination ── */
 const Pagination = ({ page, total, setPage }) => (
@@ -65,13 +56,13 @@ const Pagination = ({ page, total, setPage }) => (
 );
 
 /* ── SearchBar ── */
-const SearchBar = ({ keys, state, setState }) => (
-  <div className="flex gap-x-4 mb-3">
+const SearchBar = ({ keys, labels, state, setState }) => (
+  <div className="flex gap-x-3 mb-2 flex-wrap">
     {keys.map((key) => (
       <div key={key} className="relative">
         <input
           type="text"
-          placeholder={`Search ${key}...`}
+          placeholder={`Search ${labels[key] || key}...`}
           value={state[key] || ""}
           onChange={(e) => setState({ ...state, [key]: e.target.value })}
           className="w-full h-6 p-1 pl-8 text-gray-900 text-[11px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
@@ -88,56 +79,70 @@ const TH = ({ children, cls = "" }) => (
 );
 
 /* ── Main ── */
-const OrderEntryBuyerQtyWise = ({
-  finYear,
-  compCode,
-  finYr,
-  closeTable,
-  buyerCode,
-  buyerCodes: buyerCodesProp,
+const ProductionDetailTable = ({
+  companyName,
+  fromDate: initFromDate,
+  toDate: initToDate,
+  processName: initProcessName,
+  storeId: initStoreId,
+  onClose,
 }) => {
-  const [selectedYear, setSelectedYear] = useState(finYear);
-  const [selectedComp, setSelectedComp] = useState(compCode);
-  const [selectedBuyer, setSelectedBuyer] = useState(buyerCode || "ALL");
+  const [fromDate, setFromDate] = useState(initFromDate);
+  const [toDate, setToDate] = useState(initToDate);
+  const [selectedProcess, setSelectedProcess] = useState(
+    initProcessName || "ALL",
+  );
+  const [selectedStore, setSelectedStore] = useState(initStoreId || "ALL");
   const [page, setPage] = useState(1);
 
   const [search, setSearch] = useState({
-    orderNo: "",
-    buyerName: "",
-    bpoNo: "",
-    styleRefNo: "",
+    ORDERNO: "",
+    BUYERNAME: "",
+    STYLEREFNO: "",
+    COLORNAME: "",
   });
 
   const resetPage = () => setPage(1);
-  const resetSearch = () =>
-    setSearch({ orderNo: "", buyerName: "", bpoNo: "", styleRefNo: "" });
 
-  const buyerCodes = buyerCodesProp?.length ? buyerCodesProp : ["ALL"];
-
-  const skip = !selectedYear || !selectedComp;
-
-  /* ── Fetch — INTERNAL ORDER only ── */
+  /* ── Fetch ── */
   const {
-    data: ioRes,
+    data: response,
     isLoading,
     isFetching,
-  } = useGetOrderEntryBuyerWiseStatusTableQuery(
+  } = useGetProductionTableQuery(
     {
       params: {
-        finYear: selectedYear,
-        companyName: selectedComp,
-        buyerCode: selectedBuyer,
+        compCode: companyName,
+        fromDate,
+        toDate,
+        processName: selectedProcess,
+        storeId: selectedStore,
       },
     },
-    { skip },
+    { skip: !companyName || !fromDate || !toDate },
   );
 
   const rawData = useMemo(
-    () => (Array.isArray(ioRes?.data) ? ioRes.data : []),
-    [ioRes],
+    () => (Array.isArray(response?.data) ? response.data : []),
+    [response],
   );
 
-  /* ── Filter ── */
+  /* ── Derived filter options ── */
+  const processOptions = useMemo(() => {
+    const names = [
+      ...new Set(rawData.map((r) => r.PROCESSNAME).filter(Boolean)),
+    ];
+    return ["ALL", ...names];
+  }, [rawData]);
+
+  const storeOptions = useMemo(() => {
+    const stores = [
+      ...new Set(rawData.map((r) => r.STOREID).filter((x) => x?.trim())),
+    ];
+    return ["ALL", ...stores];
+  }, [rawData]);
+
+  /* ── Text filter ── */
   const textMatch = (row, field, val) =>
     !val ||
     String(row[field] ?? "")
@@ -148,21 +153,19 @@ const OrderEntryBuyerQtyWise = ({
     () =>
       rawData.filter(
         (r) =>
-          textMatch(r, "orderNo", search.orderNo) &&
-          textMatch(r, "buyerName", search.buyerName) &&
-          textMatch(r, "bpoNo", search.bpoNo) &&
-          textMatch(r, "styleRefNo", search.styleRefNo),
+          textMatch(r, "ORDERNO", search.ORDERNO) &&
+          textMatch(r, "BUYERNAME", search.BUYERNAME) &&
+          textMatch(r, "STYLEREFNO", search.STYLEREFNO) &&
+          textMatch(r, "COLORNAME", search.COLORNAME),
       ),
     [rawData, search],
   );
 
-  const totals = useMemo(() => {
-    return {
-      orderQty: filtered.reduce((sum, r) => sum + Number(r.orderQty || 0), 0),
-      excessQty: filtered.reduce((sum, r) => sum + Number(r.excessQty || 0), 0),
-      amount: filtered.reduce((sum, r) => sum + Number(r.amount || 0), 0),
-    };
-  }, [filtered]);
+  /* ── Totals ── */
+  const totalQty = useMemo(
+    () => filtered.reduce((sum, r) => sum + Number(r.QTY || 0), 0),
+    [filtered],
+  );
 
   /* ── Pagination ── */
   const totalPages = Math.ceil(filtered.length / RECORDS) || 1;
@@ -183,54 +186,55 @@ const OrderEntryBuyerQtyWise = ({
     </tr>
   );
 
-  /* ── Excel ── */
+  /* ── Excel Export ── */
   const handleExport = async () => {
     if (!filtered.length) {
-      alert("No data");
+      alert("No data to export");
       return;
     }
 
     const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet("Order Entry Status");
+    const ws = wb.addWorksheet("Production Detail");
 
     const columns = [
       { header: "S.No", key: "sno", width: 6 },
-      { header: "Order No", key: "orderNo", width: 28 },
-      { header: "Order Date", key: "orderDate", width: 14 },
-      { header: "Buyer Name", key: "buyerName", width: 32 },
-      { header: "BPO No", key: "bpoNo", width: 36 },
-      { header: "Style Ref No", key: "styleRefNo", width: 18 },
-      { header: "Pack Type", key: "orderPackType", width: 18 },
-      { header: "Order Qty", key: "orderQty", width: 18 },
-      { header: "Excess Qty", key: "excessQty", width: 18 },
-      { header: "Amount", key: "amount", width: 18 },
+      { header: "Process", key: "PROCESSNAME", width: 20 },
+      { header: "Store ID", key: "STOREID", width: 14 },
+      { header: "Doc Date", key: "DOCDATE", width: 14 },
+      { header: "Order No", key: "ORDERNO", width: 28 },
+      { header: "Style Ref No", key: "STYLEREFNO", width: 20 },
+      { header: "Buyer Code", key: "BUYERCODE", width: 16 },
+      { header: "Buyer Name", key: "BUYERNAME", width: 32 },
+      { header: "Color", key: "COLORNAME", width: 20 },
+      { header: "Qty", key: "QTY", width: 14 },
     ];
 
     ws.columns = columns;
     const mergeEnd = String.fromCharCode(64 + columns.length);
 
-    // Row 1: Title
-    ws.insertRow(1, [`Order Entry Buyer Wise Quantity`]);
+    // Title row
+    ws.insertRow(1, [
+      `Production Detail — ${selectedProcess} | ${companyName}`,
+    ]);
     ws.mergeCells(`A1:${mergeEnd}1`);
     const tc = ws.getCell("A1");
-    tc.font = { bold: true, size: 14, color: { argb: "FF000000" } };
+    tc.font = { bold: true, size: 13, color: { argb: "FF000000" } };
     tc.alignment = { horizontal: "center", vertical: "middle" };
-    ws.getRow(1).height = 30;
+    ws.getRow(1).height = 28;
 
-    // Row 2: Insights
-    addInsightsRowTurnOver({
-      worksheet: ws,
-      startRow: 2,
-      totalColumns: 4,
-      selectedYear,
-      localCompany: selectedComp,
-      dynamicField: "Buyer Code",
-      dynamicValue: selectedBuyer,
-    });
+    // Insights row
+    ws.insertRow(2, [
+      `Company: ${companyName}   Process: ${selectedProcess}   Store: ${selectedStore}   From: ${fmtDate(fromDate)}   To: ${fmtDate(toDate)}`,
+    ]);
+    ws.mergeCells(`A2:${mergeEnd}2`);
+    const ic = ws.getCell("A2");
+    ic.font = { size: 10, italic: true };
+    ic.alignment = { horizontal: "left", vertical: "middle" };
+    ws.getRow(2).height = 20;
 
-    // Row 3: Headers
+    // Header row styling
     const hr = ws.getRow(3);
-    hr.height = 26;
+    hr.height = 24;
     hr.eachCell((cell) => {
       cell.font = { bold: true };
       cell.alignment = { horizontal: "center", vertical: "middle" };
@@ -251,69 +255,59 @@ const OrderEntryBuyerQtyWise = ({
     filtered.forEach((r, i) => {
       ws.addRow({
         sno: i + 1,
-        orderNo: r.orderNo,
-        orderDate: fmtDate(r.orderDate),
-        buyerName: r.buyerName,
-        bpoNo: r.bpoNo,
-        styleRefNo: r.styleRefNo,
-        orderPackType: r.orderPackType,
-        orderQty: Number(r.orderQty || 0),
-        excessQty: Number(r.excessQty || 0),
-        amount: Number(r.amount || 0),
+        PROCESSNAME: r.PROCESSNAME,
+        STOREID: r.STOREID,
+        DOCDATE: fmtDate(r.DOCDATE),
+        ORDERNO: r.ORDERNO,
+        STYLEREFNO: r.STYLEREFNO,
+        BUYERCODE: r.BUYERCODE,
+        BUYERNAME: r.BUYERNAME,
+        COLORNAME: r.COLORNAME,
+        QTY: Number(r.QTY || 0),
       });
     });
 
     // Style data rows
     ws.eachRow((row, rn) => {
       if (rn <= 3) return;
-      const rowData = filtered[rn - 4];
-      row.height = 22;
+      row.height = 20;
       row.eachCell((cell, cn) => {
         const key = columns[cn - 1]?.key;
         cell.alignment = {
           horizontal:
-            key === "sno"
-              ? "center"
-              : ["orderQty", "excessQty", "amount"].includes(key)
-                ? "right"
-                : "left",
+            key === "sno" ? "center" : key === "QTY" ? "right" : "left",
           vertical: "middle",
           indent: 1,
         };
-        if (["orderQty", "excessQty"].includes(key))
-          cell.numFmt = getExcelQtyFormatByUOM(rowData?.orderPackType || "");
-        if (key === "amount") cell.numFmt = "#,##0.00";
+        if (key === "QTY") cell.numFmt = "#,##0";
       });
     });
 
     // Totals row
     const tr = ws.addRow({
       sno: "",
-      orderNo: "",
-      orderDate: "",
-      buyerName: "",
-      bpoNo: "TOTAL",
-      styleRefNo: "",
-      orderPackType: "",
-      orderQty: totals.orderQty,
-      excessQty: totals.excessQty,
-      amount: totals.amount,
+      PROCESSNAME: "",
+      STOREID: "",
+      DOCDATE: "",
+      ORDERNO: "",
+      STYLEREFNO: "",
+      BUYERCODE: "",
+      BUYERNAME: "TOTAL",
+      COLORNAME: "",
+      QTY: totalQty,
     });
-    tr.height = 24;
+    tr.height = 22;
     tr.eachCell((cell, cn) => {
       const key = columns[cn - 1]?.key;
       cell.font = { bold: true };
       cell.border = { top: { style: "thin" } };
       cell.alignment = {
-        horizontal: ["orderQty", "excessQty", "amount"].includes(key)
-          ? "right"
-          : "center",
+        horizontal:
+          key === "QTY" ? "right" : key === "BUYERNAME" ? "right" : "left",
         vertical: "middle",
         indent: 1,
       };
-      if (["orderQty", "excessQty"].includes(key))
-        cell.numFmt = getExcelQtyFormatByUOM("");
-      if (key === "amount") cell.numFmt = "#,##0.00";
+      if (key === "QTY") cell.numFmt = "#,##0";
     });
 
     ws.views = [{ state: "frozen", ySplit: 3 }];
@@ -322,7 +316,7 @@ const OrderEntryBuyerQtyWise = ({
       new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }),
-      `OrderEntry_BuyerWise_${selectedBuyer}_${selectedYear}.xlsx`,
+      `Production_${selectedProcess}_${companyName}_${fromDate}_${toDate}.xlsx`,
     );
   };
 
@@ -332,55 +326,79 @@ const OrderEntryBuyerQtyWise = ({
       <div className="bg-white w-[1360px] h-[630px] p-4 rounded-xl relative">
         {/* HEADER */}
         <div className="flex justify-between items-center">
-          <h2 className="font-bold uppercase">
-            Order Entry Buyer Wise Quantity –{" "}
-            <span className="text-blue-600">{selectedComp}</span>
+          <h2 className="font-bold uppercase text-sm">
+            Production Detail —{" "}
+            <span className="text-blue-600">{selectedProcess}</span>{" "}
+            <span className="text-gray-400 font-normal">|</span>{" "}
+            <span className="text-green-700">{companyName}</span>
           </h2>
+
           <div className="flex gap-2 items-center">
-            <div className="bg-gray-300 rounded-lg shadow-2xl flex gap-x-2 gap-1 p-2 flex-wrap items-center">
-              {/* Year */}
-              <select
-                value={selectedYear}
+            <div className="bg-gray-100 rounded-lg shadow flex gap-x-2 p-2 flex-wrap items-center">
+              {/* FROM DATE */}
+              <input
+                type="date"
+                value={fromDate}
+                max={toDate}
                 onChange={(e) => {
-                  setSelectedYear(e.target.value);
+                  setFromDate(e.target.value);
                   resetPage();
                 }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
+                style={{
+                  fontSize: "11px",
+                  padding: "3px 8px",
+                  borderRadius: "6px",
+                  border: "2px solid #2563eb",
+                }}
+              />
+
+              {/* TO DATE */}
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate}
+                onChange={(e) => {
+                  if (new Date(e.target.value) >= new Date(fromDate)) {
+                    setToDate(e.target.value);
+                    resetPage();
+                  }
+                }}
+                style={{
+                  fontSize: "11px",
+                  padding: "3px 8px",
+                  borderRadius: "6px",
+                  border: "2px solid #2563eb",
+                }}
+              />
+
+              {/* PROCESS */}
+              <select
+                value={selectedProcess}
+                onChange={(e) => {
+                  setSelectedProcess(e.target.value);
+                  resetPage();
+                }}
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-32"
               >
-                <option value="" disabled>
-                  Select Year
-                </option>
-                {(finYr?.data || []).map((item) => (
-                  <option key={item.finYear} value={item.finYear}>
-                    {item.finYear}
+                {processOptions.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
                   </option>
                 ))}
               </select>
 
-              {/* Company */}
+              {/* STORE */}
               <select
-                value={selectedComp}
+                value={selectedStore}
                 onChange={(e) => {
-                  setSelectedComp(e.target.value);
+                  setSelectedStore(e.target.value);
                   resetPage();
                 }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-32"
               >
-                <option value="JKC">JKC</option>
-              </select>
-
-              {/* Buyer */}
-              <select
-                value={selectedBuyer}
-                onChange={(e) => {
-                  setSelectedBuyer(e.target.value);
-                  resetPage();
-                }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-28"
-              >
-                {buyerCodes.map((code) => (
-                  <option key={code} value={code}>
-                    {code}
+                {storeOptions.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
                   </option>
                 ))}
               </select>
@@ -398,40 +416,43 @@ const OrderEntryBuyerQtyWise = ({
                 />
               </button>
             </div>
-            <button className="text-red-600" onClick={closeTable}>
+
+            <button className="text-red-600" onClick={onClose}>
               <FaTimes size={18} />
             </button>
           </div>
         </div>
 
         {/* RECORD COUNT & TOTALS */}
-        <div className="flex gap-6 mt-0.5">
+        <div className="flex gap-6 mt-1">
           <p className="text-xs font-semibold text-gray-600">
             Total Records:{" "}
             <span className="text-blue-600">{filtered.length}</span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
-            Total Order Qty:{" "}
+            Total Qty:{" "}
             <span className="text-green-600">
-              {Number(totals.orderQty).toLocaleString("en-IN")}
+              {Number(totalQty).toLocaleString("en-IN")}
             </span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
-            Total Excess Qty:{" "}
-            <span className="text-red-600">
-              {Number(totals.excessQty).toLocaleString("en-IN")}
+            Period:{" "}
+            <span className="text-purple-600">
+              {fmtDate(fromDate)} → {fmtDate(toDate)}
             </span>
-          </p>
-          <p className="text-xs font-semibold text-gray-600">
-            Total Amount:{" "}
-            <span className="text-purple-600">{INR(totals.amount)}</span>
           </p>
         </div>
 
         {/* SEARCH */}
-        <div className="flex justify-between items-start mt-2">
+        <div className="mt-2">
           <SearchBar
-            keys={["orderNo", "buyerName", "bpoNo", "styleRefNo"]}
+            keys={["ORDERNO", "BUYERNAME", "STYLEREFNO", "COLORNAME"]}
+            labels={{
+              ORDERNO: "Order No",
+              BUYERNAME: "Buyer Name",
+              STYLEREFNO: "Style Ref",
+              COLORNAME: "Color",
+            }}
             state={search}
             setState={(val) => {
               setSearch(val);
@@ -440,28 +461,24 @@ const OrderEntryBuyerQtyWise = ({
           />
         </div>
 
-        {/* TABLE — INTERNAL ORDER only */}
+        {/* TABLE */}
         <div
           className="overflow-x-auto border border-gray-300"
-          style={{
-            height: "470px",
-            border: "1px solid gray",
-            borderRadius: "16px",
-          }}
+          style={{ height: "455px", borderRadius: "12px" }}
         >
-          <table className="w-[1520px] border-collapse text-[11px] table-fixed">
+          <table className="w-full border-collapse text-[11px] table-fixed">
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
-                <TH cls="w-8">S.No</TH>
-                <TH cls="w-32">Order No</TH>
-                <TH cls="w-20">Order Date</TH>
-                <TH cls="w-44">Buyer Name</TH>
-                <TH cls="w-44">BPO No</TH>
+                <TH cls="w-6">S.No</TH>
+                <TH cls="w-24">Process</TH>
+                <TH cls="w-40">Store ID</TH>
+                <TH cls="w-20">Doc Date</TH>
+                <TH cls="w-36">Order No</TH>
                 <TH cls="w-28">Style Ref No</TH>
-                <TH cls="w-20">Pack Type</TH>
-                <TH cls="w-20">Order Qty</TH>
-                <TH cls="w-20">Excess Qty</TH>
-                <TH cls="w-24">Amount</TH>
+
+                <TH cls="w-44">Buyer Name</TH>
+                <TH cls="w-24">Color</TH>
+                <TH cls="w-16">Qty</TH>
               </tr>
             </thead>
             <tbody>
@@ -473,29 +490,23 @@ const OrderEntryBuyerQtyWise = ({
                 currentRows.map((row, i) => (
                   <tr
                     key={i}
-                    className="text-gray-800 bg-white even:bg-gray-100 hover:bg-blue-50 transition-colors"
+                    className="text-gray-800 bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors"
                   >
                     <td className="border p-1 text-center text-gray-500">
                       {(page - 1) * RECORDS + i + 1}
                     </td>
-                    <td className="border p-1 pl-2">{row.orderNo}</td>
-                    <td className="border p-1 pl-1">
-                      {fmtDate(row.orderDate)}
+                    <td className="border p-1 pl-2 font-medium text-indigo-700">
+                      {row.PROCESSNAME}
                     </td>
-                    <td className="border p-1 pl-2">{row.buyerName}</td>
-                    <td className="border p-1 pl-2">{row.bpoNo}</td>
-                    <td className="border p-1 pl-2">{row.styleRefNo}</td>
-                    <td className="border p-1 text-left pl-2">
-                      {row.orderPackType}
-                    </td>
-                    <td className="border p-1 pr-2 text-right">
-                      {formatQtyByUOM(row.orderQty, row.orderPackType)}
-                    </td>
-                    <td className="border p-1 pr-2 text-right">
-                      {formatQtyByUOM(row.excessQty, row.orderPackType)}
-                    </td>
-                    <td className="border p-1 pr-2 text-right text-sky-700">
-                      {INR(row.amount)}
+                    <td className="border p-1 pl-2">{row.STOREID}</td>
+                    <td className="border p-1 pl-1">{fmtDate(row.DOCDATE)}</td>
+                    <td className="border p-1 pl-2">{row.ORDERNO}</td>
+                    <td className="border p-1 pl-2">{row.STYLEREFNO}</td>
+
+                    <td className="border p-1 pl-2">{row.BUYERNAME}</td>
+                    <td className="border p-1 pl-2">{row.COLORNAME}</td>
+                    <td className="border p-1 pr-2 text-right font-semibold text-green-700">
+                      {Number(row.QTY || 0).toLocaleString("en-IN")}
                     </td>
                   </tr>
                 ))
@@ -511,4 +522,4 @@ const OrderEntryBuyerQtyWise = ({
   );
 };
 
-export default OrderEntryBuyerQtyWise;
+export default ProductionDetailTable;
