@@ -59,8 +59,8 @@ const ProductionIndex = ({
 
   /* ---------------- PREPARE CHART DATA ---------------- */
   const chartData = useMemo(() => {
-    // return responseData?.filter((item) => item.compCode !== "PSS");
-    return responseData;
+    return responseData?.filter((item) => item.compCode !== "PSS");
+    // return responseData;
     // return responseData;
     // ?.sort((a, b) => a?.compCode?.localeCompare(b.compCode));
   }, [responseData]);
