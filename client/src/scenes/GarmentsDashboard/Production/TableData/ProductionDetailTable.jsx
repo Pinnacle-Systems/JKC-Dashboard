@@ -350,6 +350,7 @@ const ProductionDetailTable = ({
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
               >
                 <option value="JKC">JKC</option>
+                <option value="PSS">PSS</option>
               </select>
               {/* FROM DATE */}
               <input
