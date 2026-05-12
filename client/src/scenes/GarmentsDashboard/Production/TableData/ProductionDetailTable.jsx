@@ -11,7 +11,11 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { useGetProductionTableQuery } from "../../../../redux/service/production";
 import moment from "moment";
-
+import {
+  addInsightsRowTurnOver,
+  formatQtyByUOM,
+  getExcelQtyFormatByUOM,
+} from "../../../../utils/hleper";
 const RECORDS = 34;
 const fmtDate = (d) => (d ? moment(d).format("DD-MM-YYYY") : "");
 
@@ -94,6 +98,7 @@ const ProductionDetailTable = ({
   );
   const [selectedStore, setSelectedStore] = useState(initStoreId || "ALL");
   const [page, setPage] = useState(1);
+  const [selectedComp, setSelectedComp] = useState(companyName);
 
   const [search, setSearch] = useState({
     ORDERNO: "",
@@ -112,14 +117,14 @@ const ProductionDetailTable = ({
   } = useGetProductionTableQuery(
     {
       params: {
-        compCode: companyName,
+        compCode: selectedComp,
         fromDate,
         toDate,
         processName: selectedProcess,
         storeId: selectedStore,
       },
     },
-    { skip: !companyName || !fromDate || !toDate },
+    { skip: !selectedComp || !fromDate || !toDate },
   );
 
   const rawData = useMemo(
@@ -198,41 +203,45 @@ const ProductionDetailTable = ({
 
     const columns = [
       { header: "S.No", key: "sno", width: 6 },
-      { header: "Process", key: "PROCESSNAME", width: 20 },
-      { header: "Store ID", key: "STOREID", width: 14 },
-      { header: "Doc Date", key: "DOCDATE", width: 14 },
-      { header: "Order No", key: "ORDERNO", width: 28 },
-      { header: "Style Ref No", key: "STYLEREFNO", width: 20 },
-      { header: "Buyer Code", key: "BUYERCODE", width: 16 },
-      { header: "Buyer Name", key: "BUYERNAME", width: 32 },
-      { header: "Color", key: "COLORNAME", width: 20 },
-      { header: "Qty", key: "QTY", width: 14 },
+      { header: "Process", key: "PROCESSNAME", width: 25 },
+      { header: "Store ID", key: "STOREID", width: 45 },
+      { header: "Doc Date", key: "DOCDATE", width: 16 },
+      { header: "Order No", key: "ORDERNO", width: 32 },
+      { header: "Style Ref No", key: "STYLEREFNO", width: 22 },
+      { header: "Buyer Name", key: "BUYERNAME", width: 40 },
+      { header: "Color", key: "COLORNAME", width: 40 },
+      { header: "Qty", key: "QTY", width: 16 },
     ];
 
     ws.columns = columns;
-    const mergeEnd = String.fromCharCode(64 + columns.length);
+    const mergeEnd = String.fromCharCode(64 + columns.length); // "I" (9 cols)
 
-    // Title row
-    ws.insertRow(1, [
-      `Production Detail — ${selectedProcess} | ${companyName}`,
-    ]);
+    // Row 1 — Title
+    ws.insertRow(1, ["Production Detail"]);
     ws.mergeCells(`A1:${mergeEnd}1`);
     const tc = ws.getCell("A1");
     tc.font = { bold: true, size: 13, color: { argb: "FF000000" } };
     tc.alignment = { horizontal: "center", vertical: "middle" };
     ws.getRow(1).height = 28;
 
-    // Insights row
-    ws.insertRow(2, [
-      `Company: ${companyName}   Process: ${selectedProcess}   Store: ${selectedStore}   From: ${fmtDate(fromDate)}   To: ${fmtDate(toDate)}`,
-    ]);
-    ws.mergeCells(`A2:${mergeEnd}2`);
-    const ic = ws.getCell("A2");
-    ic.font = { size: 10, italic: true };
-    ic.alignment = { horizontal: "left", vertical: "middle" };
-    ws.getRow(2).height = 20;
+    // Row 2 — Insights
+    addInsightsRowTurnOver({
+      worksheet: ws,
+      startRow: 2,
+      totalColumns: columns.length,
+      localCompany: selectedComp,
+      disableFinYear: true,
+      dynamicField: "From Date",
+      dynamicValue: fmtDate(fromDate),
+      secondDynamicField: "To Date",
+      seconddynamicValue: fmtDate(toDate),
+      thirdDynamicField: "Process",
+      thirdDynamicValue: selectedProcess,
+      fourthDynamicField: "Unit",
+      fourthDynamicValue: selectedStore,
+    });
 
-    // Header row styling
+    // Row 3 — Header styling
     const hr = ws.getRow(3);
     hr.height = 24;
     hr.eachCell((cell) => {
@@ -260,7 +269,6 @@ const ProductionDetailTable = ({
         DOCDATE: fmtDate(r.DOCDATE),
         ORDERNO: r.ORDERNO,
         STYLEREFNO: r.STYLEREFNO,
-        BUYERCODE: r.BUYERCODE,
         BUYERNAME: r.BUYERNAME,
         COLORNAME: r.COLORNAME,
         QTY: Number(r.QTY || 0),
@@ -291,7 +299,6 @@ const ProductionDetailTable = ({
       DOCDATE: "",
       ORDERNO: "",
       STYLEREFNO: "",
-      BUYERCODE: "",
       BUYERNAME: "TOTAL",
       COLORNAME: "",
       QTY: totalQty,
@@ -303,7 +310,7 @@ const ProductionDetailTable = ({
       cell.border = { top: { style: "thin" } };
       cell.alignment = {
         horizontal:
-          key === "QTY" ? "right" : key === "BUYERNAME" ? "right" : "left",
+          key === "QTY" ? "right" : key === "BUYERNAME" ? "left" : "left",
         vertical: "middle",
         indent: 1,
       };
@@ -311,12 +318,13 @@ const ProductionDetailTable = ({
     });
 
     ws.views = [{ state: "frozen", ySplit: 3 }];
+
     const buf = await wb.xlsx.writeBuffer();
     saveAs(
       new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }),
-      `Production_${selectedProcess}_${companyName}_${fromDate}_${toDate}.xlsx`,
+      `Production_${selectedProcess}_${selectedComp}_${fromDate}_${toDate}.xlsx`,
     );
   };
 
@@ -328,13 +336,21 @@ const ProductionDetailTable = ({
         <div className="flex justify-between items-center">
           <h2 className="font-bold uppercase text-sm">
             Production Detail —{" "}
-            <span className="text-blue-600">{selectedProcess}</span>{" "}
-            <span className="text-gray-400 font-normal">|</span>{" "}
             <span className="text-green-700">{companyName}</span>
           </h2>
 
           <div className="flex gap-2 items-center">
-            <div className="bg-gray-100 rounded-lg shadow flex gap-x-2 p-2 flex-wrap items-center">
+            <div className="bg-gray-300 rounded-lg shadow flex gap-x-2 p-2 flex-wrap items-center">
+              <select
+                value={selectedComp}
+                onChange={(e) => {
+                  setSelectedComp(e.target.value);
+                  resetPage();
+                }}
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
+              >
+                <option value="JKC">JKC</option>
+              </select>
               {/* FROM DATE */}
               <input
                 type="date"
@@ -346,7 +362,7 @@ const ProductionDetailTable = ({
                 }}
                 style={{
                   fontSize: "11px",
-                  padding: "3px 8px",
+                  padding: "0px 6px",
                   borderRadius: "6px",
                   border: "2px solid #2563eb",
                 }}
@@ -365,7 +381,7 @@ const ProductionDetailTable = ({
                 }}
                 style={{
                   fontSize: "11px",
-                  padding: "3px 8px",
+                  padding: "0px 6px",
                   borderRadius: "6px",
                   border: "2px solid #2563eb",
                 }}
@@ -378,7 +394,7 @@ const ProductionDetailTable = ({
                   setSelectedProcess(e.target.value);
                   resetPage();
                 }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-32"
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-36"
               >
                 {processOptions.map((p) => (
                   <option key={p} value={p}>
@@ -394,7 +410,7 @@ const ProductionDetailTable = ({
                   setSelectedStore(e.target.value);
                   resetPage();
                 }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-32"
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-60"
               >
                 {storeOptions.map((s) => (
                   <option key={s} value={s}>
@@ -435,12 +451,6 @@ const ProductionDetailTable = ({
               {Number(totalQty).toLocaleString("en-IN")}
             </span>
           </p>
-          <p className="text-xs font-semibold text-gray-600">
-            Period:{" "}
-            <span className="text-purple-600">
-              {fmtDate(fromDate)} → {fmtDate(toDate)}
-            </span>
-          </p>
         </div>
 
         {/* SEARCH */}
@@ -466,26 +476,26 @@ const ProductionDetailTable = ({
           className="overflow-x-auto border border-gray-300"
           style={{ height: "455px", borderRadius: "12px" }}
         >
-          <table className="w-full border-collapse text-[11px] table-fixed">
+          <table className="w-[1500px] overflow-y-auto border-collapse text-[11px] table-fixed">
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-6">S.No</TH>
                 <TH cls="w-24">Process</TH>
-                <TH cls="w-40">Store ID</TH>
+                <TH cls="w-60">Store ID</TH>
                 <TH cls="w-20">Doc Date</TH>
-                <TH cls="w-36">Order No</TH>
+                <TH cls="w-32">Order No</TH>
+                <TH cls="w-44">Buyer Name</TH>
                 <TH cls="w-28">Style Ref No</TH>
 
-                <TH cls="w-44">Buyer Name</TH>
-                <TH cls="w-24">Color</TH>
+                <TH cls="w-44">Color</TH>
                 <TH cls="w-16">Qty</TH>
               </tr>
             </thead>
             <tbody>
               {isLoading || isFetching ? (
-                <LoadingRow cols={10} />
+                <LoadingRow cols={9} />
               ) : currentRows.length === 0 ? (
-                <EmptyRow cols={10} />
+                <EmptyRow cols={9} />
               ) : (
                 currentRows.map((row, i) => (
                   <tr
@@ -501,9 +511,9 @@ const ProductionDetailTable = ({
                     <td className="border p-1 pl-2">{row.STOREID}</td>
                     <td className="border p-1 pl-1">{fmtDate(row.DOCDATE)}</td>
                     <td className="border p-1 pl-2">{row.ORDERNO}</td>
+                    <td className="border p-1 pl-2">{row.BUYERNAME}</td>
                     <td className="border p-1 pl-2">{row.STYLEREFNO}</td>
 
-                    <td className="border p-1 pl-2">{row.BUYERNAME}</td>
                     <td className="border p-1 pl-2">{row.COLORNAME}</td>
                     <td className="border p-1 pr-2 text-right font-semibold text-green-700">
                       {Number(row.QTY || 0).toLocaleString("en-IN")}
