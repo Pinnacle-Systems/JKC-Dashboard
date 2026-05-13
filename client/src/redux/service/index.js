@@ -14,3 +14,4 @@ export { default as purchase } from "./purchaseService.js";
 export { default as purchaseTable } from "./purchaseServiceTable.js";
 export { default as OrderEntry } from "./OrderEntry.js";
 export { default as production } from "./production.js";
+export { default as fabric } from "./fabric.js";

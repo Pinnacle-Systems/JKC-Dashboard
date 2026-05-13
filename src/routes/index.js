@@ -13,3 +13,4 @@ export { default as purchaseOrder } from "./purchaseOrder.js";
 export { default as purchase } from "./purchase.route.js";
 export { default as orderEntry } from "./orderEntry.route.js";
 export { default as production } from "./production.route.js";
+export { default as fabric } from "./fabric.route.js";
