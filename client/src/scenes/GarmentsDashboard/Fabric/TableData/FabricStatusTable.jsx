@@ -546,9 +546,9 @@ const FabricStatusTable = ({
             </thead>
             <tbody>
               {isLoading || isFetching ? (
-                <LoadingRow cols={14} />
+                <LoadingRow cols={13} />
               ) : currentRows.length === 0 ? (
-                <EmptyRow cols={14} />
+                <EmptyRow cols={13} />
               ) : (
                 <>
                   {currentRows.map((row, i) => (
