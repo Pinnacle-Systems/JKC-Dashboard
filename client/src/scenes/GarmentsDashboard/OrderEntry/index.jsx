@@ -154,81 +154,81 @@ const OrderEntryIndex = ({
   //   legend: { enabled: false },
   //   credits: { enabled: false },
   // };
-const options = {
-  chart: {
-    type: "pie",
-    height: 288,
-  },
- colors: [ "#22c55e", "#ef4444", "#f59e0b", "#8b5cf6"],
-  title: {
-    text: null,
-  },
-
-  tooltip: {
-    pointFormatter() {
-      return `<br/>Order Entry:  ${this.y.toLocaleString("en-IN")}`;
+  const options = {
+    chart: {
+      type: "pie",
+      height: 288,
     },
-  },
+    colors: ["#22c55e", "#ef4444", "#f59e0b", "#8b5cf6"],
+    title: {
+      text: null,
+    },
 
-  plotOptions: {
-    pie: {
-      innerSize: "60%", // 🔥 makes it donut
-      borderRadius: 6,
-      cursor: "pointer",
-      dataLabels: {
-        enabled: true,
-        formatter() {
-          return `${this.point.name}: ${this.y}`;
-        },
-        style: { fontSize: "10px" },
+    tooltip: {
+      pointFormatter() {
+        return `<br/>Orders:  ${this.y.toLocaleString("en-IN")}`;
       },
-      point: {
-        events: {
-          click() {
-            const companyName = this.name;
+    },
 
-            dispatch(setFilterBuyer(companyName));
-            dispatch(
-              push({
-                id: `OrderEntry`,
-                name: "OrderEntry",
-                component: "OrderEntryHome",
-                data: {
-                  companyName,
-                  selectedYear,
-                  filterBuyer,
-                  user,
-                  selectMonths,
-                  filterBuyerList,
-                  finYr,
-                  poType,
-                },
-              }),
-            );
+    plotOptions: {
+      pie: {
+        innerSize: "60%", // 🔥 makes it donut
+        borderRadius: 6,
+        cursor: "pointer",
+        dataLabels: {
+          enabled: true,
+          formatter() {
+            return `${this.point.name}: ${this.y}`;
+          },
+          style: { fontSize: "10px" },
+        },
+        point: {
+          events: {
+            click() {
+              const companyName = this.name;
+
+              dispatch(setFilterBuyer(companyName));
+              dispatch(
+                push({
+                  id: `OrderEntry`,
+                  name: "OrderEntry",
+                  component: "OrderEntryHome",
+                  data: {
+                    companyName,
+                    selectedYear,
+                    filterBuyer,
+                    user,
+                    selectMonths,
+                    filterBuyerList,
+                    finYr,
+                    poType,
+                  },
+                }),
+              );
+            },
           },
         },
       },
     },
-  },
 
-  series: [
-    {
-      name: "Order Entry",
-      data: chartData.map((x) => ({
-        name: x.compCode,
-        y: Number(x.completed || 0),
-      })),
+    series: [
+      {
+        name: "Order Entry",
+        data: chartData.map((x) => ({
+          name: x.compCode,
+          y: Number(x.completed || 0),
+        })),
+      },
+    ],
+
+    legend: {
+      enabled: true,
+      align: "center",
+      verticalAlign: "bottom",
     },
-  ],
 
-  legend: {
-    enabled: true,
-    align: "center",
-    verticalAlign: "bottom",
-  },
-
-  credits: { enabled: false },
-};
+    credits: { enabled: false },
+  };
   /* ---------------- RENDER ---------------- */
   if (isLoading) {
     return (

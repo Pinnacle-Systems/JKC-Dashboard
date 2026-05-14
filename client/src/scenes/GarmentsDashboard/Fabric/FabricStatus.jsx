@@ -117,6 +117,10 @@ const FabricStatus = ({ companyName, finYear, finYr }) => {
   const onChartEvents = {
     click: (params) => {
       if (params.componentType !== "series") return;
+
+      // ALLOW CLICK ONLY WHEN VALUE > 0
+      if (!params.value || Number(params.value) <= 0) return;
+
       const clickedBuyer = paginatedData[params.dataIndex];
 
       // Map series name → status param
@@ -128,7 +132,7 @@ const FabricStatus = ({ companyName, finYear, finYr }) => {
       setTableParams({
         buyer: clickedBuyer.buyerName,
         buyerName: clickedBuyer.buyerName,
-        initialStatus: statusMap[params.seriesName] || "ALL", // ← NEW
+        initialStatus: statusMap[params.seriesName] || "ALL",
       });
     },
   };

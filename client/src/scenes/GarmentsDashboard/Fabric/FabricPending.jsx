@@ -104,9 +104,9 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
       if (params.componentType !== "series") return;
       const clickedItem = paginatedData[params.dataIndex];
       setTableParams({
-        typeName: clickedItem.typeName, // ← TYPENAME from pie slice
-        buyerName: clickedItem.buyerName,
-        buyerCode: clickedItem.buyerCode,
+        typeName: clickedItem?.typeName, // ← TYPENAME from pie slice
+        buyerName: clickedItem?.buyerName,
+        buyerCode: clickedItem?.buyerCode,
       });
     },
   };

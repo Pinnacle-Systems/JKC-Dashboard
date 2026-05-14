@@ -13,8 +13,11 @@ import { useGetFabricStatusTableQuery } from "../../../../redux/service/fabric";
 import { addInsightsRowTurnOver } from "../../../../utils/hleper";
 
 const RECORDS = 34;
-const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
-
+const fmt = (n) =>
+  Number(n || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  });
 const STATUS_OPTIONS = ["ALL", "INHOUSE", "INPROGRESS"];
 
 /* ── Pagination ── */
@@ -233,8 +236,8 @@ const FabricStatusTable = ({
       // { header: "Buyer Code", key: "BUYERCODE", width: 14 },
       { header: "Order No", key: "ORDERNO", width: 30 },
       { header: "Buyer PO No", key: "BUYERPONO", width: 44 },
-      { header: "Style", key: "STYLE", width: 28 },
-      { header: "Order Qty", key: "ORDERQTY", width: 14 },
+      { header: "Style", key: "STYLE", width: 32 },
+      { header: "Order Qty", key: "ORDERQTY", width: 18 },
       { header: "Yarn PO Qty", key: "YPOQTY", width: 14 },
       { header: "Yarn Inhouse Qty", key: "YARNQTY", width: 20 },
       { header: "Knitting Inhouse Qty", key: "KNITRECQTY", width: 28 },
@@ -329,8 +332,7 @@ const FabricStatusTable = ({
           vertical: "middle",
           indent: 1,
         };
-        if (isQty) cell.numFmt = "#,##0";
-        // Color Fabric Inhouse Bal Qty (INBAL) red if > 0
+        if (isQty) cell.numFmt = "#,##0.000"; // Color Fabric Inhouse Bal Qty (INBAL) red if > 0
         if (key === "INBAL") {
           cell.font = { color: { argb: "FFDC2626" } };
         }
@@ -381,7 +383,7 @@ const FabricStatusTable = ({
         vertical: "middle",
         indent: 1,
       };
-      if (qtyKeys.includes(key)) cell.numFmt = "#,##0";
+      if (qtyKeys.includes(key)) cell.numFmt = "#,##0.000";
     });
 
     ws.views = [{ state: "frozen", ySplit: 3 }];
