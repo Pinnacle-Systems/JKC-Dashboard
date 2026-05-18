@@ -18,12 +18,13 @@ export async function initPool() {
       password: dbConfig.password,
       connectString: dbConfig.connectString,
 
-      // 🔥 pool tuning (important)
+      // 🔥 pool tuning
       poolMin: 5,
-      poolMax: 13,
-      poolIncrement: 5,
+      poolMax: 25,        // ⬆ was 13 — allows more concurrent queries
+      poolIncrement: 2,   // grow gradually instead of large jumps
       poolTimeout: 180,
-      queueTimeout: 120000,
+      queueTimeout: 30000,  // fail faster (30s) instead of silently queuing for 2min
+      queueMax: 500,        // cap the wait queue to avoid unbounded memory growth
     });
 
     console.log("✅ Oracle Pool Created Successfully");

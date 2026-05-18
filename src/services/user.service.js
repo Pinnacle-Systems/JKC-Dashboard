@@ -214,6 +214,8 @@ export async function getfname(req, res) {
   } catch (err) {
     // console.log(err)
     res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    if (connection) await connection.close();
   }
 }
 
@@ -389,7 +391,7 @@ export async function remove(req, res, next) {
 }
 
 export async function get_Usedetails(req, res) {
-  const connection = await getConnection(res);
+  // NOTE: This function uses only Prisma — no Oracle connection needed
   const { userId } = req.query;
 
   if (!userId || userId === "false") {
@@ -417,15 +419,12 @@ export async function get_Usedetails(req, res) {
     } catch (error) {
       console.error("Error retrieving data:", error);
       res.status(500).json({ error: "Internal Server Error" });
-    } finally {
-      await connection.close();
     }
   }
 }
 
 export async function get_UserOne(req, res) {
-  const connection = await getConnection(res);
-
+  // NOTE: This function uses only Prisma — no Oracle connection needed
   try {
     const rawId = req.params.id;
 
@@ -455,9 +454,6 @@ export async function get_UserOne(req, res) {
   } catch (err) {
     console.error("Error retrieving data:", err);
     return res.status(500).json({ error: "Internal Server Error" });
-
-  } finally {
-    await connection.close();
   }
 }
 
@@ -742,7 +738,7 @@ export async function UpdateUserOnPage(req, res) {
 }
 
 export async function Add_Company(req, res) {
-  const connection = await getConnection(res);
+  // NOTE: This function uses only Prisma — no Oracle connection needed
   const { username, COMPCODE } = req.body;
 
   try {
@@ -784,7 +780,5 @@ export async function Add_Company(req, res) {
     res
       .status(500)
       .json({ error: "Internal Server Error", details: err.message });
-  } finally {
-    await connection.close();
   }
 }
