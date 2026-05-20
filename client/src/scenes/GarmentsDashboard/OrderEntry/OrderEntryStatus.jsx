@@ -64,18 +64,31 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
   });
 
   /* ---------------- CLICK EVENT ---------------- */
+  // const handleChartClick = (params) => {
+  //   // 🚫 Block Pending clicks
+
+  //   const typeName = params.name;
+
+  //   setTableConfig({
+  //     typeName,
+  //     finYear,
+  //     compCode: companyName,
+  //     buyerCode: selectedBuyer, //
+  //   });
+  // };
+  // Replace handleChartClick:
   const handleChartClick = (params) => {
-  // 🚫 Block Pending clicks
-  if (params.seriesName === "Pending") return;
+    const typeName = params.name;
+    const status = params.seriesName === "Pending" ? "pending" : "completed";
 
-  const typeName = params.name;
-
-  setTableConfig({
-    typeName,
-    finYear,
-    compCode: companyName, buyerCode: selectedBuyer, // 
-  });
-};
+    setTableConfig({
+      typeName,
+      finYear,
+      compCode: companyName,
+      buyerCode: selectedBuyer,
+      status, // ← NEW
+    });
+  };
 
   /* ---------------- CHART OPTIONS ---------------- */
   const options = {
@@ -99,8 +112,12 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
         type: "category",
         data: categories,
         axisTick: { alignWithLabel: true },
-        axisLabel: { rotate: 30, fontSize: 11,  fontWeight: 600,
-        color: "#374151", },
+        axisLabel: {
+          rotate: 30,
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#374151",
+        },
       },
     ],
     yAxis: [
@@ -109,7 +126,7 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
         position: "left",
         alignTicks: true,
         axisLine: { show: true, lineStyle: { color: COLORS[0] } },
-        axisLabel: { formatter: "{value}" ,},
+        axisLabel: { formatter: "{value}" },
       },
       {
         type: "value",
@@ -128,8 +145,13 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
         type: "bar",
         yAxisIndex: 0,
         data: pendingData,
-        label: { show: true, position: "top", fontSize: 11,  fontWeight: 600,
-        color: "#374151", },
+        label: {
+          show: true,
+          position: "top",
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#374151",
+        },
         itemStyle: {
           borderRadius: [6, 6, 0, 0],
           color: {
@@ -151,8 +173,13 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
         type: "bar",
         yAxisIndex: 0,
         data: completedData,
-        label: { show: true, position: "top", fontSize: 11,  fontWeight: 600,
-        color: "#374151", },
+        label: {
+          show: true,
+          position: "top",
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#374151",
+        },
         itemStyle: {
           borderRadius: [6, 6, 0, 0],
           color: {
@@ -176,8 +203,14 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
         smooth: true,
         symbol: "circle",
         symbolSize: 8,
-        label: { show: true, position: "top", fontSize: 11,  fontWeight: 600,
-        color: "#374151", formatter: "{c}%" },
+        label: {
+          show: true,
+          position: "top",
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#374151",
+          formatter: "{c}%",
+        },
         lineStyle: { width: 2, color: "#3b82f6" },
         itemStyle: { color: "#3b82f6" },
       },
@@ -187,13 +220,15 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
   /* ---------------- RENDER ---------------- */
   return (
     <>
-      <Card  sx={{
-        mt: 1,
-        ml: 1,
-        background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
-        borderRadius: 3,
-      }}>
+      <Card
+        sx={{
+          mt: 1,
+          ml: 1,
+          background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
+          borderRadius: 3,
+        }}
+      >
         <CardHeader
           title="Order Entry Planning Status"
           titleTypographyProps={{ sx: { fontSize: ".9rem", fontWeight: 600 } }}
@@ -242,9 +277,12 @@ const OrderEntryStatus = ({ companyName, finYear, finYr }) => {
         <OrderEntryStatusTable
           typeName={tableConfig.typeName}
           finYear={tableConfig.finYear}
-          compCode={tableConfig.compCode} buyerCode={tableConfig.buyerCode} // ← new 
+          compCode={tableConfig.compCode}
+          buyerCode={tableConfig.buyerCode}
+          status={tableConfig.status} // ← NEW
           closeTable={() => setTableConfig(null)}
-          finYr={finYr}  buyerCodes={buyerCodes}  
+          finYr={finYr}
+          buyerCodes={buyerCodes}
         />
       )}
     </>

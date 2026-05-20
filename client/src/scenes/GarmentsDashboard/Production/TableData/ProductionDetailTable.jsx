@@ -6,16 +6,19 @@ import {
   FaStepBackward,
   FaStepForward,
   FaSearch,
+  FaTable,
+  FaList,
 } from "react-icons/fa";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { useGetProductionTableQuery } from "../../../../redux/service/production";
+import { useGetProductionTableQuery, useGetProductionSummaryTableQuery } from "../../../../redux/service/production";
 import moment from "moment";
 import {
   addInsightsRowTurnOver,
   formatQtyByUOM,
   getExcelQtyFormatByUOM,
 } from "../../../../utils/hleper";
+
 const RECORDS = 34;
 const fmtDate = (d) => (d ? moment(d).format("DD-MM-YYYY") : "");
 
@@ -82,6 +85,149 @@ const TH = ({ children, cls = "" }) => (
   <th className={`border p-1 text-center ${cls}`}>{children}</th>
 );
 
+/* ── Summary Table ── */
+const SummaryTable = ({ data, isLoading, isFetching, page, setPage, search, setSearch }) => {
+  const SUMMARY_RECORDS = 30;
+
+  const textMatch = (row, field, val) =>
+    !val || String(row[field] ?? "").toLowerCase().includes(val.toLowerCase());
+
+  const filteredData = useMemo(
+    () =>
+      data.filter(
+        (r) =>
+          textMatch(r, "ORDERNO", search.ORDERNO) &&
+          textMatch(r, "BUYERNAME", search.BUYERNAME) &&
+          textMatch(r, "STYLEREFNO", search.STYLEREFNO) &&
+          textMatch(r, "COLORNAME", search.COLORNAME)
+      ),
+    [data, search]
+  );
+
+  const totalPages = Math.ceil(filteredData.length / SUMMARY_RECORDS) || 1;
+  const currentRows = filteredData.slice((page - 1) * SUMMARY_RECORDS, page * SUMMARY_RECORDS);
+
+  const totals = useMemo(
+    () =>
+      filteredData.reduce(
+        (acc, r) => ({
+          ORDERQTY: acc.ORDERQTY + Number(r.ORDERQTY || 0),
+          CUTTING_QTY: acc.CUTTING_QTY + Number(r.CUTTING_QTY || 0),
+          SINGER_QTY: acc.SINGER_QTY + Number(r.SINGER_QTY || 0),
+          POWERTABLE_QTY: acc.POWERTABLE_QTY + Number(r.POWERTABLE_QTY || 0),
+          IRONING_QTY: acc.IRONING_QTY + Number(r.IRONING_QTY || 0),
+          SEWING_QTY: acc.SEWING_QTY + Number(r.SEWING_QTY || 0),
+          CHECKING_QTY: acc.CHECKING_QTY + Number(r.CHECKING_QTY || 0),
+          PACKING_QTY: acc.PACKING_QTY + Number(r.PACKING_QTY || 0),
+          TOTAL_QTY: acc.TOTAL_QTY + Number(r.TOTAL_QTY || 0),
+        }),
+        {
+          ORDERQTY: 0,
+          CUTTING_QTY: 0,
+          SINGER_QTY: 0,
+          POWERTABLE_QTY: 0,
+          IRONING_QTY: 0,
+          SEWING_QTY: 0,
+          CHECKING_QTY: 0,
+          PACKING_QTY: 0,
+          TOTAL_QTY: 0,
+        }
+      ),
+    [filteredData]
+  );
+
+  const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
+
+  const qtyCell = (val) => (
+    <td className="border p-1 pr-2 text-right font-semibold text-green-700">
+      {fmt(val)}
+    </td>
+  );
+
+  return (
+    <div >
+      {/* Summary Search Bar */}
+      <SearchBar
+        keys={["ORDERNO", "BUYERNAME", "STYLEREFNO", "COLORNAME"]}
+        labels={{
+          ORDERNO: "Order No",
+          BUYERNAME: "Buyer Name",
+          STYLEREFNO: "Style Ref",
+          COLORNAME: "Color",
+        }}
+        state={search}
+        setState={(val) => { setSearch(val); setPage(1); }}
+      />
+      <div
+        className="overflow-x-auto border border-gray-300"
+              style={{ height: "455px", borderRadius: "12px" }}
+      >
+        <table className="w-[1600px] overflow-auto border-collapse text-[11px] table-fixed" >
+          <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
+            <tr>
+              <TH cls="w-6">S.No</TH>
+              <TH cls="w-28">Order No</TH>
+              <TH cls="w-24">Style Ref</TH>
+              <TH cls="w-36">Buyer Name</TH>
+              <TH cls="w-28">Color</TH>
+              <TH cls="w-16">Order Qty</TH>
+              <TH cls="w-16">Cutting</TH>
+              <TH cls="w-16">Singer</TH>
+              <TH cls="w-16">Power Table</TH>
+              <TH cls="w-16">Ironing</TH>
+              <TH cls="w-16">Sewing</TH>
+              <TH cls="w-16">Checking</TH>
+              <TH cls="w-16">Packing</TH>
+              <TH cls="w-16">Total</TH>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading || isFetching ? (
+              <tr>
+                <td colSpan={14} className="text-center py-10 text-gray-400 text-xs">Loading...</td>
+              </tr>
+            ) : currentRows.length === 0 ? (
+              <tr>
+                <td colSpan={14} className="text-center py-10 text-gray-500 text-xs">No data found</td>
+              </tr>
+            ) : (
+              <>
+                {currentRows.map((row, i) => (
+                  <tr
+                    key={i}
+                    className="text-gray-800 bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors"
+                  >
+                    <td className="border p-1 text-center text-gray-500">
+                      {(page - 1) * SUMMARY_RECORDS + i + 1}
+                    </td>
+                    <td className="border p-1 pl-2 font-medium text-indigo-700">{row.ORDERNO}</td>
+                    <td className="border p-1 pl-2">{row.STYLEREFNO}</td>
+                    <td className="border p-1 pl-2">{row.BUYERNAME}</td>
+                    <td className="border p-1 pl-2">{row.COLORNAME}</td>
+                    {qtyCell(row.ORDERQTY)}
+                    {qtyCell(row.CUTTING_QTY)}
+                    {qtyCell(row.SINGER_QTY)}
+                    {qtyCell(row.POWERTABLE_QTY)}
+                    {qtyCell(row.IRONING_QTY)}
+                    {qtyCell(row.SEWING_QTY)}
+                    {qtyCell(row.CHECKING_QTY)}
+                    {qtyCell(row.PACKING_QTY)}
+                    <td className="border p-1 pr-2 text-right font-bold text-blue-700">
+                      {fmt(row.TOTAL_QTY)}
+                    </td>
+                  </tr>
+                ))}
+               
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <Pagination page={page} total={totalPages} setPage={setPage} />
+    </div>
+  );
+};
+
 /* ── Main ── */
 const ProductionDetailTable = ({
   companyName,
@@ -93,12 +239,11 @@ const ProductionDetailTable = ({
 }) => {
   const [fromDate, setFromDate] = useState(initFromDate);
   const [toDate, setToDate] = useState(initToDate);
-  const [selectedProcess, setSelectedProcess] = useState(
-    initProcessName || "ALL",
-  );
+  const [selectedProcess, setSelectedProcess] = useState(initProcessName || "ALL");
   const [selectedStore, setSelectedStore] = useState(initStoreId || "ALL");
   const [page, setPage] = useState(1);
   const [selectedComp, setSelectedComp] = useState(companyName);
+  const [isSummaryMode, setIsSummaryMode] = useState(false); // ← toggle state
 
   const [search, setSearch] = useState({
     ORDERNO: "",
@@ -107,9 +252,16 @@ const ProductionDetailTable = ({
     COLORNAME: "",
   });
 
+  const [summarySearch, setSummarySearch] = useState({
+    ORDERNO: "",
+    BUYERNAME: "",
+    STYLEREFNO: "",
+    COLORNAME: "",
+  });
+
   const resetPage = () => setPage(1);
 
-  /* ── Fetch ── */
+  /* ── Fetch Detail ── */
   const {
     data: response,
     isLoading,
@@ -124,35 +276,50 @@ const ProductionDetailTable = ({
         storeId: selectedStore,
       },
     },
-    { skip: !selectedComp || !fromDate || !toDate },
+    { skip: !selectedComp || !fromDate || !toDate || isSummaryMode }
+  );
+
+  /* ── Fetch Summary ── */
+  const {
+    data: summaryResponse,
+    isLoading: summaryLoading,
+    isFetching: summaryFetching,
+  } = useGetProductionSummaryTableQuery(
+    {
+      params: {
+        compCode: selectedComp,
+        fromDate,
+        toDate,
+        storeId: selectedStore,
+      },
+    },
+    { skip: !selectedComp || !fromDate || !toDate || !isSummaryMode }
   );
 
   const rawData = useMemo(
     () => (Array.isArray(response?.data) ? response.data : []),
-    [response],
+    [response]
+  );
+
+  const summaryData = useMemo(
+    () => (Array.isArray(summaryResponse?.data) ? summaryResponse.data : []),
+    [summaryResponse]
   );
 
   /* ── Derived filter options ── */
   const processOptions = useMemo(() => {
-    const names = [
-      ...new Set(rawData.map((r) => r.PROCESSNAME).filter(Boolean)),
-    ];
+    const names = [...new Set(rawData.map((r) => r.PROCESSNAME).filter(Boolean))];
     return ["ALL", ...names];
   }, [rawData]);
 
   const storeOptions = useMemo(() => {
-    const stores = [
-      ...new Set(rawData.map((r) => r.STOREID).filter((x) => x?.trim())),
-    ];
+    const stores = [...new Set(rawData.map((r) => r.STOREID).filter((x) => x?.trim()))];
     return ["ALL", ...stores];
   }, [rawData]);
 
   /* ── Text filter ── */
   const textMatch = (row, field, val) =>
-    !val ||
-    String(row[field] ?? "")
-      .toLowerCase()
-      .includes(val.toLowerCase());
+    !val || String(row[field] ?? "").toLowerCase().includes(val.toLowerCase());
 
   const filtered = useMemo(
     () =>
@@ -161,15 +328,15 @@ const ProductionDetailTable = ({
           textMatch(r, "ORDERNO", search.ORDERNO) &&
           textMatch(r, "BUYERNAME", search.BUYERNAME) &&
           textMatch(r, "STYLEREFNO", search.STYLEREFNO) &&
-          textMatch(r, "COLORNAME", search.COLORNAME),
+          textMatch(r, "COLORNAME", search.COLORNAME)
       ),
-    [rawData, search],
+    [rawData, search]
   );
 
   /* ── Totals ── */
   const totalQty = useMemo(
     () => filtered.reduce((sum, r) => sum + Number(r.QTY || 0), 0),
-    [filtered],
+    [filtered]
   );
 
   /* ── Pagination ── */
@@ -178,16 +345,12 @@ const ProductionDetailTable = ({
 
   const LoadingRow = ({ cols }) => (
     <tr>
-      <td colSpan={cols} className="text-center py-10 text-gray-400 text-xs">
-        Loading...
-      </td>
+      <td colSpan={cols} className="text-center py-10 text-gray-400 text-xs">Loading...</td>
     </tr>
   );
   const EmptyRow = ({ cols }) => (
     <tr>
-      <td colSpan={cols} className="text-center py-10 text-gray-500 text-xs">
-        No data found
-      </td>
+      <td colSpan={cols} className="text-center py-10 text-gray-500 text-xs">No data found</td>
     </tr>
   );
 
@@ -214,9 +377,8 @@ const ProductionDetailTable = ({
     ];
 
     ws.columns = columns;
-    const mergeEnd = String.fromCharCode(64 + columns.length); // "I" (9 cols)
+    const mergeEnd = String.fromCharCode(64 + columns.length);
 
-    // Row 1 — Title
     ws.insertRow(1, ["Production Detail"]);
     ws.mergeCells(`A1:${mergeEnd}1`);
     const tc = ws.getCell("A1");
@@ -224,7 +386,6 @@ const ProductionDetailTable = ({
     tc.alignment = { horizontal: "center", vertical: "middle" };
     ws.getRow(1).height = 28;
 
-    // Row 2 — Insights
     addInsightsRowTurnOver({
       worksheet: ws,
       startRow: 2,
@@ -241,17 +402,12 @@ const ProductionDetailTable = ({
       fourthDynamicValue: selectedStore,
     });
 
-    // Row 3 — Header styling
     const hr = ws.getRow(3);
     hr.height = 24;
     hr.eachCell((cell) => {
       cell.font = { bold: true };
       cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFD9D9D9" },
-      };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9D9D9" } };
       cell.border = {
         top: { style: "thin" },
         bottom: { style: "thin" },
@@ -260,7 +416,6 @@ const ProductionDetailTable = ({
       };
     });
 
-    // Data rows
     filtered.forEach((r, i) => {
       ws.addRow({
         sno: i + 1,
@@ -275,15 +430,13 @@ const ProductionDetailTable = ({
       });
     });
 
-    // Style data rows
     ws.eachRow((row, rn) => {
       if (rn <= 3) return;
       row.height = 20;
       row.eachCell((cell, cn) => {
         const key = columns[cn - 1]?.key;
         cell.alignment = {
-          horizontal:
-            key === "sno" ? "center" : key === "QTY" ? "right" : "left",
+          horizontal: key === "sno" ? "center" : key === "QTY" ? "right" : "left",
           vertical: "middle",
           indent: 1,
         };
@@ -291,7 +444,6 @@ const ProductionDetailTable = ({
       });
     });
 
-    // Totals row
     const tr = ws.addRow({
       sno: "",
       PROCESSNAME: "",
@@ -309,8 +461,7 @@ const ProductionDetailTable = ({
       cell.font = { bold: true };
       cell.border = { top: { style: "thin" } };
       cell.alignment = {
-        horizontal:
-          key === "QTY" ? "right" : key === "BUYERNAME" ? "left" : "left",
+        horizontal: key === "QTY" ? "right" : "left",
         vertical: "middle",
         indent: 1,
       };
@@ -324,7 +475,7 @@ const ProductionDetailTable = ({
       new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }),
-      `Production_${selectedProcess}_${selectedComp}_${fromDate}_${toDate}.xlsx`,
+      `Production_${selectedProcess}_${selectedComp}_${fromDate}_${toDate}.xlsx`
     );
   };
 
@@ -335,7 +486,7 @@ const ProductionDetailTable = ({
         {/* HEADER */}
         <div className="flex justify-between items-center">
           <h2 className="font-bold uppercase text-sm">
-            Production Detail —{" "}
+            Production {isSummaryMode ? "Summary" : "Detail"} —{" "}
             <span className="text-green-700">{companyName}</span>
           </h2>
 
@@ -343,30 +494,20 @@ const ProductionDetailTable = ({
             <div className="bg-gray-300 rounded-lg shadow flex gap-x-2 p-2 flex-wrap items-center">
               <select
                 value={selectedComp}
-                onChange={(e) => {
-                  setSelectedComp(e.target.value);
-                  resetPage();
-                }}
+                onChange={(e) => { setSelectedComp(e.target.value); resetPage(); }}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
               >
                 <option value="JKC">JKC</option>
                 <option value="PSS">PSS</option>
               </select>
+
               {/* FROM DATE */}
               <input
                 type="date"
                 value={fromDate}
                 max={toDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
-                  resetPage();
-                }}
-                style={{
-                  fontSize: "11px",
-                  padding: "0px 6px",
-                  borderRadius: "6px",
-                  border: "2px solid #2563eb",
-                }}
+                onChange={(e) => { setFromDate(e.target.value); resetPage(); }}
+                style={{ fontSize: "11px", padding: "0px 6px", borderRadius: "6px", border: "2px solid #2563eb" }}
               />
 
               {/* TO DATE */}
@@ -380,58 +521,61 @@ const ProductionDetailTable = ({
                     resetPage();
                   }
                 }}
-                style={{
-                  fontSize: "11px",
-                  padding: "0px 6px",
-                  borderRadius: "6px",
-                  border: "2px solid #2563eb",
-                }}
+                style={{ fontSize: "11px", padding: "0px 6px", borderRadius: "6px", border: "2px solid #2563eb" }}
               />
 
-              {/* PROCESS */}
-              <select
-                value={selectedProcess}
-                onChange={(e) => {
-                  setSelectedProcess(e.target.value);
-                  resetPage();
-                }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-36"
-              >
-                {processOptions.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
+              {/* PROCESS — hidden in summary mode */}
+              {!isSummaryMode && (
+                <select
+                  value={selectedProcess}
+                  onChange={(e) => { setSelectedProcess(e.target.value); resetPage(); }}
+                  className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-36"
+                >
+                  {processOptions.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              )}
 
               {/* STORE */}
               <select
                 value={selectedStore}
-                onChange={(e) => {
-                  setSelectedStore(e.target.value);
-                  resetPage();
-                }}
+                onChange={(e) => { setSelectedStore(e.target.value); resetPage(); }}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-60"
               >
                 {storeOptions.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
 
-              {/* Excel */}
+              {/* ── Summary Toggle Button ── */}
               <button
-                onClick={handleExport}
-                className="p-0 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
-                title="Download Excel"
+                onClick={() => { setIsSummaryMode((prev) => !prev); resetPage(); setSummarySearch({ ORDERNO: "", BUYERNAME: "", STYLEREFNO: "", COLORNAME: "" }); }}
+                title={isSummaryMode ? "Switch to Detail View" : "Switch to Summary View"}
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold border-2 transition-all duration-200 ${
+                  isSummaryMode
+                    ? "bg-blue-600 text-white border-blue-600 shadow-inner"
+                    : "bg-white text-blue-600 border-blue-600 hover:bg-blue-50"
+                }`}
               >
-                <img
-                  src="https://cdn-icons-png.flaticon.com/512/732/732220.png"
-                  alt="Excel"
-                  className="w-7 h-7 rounded-lg"
-                />
+                {isSummaryMode ? <FaTable size={12} /> : <FaList size={12} />}
+                {isSummaryMode ? "Summary" : "Detail"}
               </button>
+
+              {/* Excel — only in detail mode */}
+              {!isSummaryMode && (
+                <button
+                  onClick={handleExport}
+                  className="p-0 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
+                  title="Download Excel"
+                >
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/512/732/732220.png"
+                    alt="Excel"
+                    className="w-7 h-7 rounded-lg"
+                  />
+                </button>
+              )}
             </div>
 
             <button className="text-red-600" onClick={onClose}>
@@ -444,90 +588,113 @@ const ProductionDetailTable = ({
         <div className="flex gap-6 mt-1">
           <p className="text-xs font-semibold text-gray-600">
             Total Records:{" "}
-            <span className="text-blue-600">{filtered.length}</span>
-          </p>
-          <p className="text-xs font-semibold text-gray-600">
-            Total Qty:{" "}
-            <span className="text-green-600">
-              {Number(totalQty).toLocaleString("en-IN")}
+            <span className="text-blue-600">
+              {isSummaryMode ? summaryData.filter(r =>
+                (!summarySearch.ORDERNO || String(r.ORDERNO ?? "").toLowerCase().includes(summarySearch.ORDERNO.toLowerCase())) &&
+                (!summarySearch.BUYERNAME || String(r.BUYERNAME ?? "").toLowerCase().includes(summarySearch.BUYERNAME.toLowerCase())) &&
+                (!summarySearch.STYLEREFNO || String(r.STYLEREFNO ?? "").toLowerCase().includes(summarySearch.STYLEREFNO.toLowerCase())) &&
+                (!summarySearch.COLORNAME || String(r.COLORNAME ?? "").toLowerCase().includes(summarySearch.COLORNAME.toLowerCase()))
+              ).length : filtered.length}
             </span>
           </p>
+          {!isSummaryMode && (
+            <p className="text-xs font-semibold text-gray-600">
+              Total Qty:{" "}
+              <span className="text-green-600">
+                {Number(totalQty).toLocaleString("en-IN")}
+              </span>
+            </p>
+          )}
         </div>
 
-        {/* SEARCH */}
-        <div className="mt-2">
-          <SearchBar
-            keys={["ORDERNO", "BUYERNAME", "STYLEREFNO", "COLORNAME"]}
-            labels={{
-              ORDERNO: "Order No",
-              BUYERNAME: "Buyer Name",
-              STYLEREFNO: "Style Ref",
-              COLORNAME: "Color",
-            }}
-            state={search}
-            setState={(val) => {
-              setSearch(val);
-              resetPage();
-            }}
-          />
-        </div>
+        {/* SEARCH — only in detail mode */}
+        {!isSummaryMode && (
+          <div className="mt-2">
+            <SearchBar
+              keys={["ORDERNO", "BUYERNAME", "STYLEREFNO", "COLORNAME"]}
+              labels={{
+                ORDERNO: "Order No",
+                BUYERNAME: "Buyer Name",
+                STYLEREFNO: "Style Ref",
+                COLORNAME: "Color",
+              }}
+              state={search}
+              setState={(val) => { setSearch(val); resetPage(); }}
+            />
+          </div>
+        )}
 
-        {/* TABLE */}
-        <div
-          className="overflow-x-auto border border-gray-300"
-          style={{ height: "455px", borderRadius: "12px" }}
-        >
-          <table className="w-[1500px] overflow-y-auto border-collapse text-[11px] table-fixed">
-            <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
-              <tr>
-                <TH cls="w-6">S.No</TH>
-                <TH cls="w-24">Process</TH>
-                <TH cls="w-60">Store ID</TH>
-                <TH cls="w-20">Doc Date</TH>
-                <TH cls="w-32">Order No</TH>
-                <TH cls="w-44">Buyer Name</TH>
-                <TH cls="w-28">Style Ref No</TH>
-
-                <TH cls="w-44">Color</TH>
-                <TH cls="w-16">Qty</TH>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading || isFetching ? (
-                <LoadingRow cols={9} />
-              ) : currentRows.length === 0 ? (
-                <EmptyRow cols={9} />
-              ) : (
-                currentRows.map((row, i) => (
-                  <tr
-                    key={i}
-                    className="text-gray-800 bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors"
-                  >
-                    <td className="border p-1 text-center text-gray-500">
-                      {(page - 1) * RECORDS + i + 1}
-                    </td>
-                    <td className="border p-1 pl-2 font-medium text-indigo-700">
-                      {row.PROCESSNAME}
-                    </td>
-                    <td className="border p-1 pl-2">{row.STOREID}</td>
-                    <td className="border p-1 pl-1">{fmtDate(row.DOCDATE)}</td>
-                    <td className="border p-1 pl-2">{row.ORDERNO}</td>
-                    <td className="border p-1 pl-2">{row.BUYERNAME}</td>
-                    <td className="border p-1 pl-2">{row.STYLEREFNO}</td>
-
-                    <td className="border p-1 pl-2">{row.COLORNAME}</td>
-                    <td className="border p-1 pr-2 text-right font-semibold text-green-700">
-                      {Number(row.QTY || 0).toLocaleString("en-IN")}
-                    </td>
+        {/* ── DETAIL TABLE (unchanged) ── */}
+        {!isSummaryMode && (
+          <>
+            <div
+              className="overflow-x-auto border border-gray-300"
+              style={{ height: "455px", borderRadius: "12px" }}
+            >
+              <table className="w-[1500px] overflow-y-auto border-collapse text-[11px] table-fixed">
+                <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
+                  <tr>
+                    <TH cls="w-6">S.No</TH>
+                    <TH cls="w-24">Process</TH>
+                    <TH cls="w-60">Store ID</TH>
+                    <TH cls="w-20">Doc Date</TH>
+                    <TH cls="w-32">Order No</TH>
+                    <TH cls="w-44">Buyer Name</TH>
+                    <TH cls="w-28">Style Ref No</TH>
+                    <TH cls="w-44">Color</TH>
+                    <TH cls="w-16">Qty</TH>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {isLoading || isFetching ? (
+                    <LoadingRow cols={9} />
+                  ) : currentRows.length === 0 ? (
+                    <EmptyRow cols={9} />
+                  ) : (
+                    currentRows.map((row, i) => (
+                      <tr
+                        key={i}
+                        className="text-gray-800 bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors"
+                      >
+                        <td className="border p-1 text-center text-gray-500">
+                          {(page - 1) * RECORDS + i + 1}
+                        </td>
+                        <td className="border p-1 pl-2 font-medium text-indigo-700">
+                          {row.PROCESSNAME}
+                        </td>
+                        <td className="border p-1 pl-2">{row.STOREID}</td>
+                        <td className="border p-1 pl-1">{fmtDate(row.DOCDATE)}</td>
+                        <td className="border p-1 pl-2">{row.ORDERNO}</td>
+                        <td className="border p-1 pl-2">{row.BUYERNAME}</td>
+                        <td className="border p-1 pl-2">{row.STYLEREFNO}</td>
+                        <td className="border p-1 pl-2">{row.COLORNAME}</td>
+                        <td className="border p-1 pr-2 text-right font-semibold text-green-700">
+                          {Number(row.QTY || 0).toLocaleString("en-IN")}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <Pagination page={page} total={totalPages} setPage={setPage} />
+          </>
+        )}
 
-        {/* PAGINATION */}
-        <Pagination page={page} total={totalPages} setPage={setPage} />
+        {/* ── SUMMARY TABLE ── */}
+        {isSummaryMode && (
+          <div className="mt-2">
+            <SummaryTable
+              data={summaryData}
+              isLoading={summaryLoading}
+              isFetching={summaryFetching}
+              page={page}
+              setPage={setPage}
+              search={summarySearch}
+              setSearch={setSummarySearch}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -219,6 +219,19 @@ const purchase = createApi({
       },
       providesTags: ["orderEntry"],
     }),
+    getOrderEntryStatusTableWithStatus: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryStatusTableWithStatus",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
   }),
 });
 
@@ -242,6 +255,7 @@ export const {
   useGetOrderEntryBuyerPoNoWiseStatusTableQuery,
   useGetOrderEntryStyleWiseTableQuery,
   useGetOrderEntryColorWiseTableQuery,
+  useGetOrderEntryStatusTableWithStatusQuery
 } = purchase;
 
 export default purchase;

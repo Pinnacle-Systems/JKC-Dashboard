@@ -34,12 +34,26 @@ const production = createApi({
       },
       providesTags: ["production"],
     }),
+    getProductionSummaryTable: builder.query({
+      query: ({ params }) => {
+        return {
+          url: PRODUCTION + "/getProductionSummaryTable",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["production"],
+    }),
   }),
 });
 
 export const {
   useGetProductionQuery,
   useGetProductionTableQuery,
+  useGetProductionSummaryTableQuery
   // table
 } = production;
 

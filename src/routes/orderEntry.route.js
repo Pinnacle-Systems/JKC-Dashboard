@@ -17,7 +17,7 @@ import {
   getOrderEntryBuyerWiseStatusTable,
   getOrderEntryBuyerPoNoWiseQtyStatusTable,
   getOrderEntryStyleItemGroupWiseQtyTable,
-  getOrderEntryColorWiseQtyTable,
+  getOrderEntryColorWiseQtyTable,getOrderEntryStatusTableWithStatus
 } from "../services/orderEntryTable.service.js";
 
 const router = Router();
@@ -50,5 +50,6 @@ router.get(
   getOrderEntryStyleItemGroupWiseQtyTable,
 );
 router.get("/getOrderEntryColorWiseTable", getOrderEntryColorWiseQtyTable);
+router.get("/getOrderEntryStatusTableWithStatus", getOrderEntryStatusTableWithStatus);
 
 export default router;

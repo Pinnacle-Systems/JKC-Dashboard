@@ -94,3 +94,296 @@ AND (:STOREID2='ALL' OR UPPER(TRIM(A.LOCID))=UPPER(TRIM(:STOREID2)))
     }
   }
 }
+
+export async function getProductionSummaryTable(req, res) {
+  const connection = await getConnection(res);
+
+  try {
+    const {
+      compCode,
+      fromDate,
+      toDate,
+      storeId = "ALL",
+    } = req.query;
+
+    const sql1 = `
+SELECT
+    src.ORDERNO,
+    src.STYLEREFNO,
+    src.BUYERCODE,
+    src.BUYERNAME,
+    src.COLORNAME,
+    src.COMPCODE,
+    src.STOREID,
+    OQ.ORDERQTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'CUTTING' THEN src.QTY ELSE 0 END) AS CUTTING_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'SINGER' THEN src.QTY ELSE 0 END) AS SINGER_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'POWER TABLE' THEN src.QTY ELSE 0 END) AS POWERTABLE_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'IRONING' THEN src.QTY ELSE 0 END) AS IRONING_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'SEWING' THEN src.QTY ELSE 0 END) AS SEWING_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'CHECKING' THEN src.QTY ELSE 0 END) AS CHECKING_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'PACKING' THEN src.QTY ELSE 0 END) AS PACKING_QTY,
+    SUM(src.QTY) AS TOTAL_QTY
+FROM (
+    SELECT
+        'CUTTING' AS PROCESSNAME,
+        DD.COMPCODE,
+        AB.LOCID AS STOREID,
+        AA.DOCDATE,
+        AB.TP AS QTY,
+        FF.ORDERNO,
+        CASE
+            WHEN FF.STYLEREF IS NULL THEN FF.STYLEREFNO
+            ELSE FF.STYLEREF
+        END AS STYLEREFNO,
+        GG.BUYERCODE,
+        GG.BUYERNAME,
+        CC.COLORNAME
+    FROM CTPRODUCTION AA
+    JOIN CTPRODDET AB
+        ON AA.CTPRODUCTIONID = AB.CTPRODUCTIONID
+    JOIN GTCOLORMAST CC
+        ON CC.GTCOLORMASTID = AB.COLOR
+    JOIN GTCOMPMAST DD
+        ON DD.GTCOMPMASTID = AA.COMPCODE
+    JOIN GTLOCMAST EE
+        ON EE.GTLOCMASTID = AA.CPSTOREID
+    JOIN GTNORDERENTRY FF
+        ON FF.ORDERNO = AA.FILENO
+    JOIN GTBUYERMAST GG
+        ON GG.GTBUYERMASTID = FF.BUYER
+    WHERE DD.COMPCODE = :COMPCODE
+        AND AA.DOCDATE BETWEEN :FROMDATE AND :TODATE
+        AND AA.RIB = 'NO'
+        AND (
+            :STOREID = 'ALL'
+            OR UPPER(TRIM(AB.LOCID)) = UPPER(TRIM(:STOREID))
+        )
+
+    UNION ALL
+
+    SELECT
+        UPPER(TRIM(E.PROCESSNAME)) AS PROCESSNAME,
+        C.COMPCODE,
+        A.LOCID AS STOREID,
+        A.PEDATE AS DOCDATE,
+        CC.DAILYPROD AS QTY,
+        FF.ORDERNO,
+        CASE
+            WHEN FF.STYLEREF IS NULL THEN FF.STYLEREFNO
+            ELSE FF.STYLEREF
+        END AS STYLEREFNO,
+        GG.BUYERCODE,
+        GG.BUYERNAME,
+        D.COLORNAME
+    FROM GTGINPROD A
+    JOIN GTGINPRODDET B
+        ON A.GTGINPRODID = B.GTGINPRODID
+    JOIN GTGINPRODSUBDET CC
+        ON CC.GTGINPRODID = B.GTGINPRODID
+        AND CC.GTGINPRODDETID = B.GTGINPRODDETID
+    JOIN GTCOMPMAST C
+        ON C.GTCOMPMASTID = A.COMPCODE
+    JOIN GTCOLORMAST D
+        ON D.GTCOLORMASTID = B.COLOR
+    JOIN GTPROCESSMAST E
+        ON E.GTPROCESSMASTID = A.DEPARTMENT
+    JOIN GTNORDERENTRY FF
+        ON FF.ORDERNO = B.ORDERNO
+    JOIN GTBUYERMAST GG
+        ON GG.GTBUYERMASTID = FF.BUYER
+    WHERE C.COMPCODE = :COMPCODE
+        AND A.PEDATE BETWEEN :FROMDATE AND :TODATE
+        AND (
+            :STOREID = 'ALL'
+            OR UPPER(TRIM(A.LOCID)) = UPPER(TRIM(:STOREID))
+        )
+) src
+LEFT JOIN (
+    SELECT
+        OD.ORDERNO,
+        SUM(OD.SHIPQTY) AS ORDERQTY
+    FROM ORDERALLOWDET OD
+    GROUP BY OD.ORDERNO
+) OQ
+    ON OQ.ORDERNO = src.ORDERNO
+GROUP BY
+    src.ORDERNO,
+    src.STYLEREFNO,
+    src.BUYERCODE,
+    src.BUYERNAME,
+    src.COLORNAME,
+    src.COMPCODE,
+    src.STOREID,
+    OQ.ORDERQTY
+ORDER BY
+    src.ORDERNO,
+    src.COLORNAME
+`;
+
+const sql = `
+SELECT
+    src.ORDERNO,
+    src.STYLEREFNO,
+    src.BUYERCODE,
+    src.BUYERNAME,
+    src.COLORNAME,
+    src.COMPCODE,
+    src.STOREID,
+    OQ.ORDERQTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'CUTTING'     THEN src.QTY ELSE 0 END) AS CUTTING_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'SINGER'      THEN src.QTY ELSE 0 END) AS SINGER_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'POWER TABLE' THEN src.QTY ELSE 0 END) AS POWERTABLE_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'IRONING'     THEN src.QTY ELSE 0 END) AS IRONING_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'SEWING'      THEN src.QTY ELSE 0 END) AS SEWING_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'CHECKING'    THEN src.QTY ELSE 0 END) AS CHECKING_QTY,
+    SUM(CASE WHEN src.PROCESSNAME = 'PACKING'     THEN src.QTY ELSE 0 END) AS PACKING_QTY,
+    SUM(src.QTY) AS TOTAL_QTY
+FROM (
+    SELECT
+        'CUTTING' AS PROCESSNAME,
+        DD.COMPCODE,
+        AB.LOCID AS STOREID,
+        AA.DOCDATE,
+        AB.TP AS QTY,
+        FF.ORDERNO,
+        CASE
+            WHEN FF.STYLEREF IS NULL THEN FF.STYLEREFNO
+            ELSE FF.STYLEREF
+        END AS STYLEREFNO,
+        GG.BUYERCODE,
+        GG.BUYERNAME,
+        CC.COLORNAME
+    FROM CTPRODUCTION AA
+    JOIN CTPRODDET AB
+        ON AA.CTPRODUCTIONID = AB.CTPRODUCTIONID
+    JOIN GTCOLORMAST CC
+        ON CC.GTCOLORMASTID = AB.COLOR
+    JOIN GTCOMPMAST DD
+        ON DD.GTCOMPMASTID = AA.COMPCODE
+    JOIN GTLOCMAST EE
+        ON EE.GTLOCMASTID = AA.CPSTOREID
+    JOIN GTNORDERENTRY FF
+        ON FF.ORDERNO = AA.FILENO
+    JOIN GTBUYERMAST GG
+        ON GG.GTBUYERMASTID = FF.BUYER
+    WHERE DD.COMPCODE = :COMPCODE
+        AND AA.DOCDATE BETWEEN TO_DATE(:FROMDATE, 'YYYY-MM-DD')
+                           AND TO_DATE(:TODATE,   'YYYY-MM-DD')
+        AND AA.RIB = 'NO'
+        AND (
+            :STOREID = 'ALL'
+            OR UPPER(TRIM(AB.LOCID)) = UPPER(TRIM(:STOREID))
+        )
+ 
+    UNION ALL
+ 
+    SELECT
+        UPPER(TRIM(E.PROCESSNAME)) AS PROCESSNAME,
+        C.COMPCODE,
+        A.LOCID AS STOREID,
+        A.PEDATE AS DOCDATE,
+        CC.DAILYPROD AS QTY,
+        FF.ORDERNO,
+        CASE
+            WHEN FF.STYLEREF IS NULL THEN FF.STYLEREFNO
+            ELSE FF.STYLEREF
+        END AS STYLEREFNO,
+        GG.BUYERCODE,
+        GG.BUYERNAME,
+        D.COLORNAME
+    FROM GTGINPROD A
+    JOIN GTGINPRODDET B
+        ON A.GTGINPRODID = B.GTGINPRODID
+    JOIN GTGINPRODSUBDET CC
+        ON CC.GTGINPRODID = B.GTGINPRODID
+        AND CC.GTGINPRODDETID = B.GTGINPRODDETID
+    JOIN GTCOMPMAST C
+        ON C.GTCOMPMASTID = A.COMPCODE
+    JOIN GTCOLORMAST D
+        ON D.GTCOLORMASTID = B.COLOR
+    JOIN GTPROCESSMAST E
+        ON E.GTPROCESSMASTID = A.DEPARTMENT
+    JOIN GTNORDERENTRY FF
+        ON FF.ORDERNO = B.ORDERNO
+    JOIN GTBUYERMAST GG
+        ON GG.GTBUYERMASTID = FF.BUYER
+    WHERE C.COMPCODE = :COMPCODE
+        AND A.PEDATE BETWEEN TO_DATE(:FROMDATE, 'YYYY-MM-DD')
+                         AND TO_DATE(:TODATE,   'YYYY-MM-DD')
+        AND (
+            :STOREID = 'ALL'
+            OR UPPER(TRIM(A.LOCID)) = UPPER(TRIM(:STOREID))
+        )
+) src
+LEFT JOIN (
+    SELECT
+        OD.ORDERNO,
+        SUM(OD.SHIPQTY) AS ORDERQTY
+    FROM ORDERALLOWDET OD
+    GROUP BY OD.ORDERNO
+) OQ
+    ON OQ.ORDERNO = src.ORDERNO
+GROUP BY
+    src.ORDERNO,
+    src.STYLEREFNO,
+    src.BUYERCODE,
+    src.BUYERNAME,
+    src.COLORNAME,
+    src.COMPCODE,
+    src.STOREID,
+    OQ.ORDERQTY
+ORDER BY
+    src.ORDERNO,
+    src.COLORNAME
+`;
+ 
+
+
+
+    const binds = {
+      COMPCODE: compCode,
+      FROMDATE: fromDate,
+      TODATE: toDate,
+      STOREID: storeId,
+    };
+
+    const result = await connection.execute(sql, binds);
+
+    const resp =
+      result.rows?.map((row) => ({
+        ORDERNO: row[0],
+        STYLEREFNO: row[1],
+        BUYERCODE: row[2],
+        BUYERNAME: row[3],
+        COLORNAME: row[4],
+        COMPCODE: row[5],
+        STOREID: row[6],
+        ORDERQTY: row[7],
+        CUTTING_QTY: row[8],
+        SINGER_QTY: row[9],
+        POWERTABLE_QTY: row[10],
+        IRONING_QTY: row[11],
+        SEWING_QTY: row[12],
+        CHECKING_QTY: row[13],
+        PACKING_QTY: row[14],
+        TOTAL_QTY: row[15],
+      })) || [];
+
+    return res.json({
+      statusCode: 0,
+      data: resp,
+    });
+  } catch (err) {
+    console.error("Error retrieving production summary:", err);
+
+    return res.status(500).json({
+      statusCode: 1,
+      error: err.message,
+    });
+  } finally {
+    if (connection) {
+      await connection.close();
+    }
+  }
+}

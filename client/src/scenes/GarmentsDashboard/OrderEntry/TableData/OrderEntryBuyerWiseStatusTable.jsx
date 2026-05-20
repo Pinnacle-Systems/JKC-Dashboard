@@ -1,3 +1,518 @@
+// import { useState, useMemo } from "react";
+// import {
+//   FaTimes,
+//   FaChevronLeft,
+//   FaChevronRight,
+//   FaStepBackward,
+//   FaStepForward,
+//   FaSearch,
+// } from "react-icons/fa";
+// import ExcelJS from "exceljs";
+// import { saveAs } from "file-saver";
+// import { useGetOrderEntryBuyerWiseStatusTableQuery } from "../../../../redux/service/OrderEntry";
+// import moment from "moment";
+// import {
+//   addInsightsRowTurnOver,
+//   formatQtyByUOM,
+//   getExcelQtyFormatByUOM,
+// } from "../../../../utils/hleper";
+
+// const RECORDS = 34;
+// const fmtDate = (d) => (d ? moment(d).format("DD-MM-YYYY") : "");
+// const INR = (v) =>
+//   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
+//     v || 0,
+//   );
+
+// /* ── Pagination ── */
+// const Pagination = ({ page, total, setPage }) => (
+//   <div
+//     className="flex justify-end items-center mt-4 space-x-2 text-[11px]"
+//     style={{ position: "absolute", bottom: "5px", right: "0px" }}
+//   >
+//     <button
+//       onClick={() => setPage(1)}
+//       disabled={page === 1}
+//       className={`p-2 rounded-md ${page === 1 ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-gray-200"}`}
+//     >
+//       <FaStepBackward size={16} />
+//     </button>
+//     <button
+//       onClick={() => setPage((p) => Math.max(p - 1, 1))}
+//       disabled={page === 1}
+//       className={`p-2 rounded-md ${page === 1 ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-gray-200"}`}
+//     >
+//       <FaChevronLeft size={16} />
+//     </button>
+//     <span className="text-xs font-semibold px-3">
+//       Page {page} of {total || 1}
+//     </span>
+//     <button
+//       onClick={() => setPage((p) => Math.min(p + 1, total))}
+//       disabled={page === total || !total}
+//       className={`p-2 rounded-md ${page === total || !total ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-gray-200"}`}
+//     >
+//       <FaChevronRight size={16} />
+//     </button>
+//     <button
+//       onClick={() => setPage(total)}
+//       disabled={page === total || !total}
+//       className={`p-2 rounded-md ${page === total || !total ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-gray-200"}`}
+//     >
+//       <FaStepForward size={16} />
+//     </button>
+//   </div>
+// );
+
+// /* ── SearchBar ── */
+// const SearchBar = ({ keys, state, setState }) => (
+//   <div className="flex gap-x-4 mb-3">
+//     {keys.map((key) => (
+//       <div key={key} className="relative">
+//         <input
+//           type="text"
+//           placeholder={`Search ${key}...`}
+//           value={state[key] || ""}
+//           onChange={(e) => setState({ ...state, [key]: e.target.value })}
+//           className="w-full h-6 p-1 pl-8 text-gray-900 text-[11px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
+//         />
+//         <FaSearch className="absolute left-2 top-1.5 text-gray-500 text-sm" />
+//       </div>
+//     ))}
+//   </div>
+// );
+
+// /* ── TH ── */
+// const TH = ({ children, cls = "" }) => (
+//   <th className={`border p-1 text-center ${cls}`}>{children}</th>
+// );
+
+// /* ── Main ── */
+// const OrderEntryBuyerWiseStatusTable = ({
+//   finYear,
+//   compCode,
+//   finYr,
+//   closeTable,
+//   buyerCode,
+//   buyerCodes: buyerCodesProp,
+// }) => {
+//   const [selectedYear, setSelectedYear] = useState(finYear);
+//   const [selectedComp, setSelectedComp] = useState(compCode);
+//   const [selectedBuyer, setSelectedBuyer] = useState(buyerCode || "ALL");
+//   const [page, setPage] = useState(1);
+
+//   const [search, setSearch] = useState({
+//     orderNo: "",
+//     buyerName: "",
+//     bpoNo: "",
+//     styleRefNo: "",
+//   });
+
+//   const resetPage = () => setPage(1);
+//   const resetSearch = () =>
+//     setSearch({ orderNo: "", buyerName: "", bpoNo: "", styleRefNo: "" });
+
+//   const buyerCodes = buyerCodesProp?.length ? buyerCodesProp : ["ALL"];
+
+//   const skip = !selectedYear || !selectedComp;
+
+//   /* ── Fetch — INTERNAL ORDER only ── */
+//   const {
+//     data: ioRes,
+//     isLoading,
+//     isFetching,
+//   } = useGetOrderEntryBuyerWiseStatusTableQuery(
+//     {
+//       params: {
+//         finYear: selectedYear,
+//         companyName: selectedComp,
+//         buyerCode: selectedBuyer,
+//       },
+//     },
+//     { skip },
+//   );
+
+//   const rawData = useMemo(
+//     () => (Array.isArray(ioRes?.data) ? ioRes.data : []),
+//     [ioRes],
+//   );
+
+//   /* ── Filter ── */
+//   const textMatch = (row, field, val) =>
+//     !val ||
+//     String(row[field] ?? "")
+//       .toLowerCase()
+//       .includes(val.toLowerCase());
+
+//   const filtered = useMemo(
+//     () =>
+//       rawData.filter(
+//         (r) =>
+//           textMatch(r, "orderNo", search.orderNo) &&
+//           textMatch(r, "buyerName", search.buyerName) &&
+//           textMatch(r, "bpoNo", search.bpoNo) &&
+//           textMatch(r, "styleRefNo", search.styleRefNo),
+//       ),
+//     [rawData, search],
+//   );
+
+//   const totals = useMemo(() => {
+//     return {
+//       orderQty: filtered.reduce((sum, r) => sum + Number(r.orderQty || 0), 0),
+//       excessQty: filtered.reduce((sum, r) => sum + Number(r.excessQty || 0), 0),
+//       amount: filtered.reduce((sum, r) => sum + Number(r.amount || 0), 0),
+//     };
+//   }, [filtered]);
+
+//   /* ── Pagination ── */
+//   const totalPages = Math.ceil(filtered.length / RECORDS) || 1;
+//   const currentRows = filtered.slice((page - 1) * RECORDS, page * RECORDS);
+
+//   const LoadingRow = ({ cols }) => (
+//     <tr>
+//       <td colSpan={cols} className="text-center py-10 text-gray-400 text-xs">
+//         Loading...
+//       </td>
+//     </tr>
+//   );
+//   const EmptyRow = ({ cols }) => (
+//     <tr>
+//       <td colSpan={cols} className="text-center py-10 text-gray-500 text-xs">
+//         No data found
+//       </td>
+//     </tr>
+//   );
+
+//   /* ── Excel ── */
+//   const handleExport = async () => {
+//     if (!filtered.length) {
+//       alert("No data");
+//       return;
+//     }
+
+//     const wb = new ExcelJS.Workbook();
+//     const ws = wb.addWorksheet("Order Entry Status");
+
+//     const columns = [
+//       { header: "S.No", key: "sno", width: 6 },
+//       { header: "Order No", key: "orderNo", width: 28 },
+//       { header: "Order Date", key: "orderDate", width: 14 },
+//       { header: "Buyer Name", key: "buyerName", width: 32 },
+//       { header: "BPO No", key: "bpoNo", width: 36 },
+//       { header: "Style Ref No", key: "styleRefNo", width: 18 },
+//       { header: "Pack Type", key: "orderPackType", width: 18 },
+//       { header: "Order Qty", key: "orderQty", width: 18 },
+//       { header: "Excess Qty", key: "excessQty", width: 18 },
+//       { header: "Amount", key: "amount", width: 18 },
+//     ];
+
+//     ws.columns = columns;
+//     const mergeEnd = String.fromCharCode(64 + columns.length);
+
+//     // Row 1: Title
+//     ws.insertRow(1, [`Order Entry Buyer Wise Status`]);
+//     ws.mergeCells(`A1:${mergeEnd}1`);
+//     const tc = ws.getCell("A1");
+//     tc.font = { bold: true, size: 14, color: { argb: "FF000000" } };
+//     tc.alignment = { horizontal: "center", vertical: "middle" };
+//     ws.getRow(1).height = 30;
+
+//     // Row 2: Insights
+//     addInsightsRowTurnOver({
+//       worksheet: ws,
+//       startRow: 2,
+//       totalColumns: 4,
+//       selectedYear,
+//       localCompany: selectedComp,
+//       dynamicField: "Buyer Code",
+//       dynamicValue: selectedBuyer,
+  
+//     });
+
+//     // Row 3: Headers
+//     const hr = ws.getRow(3);
+//     hr.height = 26;
+//     hr.eachCell((cell) => {
+//       cell.font = { bold: true };
+//       cell.alignment = { horizontal: "center", vertical: "middle" };
+//       cell.fill = {
+//         type: "pattern",
+//         pattern: "solid",
+//         fgColor: { argb: "FFD9D9D9" },
+//       };
+//       cell.border = {
+//         top: { style: "thin" },
+//         bottom: { style: "thin" },
+//         left: { style: "thin" },
+//         right: { style: "thin" },
+//       };
+//     });
+
+//     // Data rows
+//     filtered.forEach((r, i) => {
+//       ws.addRow({
+//         sno: i + 1,
+//         orderNo: r.orderNo,
+//         orderDate: fmtDate(r.orderDate),
+//         buyerName: r.buyerName,
+//         bpoNo: r.bpoNo,
+//         styleRefNo: r.styleRefNo,
+//         orderPackType: r.orderPackType,
+//         orderQty: Number(r.orderQty || 0),
+//         excessQty: Number(r.excessQty || 0),
+//         amount: Number(r.amount || 0),
+//       });
+//     });
+
+//     // Style data rows
+//     ws.eachRow((row, rn) => {
+//       if (rn <= 3) return;
+//       const rowData = filtered[rn - 4];
+//       row.height = 22;
+//       row.eachCell((cell, cn) => {
+//         const key = columns[cn - 1]?.key;
+//         cell.alignment = {
+//           horizontal:
+//             key === "sno"
+//               ? "center"
+//               : ["orderQty", "excessQty", "amount"].includes(key)
+//                 ? "right"
+//                 : "left",
+//           vertical: "middle",
+//           indent: 1,
+//         };
+//         if (["orderQty", "excessQty"].includes(key))
+//           cell.numFmt = getExcelQtyFormatByUOM(rowData?.orderPackType || "");
+//         if (key === "amount") cell.numFmt = "#,##0.00";
+//       });
+//     });
+
+//     // Totals row
+//     const tr = ws.addRow({
+//       sno: "",
+//       orderNo: "",
+//       orderDate: "",
+//       buyerName: "",
+//       bpoNo: "TOTAL",
+//       styleRefNo: "",
+//       orderPackType: "",
+//       orderQty: totals.orderQty,
+//       excessQty: totals.excessQty,
+//       amount: totals.amount,
+//     });
+//     tr.height = 24;
+//     tr.eachCell((cell, cn) => {
+//       const key = columns[cn - 1]?.key;
+//       cell.font = { bold: true };
+//       cell.border = { top: { style: "thin" } };
+//       cell.alignment = {
+//         horizontal: ["orderQty", "excessQty", "amount"].includes(key)
+//           ? "right"
+//           : "center",
+//         vertical: "middle",
+//         indent: 1,
+//       };
+//       if (["orderQty", "excessQty"].includes(key))
+//         cell.numFmt = getExcelQtyFormatByUOM("");
+//       if (key === "amount") cell.numFmt = "#,##0.00";
+//     });
+
+//     ws.views = [{ state: "frozen", ySplit: 3 }];
+//     const buf = await wb.xlsx.writeBuffer();
+//     saveAs(
+//       new Blob([buf], {
+//         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+//       }),
+//       `OrderEntry_BuyerWise_${selectedBuyer}_${selectedYear}.xlsx`,
+//     );
+//   };
+
+//   /* ── Render ── */
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex justify-center items-center">
+//       <div className="bg-white w-[1360px] h-[630px] p-4 rounded-xl relative">
+//         {/* HEADER */}
+//         <div className="flex justify-between items-center">
+//           <h2 className="font-bold uppercase">
+//             Order Entry Buyer Wise Status –{" "}
+//             <span className="text-blue-600">{selectedComp}</span>
+//           </h2>
+//           <div className="flex gap-2 items-center">
+//             <div className="bg-gray-300 rounded-lg shadow-2xl flex gap-x-2 gap-1 p-2 flex-wrap items-center">
+//               {/* Year */}
+//               <select
+//                 value={selectedYear}
+//                 onChange={(e) => {
+//                   setSelectedYear(e.target.value);
+//                   resetPage();
+//                 }}
+//                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
+//               >
+//                 <option value="" disabled>
+//                   Select Year
+//                 </option>
+//                 {(finYr?.data || []).map((item) => (
+//                   <option key={item.finYear} value={item.finYear}>
+//                     {item.finYear}
+//                   </option>
+//                 ))}
+//               </select>
+
+//               {/* Company */}
+//               <select
+//                 value={selectedComp}
+//                 onChange={(e) => {
+//                   setSelectedComp(e.target.value);
+//                   resetPage();
+//                 }}
+//                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
+//               >
+//                 <option value="JKC">JKC</option>
+//               </select>
+
+//               {/* Buyer */}
+//               <select
+//                 value={selectedBuyer}
+//                 onChange={(e) => {
+//                   setSelectedBuyer(e.target.value);
+//                   resetPage();
+//                 }}
+//                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-28"
+//               >
+//                 {buyerCodes.map((code) => (
+//                   <option key={code} value={code}>
+//                     {code}
+//                   </option>
+//                 ))}
+//               </select>
+
+//               {/* Excel */}
+//               <button
+//                 onClick={handleExport}
+//                 className="p-0 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
+//                 title="Download Excel"
+//               >
+//                 <img
+//                   src="https://cdn-icons-png.flaticon.com/512/732/732220.png"
+//                   alt="Excel"
+//                   className="w-7 h-7 rounded-lg"
+//                 />
+//               </button>
+//             </div>
+//             <button className="text-red-600" onClick={closeTable}>
+//               <FaTimes size={18} />
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* RECORD COUNT & TOTALS */}
+//         <div className="flex gap-6 mt-0.5">
+//           <p className="text-xs font-semibold text-gray-600">
+//             Total Records:{" "}
+//             <span className="text-blue-600">{filtered.length}</span>
+//           </p>
+//           <p className="text-xs font-semibold text-gray-600">
+//             Total Order Qty:{" "}
+//             <span className="text-green-600">
+//               {Number(totals.orderQty).toLocaleString("en-IN")}
+//             </span>
+//           </p>
+//           <p className="text-xs font-semibold text-gray-600">
+//             Total Excess Qty:{" "}
+//             <span className="text-red-600">
+//               {Number(totals.excessQty).toLocaleString("en-IN")}
+//             </span>
+//           </p>
+//           <p className="text-xs font-semibold text-gray-600">
+//             Total Amount:{" "}
+//             <span className="text-purple-600">{INR(totals.amount)}</span>
+//           </p>
+//         </div>
+
+//         {/* SEARCH */}
+//         <div className="flex justify-between items-start mt-2">
+//           <SearchBar
+//             keys={["orderNo", "buyerName", "bpoNo", "styleRefNo"]}
+//             state={search}
+//             setState={(val) => {
+//               setSearch(val);
+//               resetPage();
+//             }}
+//           />
+//         </div>
+
+//         {/* TABLE — INTERNAL ORDER only */}
+//         <div
+//           className="overflow-x-auto border border-gray-300"
+//           style={{
+//             height: "470px",
+//             border: "1px solid gray",
+//             borderRadius: "16px",
+//           }}
+//         >
+//           <table className="w-[1520px] border-collapse text-[11px] table-fixed">
+//             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
+//               <tr>
+//                 <TH cls="w-8">S.No</TH>
+//                 <TH cls="w-32">Order No</TH>
+//                 <TH cls="w-20">Order Date</TH>
+//                 <TH cls="w-44">Buyer Name</TH>
+//                 <TH cls="w-44">BPO No</TH>
+//                 <TH cls="w-28">Style Ref No</TH>
+//                 <TH cls="w-20">Pack Type</TH>
+//                 <TH cls="w-20">Order Qty</TH>
+//                 <TH cls="w-20">Excess Qty</TH>
+//                 <TH cls="w-24">Amount</TH>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {isLoading || isFetching ? (
+//                 <LoadingRow cols={10} />
+//               ) : currentRows.length === 0 ? (
+//                 <EmptyRow cols={10} />
+//               ) : (
+//                 currentRows.map((row, i) => (
+//                   <tr
+//                     key={i}
+//                     className="text-gray-800 bg-white even:bg-gray-100 hover:bg-blue-50 transition-colors"
+//                   >
+//                     <td className="border p-1 text-center text-gray-500">
+//                       {(page - 1) * RECORDS + i + 1}
+//                     </td>
+//                     <td className="border p-1 pl-2">{row.orderNo}</td>
+//                     <td className="border p-1 pl-1">
+//                       {fmtDate(row.orderDate)}
+//                     </td>
+//                     <td className="border p-1 pl-2">{row.buyerName}</td>
+//                     <td className="border p-1 pl-2">{row.bpoNo}</td>
+//                     <td className="border p-1 pl-2">{row.styleRefNo}</td>
+//                     <td className="border p-1 text-left pl-2">
+//                       {row.orderPackType}
+//                     </td>
+//                     <td className="border p-1 pr-2 text-right">
+//                       {formatQtyByUOM(row.orderQty, row.orderPackType)}
+//                     </td>
+//                     <td className="border p-1 pr-2 text-right">
+//                       {formatQtyByUOM(row.excessQty, row.orderPackType)}
+//                     </td>
+//                     <td className="border p-1 pr-2 text-right text-sky-700">
+//                       {INR(row.amount)}
+//                     </td>
+//                   </tr>
+//                 ))
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+
+//         {/* PAGINATION */}
+//         <Pagination page={page} total={totalPages} setPage={setPage} />
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default OrderEntryBuyerWiseStatusTable;
 import { useState, useMemo } from "react";
 import {
   FaTimes,
@@ -11,18 +526,11 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { useGetOrderEntryBuyerWiseStatusTableQuery } from "../../../../redux/service/OrderEntry";
 import moment from "moment";
-import {
-  addInsightsRowTurnOver,
-  formatQtyByUOM,
-  getExcelQtyFormatByUOM,
-} from "../../../../utils/hleper";
+import { addInsightsRowTurnOver } from "../../../../utils/hleper";
 
 const RECORDS = 34;
-const fmtDate = (d) => (d ? moment(d).format("DD-MM-YYYY") : "");
 const INR = (v) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
-    v || 0,
-  );
+  new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(v || 0);
 
 /* ── Pagination ── */
 const Pagination = ({ page, total, setPage }) => (
@@ -87,6 +595,13 @@ const TH = ({ children, cls = "" }) => (
   <th className={`border p-1 text-center ${cls}`}>{children}</th>
 );
 
+/* ── Numeric cell ── */
+const NumCell = ({ val }) => (
+  <td className="border p-1 pr-2 text-right">
+    {val != null ? INR(val) : <span className="text-gray-300">—</span>}
+  </td>
+);
+
 /* ── Main ── */
 const OrderEntryBuyerWiseStatusTable = ({
   finYear,
@@ -102,39 +617,35 @@ const OrderEntryBuyerWiseStatusTable = ({
   const [page, setPage] = useState(1);
 
   const [search, setSearch] = useState({
-    orderNo: "",
-    buyerName: "",
-    bpoNo: "",
-    styleRefNo: "",
+    ORDERNO: "",
+    BUYERNAME: "",
+    BUYERPONO: "",
+    STYLE: "",
   });
 
   const resetPage = () => setPage(1);
   const resetSearch = () =>
-    setSearch({ orderNo: "", buyerName: "", bpoNo: "", styleRefNo: "" });
+    setSearch({ ORDERNO: "", BUYERNAME: "", BUYERPONO: "", STYLE: "" });
 
   const buyerCodes = buyerCodesProp?.length ? buyerCodesProp : ["ALL"];
-
   const skip = !selectedYear || !selectedComp;
 
-  /* ── Fetch — INTERNAL ORDER only ── */
-  const {
-    data: ioRes,
-    isLoading,
-    isFetching,
-  } = useGetOrderEntryBuyerWiseStatusTableQuery(
-    {
-      params: {
-        finYear: selectedYear,
-        companyName: selectedComp,
-        buyerCode: selectedBuyer,
+  /* ── Fetch ── */
+  const { data: ioRes, isLoading, isFetching } =
+    useGetOrderEntryBuyerWiseStatusTableQuery(
+      {
+        params: {
+          finYear: selectedYear,
+          companyName: selectedComp,
+          buyerCode: selectedBuyer,
+        },
       },
-    },
-    { skip },
-  );
+      { skip }
+    );
 
   const rawData = useMemo(
     () => (Array.isArray(ioRes?.data) ? ioRes.data : []),
-    [ioRes],
+    [ioRes]
   );
 
   /* ── Filter ── */
@@ -148,20 +659,27 @@ const OrderEntryBuyerWiseStatusTable = ({
     () =>
       rawData.filter(
         (r) =>
-          textMatch(r, "orderNo", search.orderNo) &&
-          textMatch(r, "buyerName", search.buyerName) &&
-          textMatch(r, "bpoNo", search.bpoNo) &&
-          textMatch(r, "styleRefNo", search.styleRefNo),
+          textMatch(r, "ORDERNO", search.ORDERNO) &&
+          textMatch(r, "BUYERNAME", search.BUYERNAME) &&
+          textMatch(r, "BUYERPONO", search.BUYERPONO) &&
+          textMatch(r, "STYLE", search.STYLE)
       ),
-    [rawData, search],
+    [rawData, search]
   );
 
+  /* ── Totals ── */
+  const NUM_FIELDS = [
+    "ORDERQTY","YARNQTY","KNITQTY","FINQTY",
+    "YBAL","KNITBAL","INBAL",
+    "CUTTING","SEWING","CHECKING","PACKING","BOX",
+  ];
+
   const totals = useMemo(() => {
-    return {
-      orderQty: filtered.reduce((sum, r) => sum + Number(r.orderQty || 0), 0),
-      excessQty: filtered.reduce((sum, r) => sum + Number(r.excessQty || 0), 0),
-      amount: filtered.reduce((sum, r) => sum + Number(r.amount || 0), 0),
-    };
+    const t = {};
+    NUM_FIELDS.forEach((f) => {
+      t[f] = filtered.reduce((sum, r) => sum + Number(r[f] || 0), 0);
+    });
+    return t;
   }, [filtered]);
 
   /* ── Pagination ── */
@@ -184,153 +702,139 @@ const OrderEntryBuyerWiseStatusTable = ({
   );
 
   /* ── Excel ── */
-  const handleExport = async () => {
-    if (!filtered.length) {
-      alert("No data");
-      return;
-    }
+  /* ── Excel ── */
+const handleExport = async () => {
+  if (!filtered.length) { alert("No data"); return; }
 
-    const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet("Order Entry Status");
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Order Entry Status");
 
-    const columns = [
-      { header: "S.No", key: "sno", width: 6 },
-      { header: "Order No", key: "orderNo", width: 28 },
-      { header: "Order Date", key: "orderDate", width: 14 },
-      { header: "Buyer Name", key: "buyerName", width: 32 },
-      { header: "BPO No", key: "bpoNo", width: 36 },
-      { header: "Style Ref No", key: "styleRefNo", width: 18 },
-      { header: "Pack Type", key: "orderPackType", width: 18 },
-      { header: "Order Qty", key: "orderQty", width: 18 },
-      { header: "Excess Qty", key: "excessQty", width: 18 },
-      { header: "Amount", key: "amount", width: 18 },
-    ];
+  const columns = [
+    { header: "S.No",        key: "sno",        width: 6  },
+    { header: "Order No",    key: "ORDERNO",    width: 30 },
+    { header: "Buyer Name",  key: "BUYERNAME",  width: 32 },
+    { header: "BPO No",      key: "BUYERPONO",  width: 30 },
+    { header: "Style",       key: "STYLE",      width: 20 },
+    { header: "Order Qty",   key: "ORDERQTY",   width: 14 },
+    { header: "Cutting",     key: "CUTTING",    width: 14 },
+    { header: "Sewing",      key: "SEWING",     width: 14 },
+    { header: "Power Table", key: "POWERTABLE", width: 14 },
+    { header: "Singer",      key: "SINGER",     width: 14 },
+    { header: "Checking",    key: "CHECKING",   width: 14 },
+    { header: "Packing",     key: "PACKING",    width: 14 },
+    { header: "Box",         key: "BOX",        width: 14 },
+  ];
 
-    ws.columns = columns;
-    const mergeEnd = String.fromCharCode(64 + columns.length);
+  const NUM_FIELDS_EXCEL = [
+    "ORDERQTY", "CUTTING", "SEWING", "POWERTABLE",
+    "SINGER", "CHECKING", "PACKING", "BOX",
+  ];
+  const numKeys = new Set(NUM_FIELDS_EXCEL);
 
-    // Row 1: Title
-    ws.insertRow(1, [`Order Entry Buyer Wise Status`]);
-    ws.mergeCells(`A1:${mergeEnd}1`);
-    const tc = ws.getCell("A1");
-    tc.font = { bold: true, size: 14, color: { argb: "FF000000" } };
-    tc.alignment = { horizontal: "center", vertical: "middle" };
-    ws.getRow(1).height = 30;
+  ws.columns = columns;
+  const mergeEnd = String.fromCharCode(64 + columns.length);
 
-    // Row 2: Insights
-    addInsightsRowTurnOver({
-      worksheet: ws,
-      startRow: 2,
-      totalColumns: 4,
-      selectedYear,
-      localCompany: selectedComp,
-      dynamicField: "Buyer Code",
-      dynamicValue: selectedBuyer,
-  
+  // Row 1: Title
+  ws.insertRow(1, [`Order Entry Buyer Wise Status`]);
+  ws.mergeCells(`A1:${mergeEnd}1`);
+  const tc = ws.getCell("A1");
+  tc.font = { bold: true, size: 14, color: { argb: "FF000000" } };
+  tc.alignment = { horizontal: "center", vertical: "middle" };
+  ws.getRow(1).height = 30;
+
+  // Row 2: Insights
+  addInsightsRowTurnOver({
+    worksheet: ws,
+    startRow: 2,
+    totalColumns: 4,
+    selectedYear,
+    localCompany: selectedComp,
+    dynamicField: "Buyer Code",
+    dynamicValue: selectedBuyer,
+  });
+
+  // Row 3: Headers
+  const hr = ws.getRow(3);
+  hr.height = 26;
+  hr.eachCell((cell) => {
+    cell.font = { bold: true };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9D9D9" } };
+    cell.border = {
+      top: { style: "thin" }, bottom: { style: "thin" },
+      left: { style: "thin" }, right: { style: "thin" },
+    };
+  });
+
+  // Data rows
+  filtered.forEach((r, i) => {
+    ws.addRow({
+      sno:        i + 1,
+      ORDERNO:    r.ORDERNO,
+      BUYERNAME:  r.BUYERNAME,
+      BUYERPONO:  r.BUYERPONO,
+      STYLE:      r.STYLE,
+      ORDERQTY:   Number(r.ORDERQTY  || 0),
+      CUTTING:    r.CUTTING    != null ? Number(r.CUTTING)    : null,
+      SEWING:     r.SEWING     != null ? Number(r.SEWING)     : null,
+      POWERTABLE: r.POWERTABLE != null ? Number(r.POWERTABLE) : null,
+      SINGER:     r.SINGER     != null ? Number(r.SINGER)     : null,
+      CHECKING:   r.CHECKING   != null ? Number(r.CHECKING)   : null,
+      PACKING:    r.PACKING    != null ? Number(r.PACKING)    : null,
+      BOX:        r.BOX        != null ? Number(r.BOX)        : null,
     });
+  });
 
-    // Row 3: Headers
-    const hr = ws.getRow(3);
-    hr.height = 26;
-    hr.eachCell((cell) => {
-      cell.font = { bold: true };
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFD9D9D9" },
-      };
-      cell.border = {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-      };
-    });
-
-    // Data rows
-    filtered.forEach((r, i) => {
-      ws.addRow({
-        sno: i + 1,
-        orderNo: r.orderNo,
-        orderDate: fmtDate(r.orderDate),
-        buyerName: r.buyerName,
-        bpoNo: r.bpoNo,
-        styleRefNo: r.styleRefNo,
-        orderPackType: r.orderPackType,
-        orderQty: Number(r.orderQty || 0),
-        excessQty: Number(r.excessQty || 0),
-        amount: Number(r.amount || 0),
-      });
-    });
-
-    // Style data rows
-    ws.eachRow((row, rn) => {
-      if (rn <= 3) return;
-      const rowData = filtered[rn - 4];
-      row.height = 22;
-      row.eachCell((cell, cn) => {
-        const key = columns[cn - 1]?.key;
-        cell.alignment = {
-          horizontal:
-            key === "sno"
-              ? "center"
-              : ["orderQty", "excessQty", "amount"].includes(key)
-                ? "right"
-                : "left",
-          vertical: "middle",
-          indent: 1,
-        };
-        if (["orderQty", "excessQty"].includes(key))
-          cell.numFmt = getExcelQtyFormatByUOM(rowData?.orderPackType || "");
-        if (key === "amount") cell.numFmt = "#,##0.00";
-      });
-    });
-
-    // Totals row
-    const tr = ws.addRow({
-      sno: "",
-      orderNo: "",
-      orderDate: "",
-      buyerName: "",
-      bpoNo: "TOTAL",
-      styleRefNo: "",
-      orderPackType: "",
-      orderQty: totals.orderQty,
-      excessQty: totals.excessQty,
-      amount: totals.amount,
-    });
-    tr.height = 24;
-    tr.eachCell((cell, cn) => {
+  // Style data rows
+  ws.eachRow((row, rn) => {
+    if (rn <= 3) return;
+    row.height = 22;
+    row.eachCell((cell, cn) => {
       const key = columns[cn - 1]?.key;
-      cell.font = { bold: true };
-      cell.border = { top: { style: "thin" } };
       cell.alignment = {
-        horizontal: ["orderQty", "excessQty", "amount"].includes(key)
-          ? "right"
-          : "center",
+        horizontal: key === "sno" ? "center" : numKeys.has(key) ? "right" : "left",
         vertical: "middle",
         indent: 1,
       };
-      if (["orderQty", "excessQty"].includes(key))
-        cell.numFmt = getExcelQtyFormatByUOM("");
-      if (key === "amount") cell.numFmt = "#,##0.00";
+      if (numKeys.has(key)) cell.numFmt = "#,##0.00";
     });
+  });
 
-    ws.views = [{ state: "frozen", ySplit: 3 }];
-    const buf = await wb.xlsx.writeBuffer();
-    saveAs(
-      new Blob([buf], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      }),
-      `OrderEntry_BuyerWise_${selectedBuyer}_${selectedYear}.xlsx`,
-    );
-  };
+  // Totals row
+  const totalRow = ws.addRow({
+    sno: "", ORDERNO: "", BUYERNAME: "", BUYERPONO: "TOTAL", STYLE: "",
+    ...Object.fromEntries(
+      NUM_FIELDS_EXCEL.map((f) => [f, totals[f] ?? 0])
+    ),
+  });
+  totalRow.height = 24;
+  totalRow.eachCell((cell, cn) => {
+    const key = columns[cn - 1]?.key;
+    cell.font = { bold: true };
+    cell.border = { top: { style: "thin" } };
+    cell.alignment = {
+      horizontal: numKeys.has(key) ? "right" : "center",
+      vertical: "middle",
+      indent: 1,
+    };
+    if (numKeys.has(key)) cell.numFmt = "#,##0.00";
+  });
+
+  ws.views = [{ state: "frozen", ySplit: 3 }];
+  const buf = await wb.xlsx.writeBuffer();
+  saveAs(
+    new Blob([buf], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+    `OrderEntry_BuyerWise_${selectedBuyer}_${selectedYear}.xlsx`
+  );
+};
 
   /* ── Render ── */
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex justify-center items-center">
-      <div className="bg-white w-[1360px] h-[630px] p-4 rounded-xl relative">
+      <div className="bg-white w-[1500px] h-[650px] p-4 rounded-xl relative">
+
         {/* HEADER */}
         <div className="flex justify-between items-center">
           <h2 className="font-bold uppercase">
@@ -342,47 +846,33 @@ const OrderEntryBuyerWiseStatusTable = ({
               {/* Year */}
               <select
                 value={selectedYear}
-                onChange={(e) => {
-                  setSelectedYear(e.target.value);
-                  resetPage();
-                }}
+                onChange={(e) => { setSelectedYear(e.target.value); resetPage(); }}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
               >
-                <option value="" disabled>
-                  Select Year
-                </option>
+                <option value="" disabled>Select Year</option>
                 {(finYr?.data || []).map((item) => (
-                  <option key={item.finYear} value={item.finYear}>
-                    {item.finYear}
-                  </option>
+                  <option key={item.finYear} value={item.finYear}>{item.finYear}</option>
                 ))}
               </select>
 
               {/* Company */}
               <select
                 value={selectedComp}
-                onChange={(e) => {
-                  setSelectedComp(e.target.value);
-                  resetPage();
-                }}
+                onChange={(e) => { setSelectedComp(e.target.value); resetPage(); }}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
               >
                 <option value="JKC">JKC</option>
+                {/* <option value="PSS">PSS</option> */}
               </select>
 
               {/* Buyer */}
               <select
                 value={selectedBuyer}
-                onChange={(e) => {
-                  setSelectedBuyer(e.target.value);
-                  resetPage();
-                }}
+                onChange={(e) => { setSelectedBuyer(e.target.value); resetPage(); }}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-28"
               >
                 {buyerCodes.map((code) => (
-                  <option key={code} value={code}>
-                    {code}
-                  </option>
+                  <option key={code} value={code}>{code}</option>
                 ))}
               </select>
 
@@ -406,70 +896,77 @@ const OrderEntryBuyerWiseStatusTable = ({
         </div>
 
         {/* RECORD COUNT & TOTALS */}
-        <div className="flex gap-6 mt-0.5">
+        <div className="flex gap-6 mt-0.5 flex-wrap">
           <p className="text-xs font-semibold text-gray-600">
-            Total Records:{" "}
-            <span className="text-blue-600">{filtered.length}</span>
+            Total Records: <span className="text-blue-600">{filtered.length}</span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
-            Total Order Qty:{" "}
-            <span className="text-green-600">
-              {Number(totals.orderQty).toLocaleString("en-IN")}
-            </span>
+            Order Qty: <span className="text-green-600">{INR(totals.ORDERQTY)}</span>
+          </p>
+          {/* <p className="text-xs font-semibold text-gray-600">
+            Yarn Qty: <span className="text-amber-600">{INR(totals.YARNQTY)}</span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
-            Total Excess Qty:{" "}
-            <span className="text-red-600">
-              {Number(totals.excessQty).toLocaleString("en-IN")}
-            </span>
+            Knit Qty: <span className="text-indigo-600">{INR(totals.KNITQTY)}</span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
-            Total Amount:{" "}
-            <span className="text-purple-600">{INR(totals.amount)}</span>
+            Fin Qty: <span className="text-teal-600">{INR(totals.FINQTY)}</span>
           </p>
+          <p className="text-xs font-semibold text-gray-600">
+            Y Bal: <span className="text-red-600">{INR(totals.YBAL)}</span>
+          </p>
+          <p className="text-xs font-semibold text-gray-600">
+            Knit Bal: <span className="text-red-600">{INR(totals.KNITBAL)}</span>
+          </p>
+          <p className="text-xs font-semibold text-gray-600">
+            In Bal: <span className="text-red-600">{INR(totals.INBAL)}</span>
+          </p> */}
         </div>
 
         {/* SEARCH */}
         <div className="flex justify-between items-start mt-2">
           <SearchBar
-            keys={["orderNo", "buyerName", "bpoNo", "styleRefNo"]}
+            keys={["ORDERNO", "BUYERNAME", "BUYERPONO", "STYLE"]}
             state={search}
-            setState={(val) => {
-              setSearch(val);
-              resetPage();
-            }}
+            setState={(val) => { setSearch(val); resetPage(); }}
           />
         </div>
 
-        {/* TABLE — INTERNAL ORDER only */}
+        {/* TABLE */}
         <div
           className="overflow-x-auto border border-gray-300"
-          style={{
-            height: "470px",
-            border: "1px solid gray",
-            borderRadius: "16px",
-          }}
+          style={{ height: "460px", border: "1px solid gray", borderRadius: "16px" }}
         >
-          <table className="w-[1520px] border-collapse text-[11px] table-fixed">
+          <table className="w-full border-collapse text-[11px] table-fixed" style={{ minWidth: "1800px" }}>
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-8">S.No</TH>
-                <TH cls="w-32">Order No</TH>
-                <TH cls="w-20">Order Date</TH>
-                <TH cls="w-44">Buyer Name</TH>
-                <TH cls="w-44">BPO No</TH>
-                <TH cls="w-28">Style Ref No</TH>
-                <TH cls="w-20">Pack Type</TH>
+                <TH cls="w-36">Order No</TH>
+                <TH cls="w-40">Buyer Name</TH>
+                <TH cls="w-36">BPO No</TH>
+                <TH cls="w-28">Style</TH>
                 <TH cls="w-20">Order Qty</TH>
-                <TH cls="w-20">Excess Qty</TH>
-                <TH cls="w-24">Amount</TH>
+                {/* <TH cls="w-20">Yarn Qty</TH>
+                <TH cls="w-20">Knit Qty</TH>
+                <TH cls="w-20">Fin Qty</TH>
+                <TH cls="w-20">Y Bal</TH>
+                <TH cls="w-20">Knit Bal</TH>
+                <TH cls="w-20">In Bal</TH> */}
+                <TH cls="w-20">Cutting</TH>
+                <TH cls="w-20">Sewing</TH>
+                                <TH cls="w-20">POWERTABLE</TH>
+                                <TH cls="w-20">SINGER</TH>
+
+                <TH cls="w-20">Checking</TH>
+                <TH cls="w-20">Packing</TH>
+                <TH cls="w-20">Box</TH>
               </tr>
             </thead>
             <tbody>
               {isLoading || isFetching ? (
-                <LoadingRow cols={10} />
+                <LoadingRow cols={13} />
               ) : currentRows.length === 0 ? (
-                <EmptyRow cols={10} />
+                <EmptyRow cols={13} />
               ) : (
                 currentRows.map((row, i) => (
                   <tr
@@ -479,25 +976,24 @@ const OrderEntryBuyerWiseStatusTable = ({
                     <td className="border p-1 text-center text-gray-500">
                       {(page - 1) * RECORDS + i + 1}
                     </td>
-                    <td className="border p-1 pl-2">{row.orderNo}</td>
-                    <td className="border p-1 pl-1">
-                      {fmtDate(row.orderDate)}
-                    </td>
-                    <td className="border p-1 pl-2">{row.buyerName}</td>
-                    <td className="border p-1 pl-2">{row.bpoNo}</td>
-                    <td className="border p-1 pl-2">{row.styleRefNo}</td>
-                    <td className="border p-1 text-left pl-2">
-                      {row.orderPackType}
-                    </td>
-                    <td className="border p-1 pr-2 text-right">
-                      {formatQtyByUOM(row.orderQty, row.orderPackType)}
-                    </td>
-                    <td className="border p-1 pr-2 text-right">
-                      {formatQtyByUOM(row.excessQty, row.orderPackType)}
-                    </td>
-                    <td className="border p-1 pr-2 text-right text-sky-700">
-                      {INR(row.amount)}
-                    </td>
+                    <td className="border p-1 pl-2">{row.ORDERNO}</td>
+                    <td className="border p-1 pl-2">{row.BUYERNAME}</td>
+                    <td className="border p-1 pl-2">{row.BUYERPONO}</td>
+                    <td className="border p-1 pl-2">{row.STYLE}</td>
+                    <NumCell val={row.ORDERQTY} />
+                    {/* <NumCell val={row.YARNQTY} />
+                    <NumCell val={row.KNITQTY} />
+                    <NumCell val={row.FINQTY} />
+                    <NumCell val={row.YBAL} />
+                    <NumCell val={row.KNITBAL} />
+                    <NumCell val={row.INBAL} /> */}
+                    <NumCell val={row.CUTTING} />
+                    <NumCell val={row.SEWING} />
+                    <NumCell val={row.POWERTABLE} />
+                    <NumCell val={row.SINGER} />
+                    <NumCell val={row.CHECKING} />
+                    <NumCell val={row.PACKING} />
+                    <NumCell val={row.BOX} />
                   </tr>
                 ))
               )}

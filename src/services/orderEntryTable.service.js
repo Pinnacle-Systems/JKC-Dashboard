@@ -220,43 +220,194 @@ ORDER BY 1,2,3,4,5,6,7,8`;
   }
 }
 
-export async function getOrderEntryBuyerWiseStatusTable(req, res) {
+export async function getOrderEntryStatusTableWithStatus(req, res) {
   const connection = await getConnection(res);
   try {
-    const { finYear, companyName, buyerCode } = req.query;
+    const { finYear, companyName, buyerCode, typeName } = req.query; // status no longer needed
     const buyerFilter =
       buyerCode && buyerCode !== "ALL"
         ? `AND C.BUYERCODE = '${buyerCode}'`
         : "";
 
-    const sql = `SELECT A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,
-A.BUYERNAME,LISTAGG(A.BPONO,',') WITHIN GROUP (ORDER BY A.BPONO) BPONO,A.STYLEREFNO,A.ORDERPACKTYPE,
-SUM(A.ORDERQTY) ORDERQTY,SUM(A.EXCESSQTY) EXCESSQTY,SUM(A.AMOUNT) AMOUNT FROM (
-SELECT A.COMPCODE,'INTERNAL ORDER' TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYER BUYERCODE,
-C.BUYERNAME,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,
-SUM(A.SHIPQTY) ORDERQTY,SUM(A.PRODQTY) EXCESSQTY,SUM(A.SHIPQTY* A.BUYERPRICE * A.CONVALUE) AMOUNT FROM ORDERALLOWDET A
-JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID 
-WHERE A.COMPCODE = '${companyName}' AND A.FINYR = '${finYear}' ${buyerFilter}
-GROUP BY A.COMPCODE,A.ORDERNO,A.ORDERDATE,A.BUYER,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,A.BUYER,C.BUYERNAME
-) A
-GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.STYLEREFNO,A.ORDERPACKTYPE`;
+    let sql = "";
+
+    /* ════════════════════════════════════════════
+       INTERNAL ORDER
+    ════════════════════════════════════════════ */
+    if (typeName === "INTERNAL ORDER") {
+      sql = `
+        SELECT A.COMPCODE, A.TYPENAME, A.ORDERNO, A.ORDERDATE, A.BUYERCODE,
+          A.BUYERNAME,
+          LISTAGG(A.BPONO, ',') WITHIN GROUP (ORDER BY A.BPONO) BPONO,
+          A.STYLEREFNO, A.ORDERPACKTYPE,
+          SUM(A.ORDERQTY) ORDERQTY, SUM(A.EXCESSQTY) EXCESSQTY, SUM(A.AMOUNT) AMOUNT
+        FROM (
+          SELECT A.COMPCODE, 'INTERNAL ORDER' TYPENAME, A.ORDERNO, A.ORDERDATE,
+            A.BUYER BUYERCODE, C.BUYERNAME, A.BPONO,
+            A.STYLEREFNO, A.ORDERPACKTYPE,
+            SUM(A.SHIPQTY) ORDERQTY,
+            SUM(A.PRODQTY) EXCESSQTY,
+            SUM(A.SHIPQTY * A.BUYERPRICE * A.CONVALUE) AMOUNT
+          FROM ORDERALLOWDET A
+          JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
+          WHERE A.COMPCODE = '${companyName}'
+            AND A.FINYR = '${finYear}' ${buyerFilter}
+          GROUP BY A.COMPCODE, A.ORDERNO, A.ORDERDATE, A.BUYER,
+            C.BUYERNAME, A.BPONO, A.STYLEREFNO, A.ORDERPACKTYPE
+        ) A
+        GROUP BY A.COMPCODE, A.TYPENAME, A.ORDERNO, A.ORDERDATE,
+          A.BUYERCODE, A.BUYERNAME, A.STYLEREFNO, A.ORDERPACKTYPE
+      `;
+
+    /* ════════════════════════════════════════════
+       FABRIC PROCESS PLAN — always completed
+    ════════════════════════════════════════════ */
+    } else if (typeName === "FABRIC PROCESS PLAN") {
+      sql = `
+        SELECT DISTINCT A.FINYR, A.COMPCODE, 'FABRIC PROCESS PLAN' TYPENAME,
+          B.PLANNO, B.PLANDATE, B.TRANSTYPE, A.ORDERNO, A.ORDERDATE,
+          C.BUYERNAME, B.PLANDATE - A.ORDERDATE AGE
+        FROM ORDERALLOWDET A
+        JOIN GTFYPPLAN B ON B.ORDERNO = A.GTNORDERENTRYID
+        JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
+        WHERE A.COMPCODE = '${companyName}'
+          AND A.FINYR = '${finYear}' ${buyerFilter}
+        GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
+          C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
+          A.ORDERPACKTYPE, B.PLANNO, B.PLANDATE, B.TRANSTYPE
+        ORDER BY 1,2,3,4,5,6,7,8
+      `;
+
+    /* ════════════════════════════════════════════
+       ACCESSORIES PLAN — always completed
+    ════════════════════════════════════════════ */
+    } else if (typeName === "ACCESSORIES PLAN") {
+      sql = `
+        SELECT DISTINCT A.FINYR, A.COMPCODE, 'ACCESSORIES PLAN' TYPENAME,
+          B.ACCPLANNO, B.ACCPLANDATE, B.TRANSTYPE, A.ORDERNO, A.ORDERDATE,
+          C.BUYERNAME, B.ACCPLANDATE - A.ORDERDATE AGE
+        FROM ORDERALLOWDET A
+        JOIN GTACCPLAN B ON B.ORDERNO = A.GTNORDERENTRYID
+        JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
+        WHERE A.COMPCODE = '${companyName}'
+          AND A.FINYR = '${finYear}' ${buyerFilter}
+        GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
+          C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
+          A.ORDERPACKTYPE, B.ACCPLANNO, B.ACCPLANDATE, B.TRANSTYPE
+        ORDER BY 1,2,3,4,5,6,7,8
+      `;
+
+    /* ════════════════════════════════════════════
+       CMT PLAN — always completed
+    ════════════════════════════════════════════ */
+    } else if (typeName === "CMT PLAN") {
+      sql = `
+        SELECT DISTINCT A.FINYR, A.COMPCODE, 'CMT PLAN' TYPENAME,
+          B.DOCID, B.DOCDATE, A.ORDERNO, A.ORDERDATE,
+          C.BUYERNAME, B.DOCDATE - A.ORDERDATE AGE
+        FROM ORDERALLOWDET A
+        JOIN GTCMTPLAN B ON B.ORDERNO = A.GTNORDERENTRYID
+        JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
+        WHERE A.COMPCODE = '${companyName}'
+          AND A.FINYR = '${finYear}' ${buyerFilter}
+        GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
+          C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
+          A.ORDERPACKTYPE, B.DOCID, B.DOCDATE
+        ORDER BY 1,2,3,4,5,6,7,8
+      `;
+
+    /* ════════════════════════════════════════════
+       PRE - BUDGET — always completed
+    ════════════════════════════════════════════ */
+    } else if (typeName === "PRE - BUDGET") {
+      sql = `
+        SELECT DISTINCT A.FINYR, A.COMPCODE, 'PRE - BUDGET' TYPENAME,
+          B.BUDID DOCID, B.BUDDATE DOCDATE, A.ORDERNO, A.ORDERDATE,
+          C.BUYERNAME, B.BUDDATE - A.ORDERDATE AGE
+        FROM ORDERALLOWDET A
+        JOIN GTBM B ON B.ORDERNO = A.GTNORDERENTRYID
+        JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
+        WHERE A.COMPCODE = '${companyName}'
+          AND A.FINYR = '${finYear}' ${buyerFilter}
+        GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
+          C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
+          A.ORDERPACKTYPE, B.BUDID, B.BUDDATE
+        ORDER BY 1,2,3,4,5,6,7,8
+      `;
+    }
 
     const result = await connection.execute(sql);
 
-    let resp = result.rows?.map((po) => ({
-      compCode: po[0],
-      typeName: po[1],
-      orderNo: po[2],
-      orderDate: po[3],
-      buyerCode: po[4],
-      buyerName: po[5],
-      bpoNo: po[6],
-      styleRefNo: po[7],
-      orderPackType: po[8],
-      orderQty: po[9],
-      excessQty: po[10],
-      amount: po[11],
-    }));
+    /* ── Response mapping — based on typeName only ── */
+    let resp;
+
+    if (typeName === "INTERNAL ORDER") {
+      resp = result.rows?.map((po) => ({
+        compCode:      po[0],
+        typeName:      po[1],
+        orderNo:       po[2],
+        orderDate:     po[3],
+        buyerCode:     po[4],
+        buyerName:     po[5],
+        bpoNo:         po[6],
+        styleRefNo:    po[7],
+        orderPackType: po[8],
+        orderQty:      po[9],
+        excessQty:     po[10],
+        amount:        po[11],
+      }));
+    } else if (typeName === "FABRIC PROCESS PLAN") {
+      resp = result.rows?.map((po) => ({
+        finYear:   po[0],
+        compCode:  po[1],
+        typeName:  po[2],
+        planNo:    po[3],
+        planDate:  po[4],
+        transType: po[5],
+        orderNo:   po[6],
+        orderDate: po[7],
+        buyerName: po[8],
+        age:       po[9],
+      }));
+    } else if (typeName === "ACCESSORIES PLAN") {
+      resp = result.rows?.map((po) => ({
+        finYear:     po[0],
+        compCode:    po[1],
+        typeName:    po[2],
+        accplanNo:   po[3],
+        accplanDate: po[4],
+        transType:   po[5],
+        orderNo:     po[6],
+        orderDate:   po[7],
+        buyerName:   po[8],
+        age:         po[9],
+      }));
+    } else if (typeName === "CMT PLAN") {
+      resp = result.rows?.map((po) => ({
+        finYear:   po[0],
+        compCode:  po[1],
+        typeName:  po[2],
+        docId:     po[3],
+        docDate:   po[4],
+        orderNo:   po[5],
+        orderDate: po[6],
+        buyerName: po[7],
+        age:       po[8],
+      }));
+    } else if (typeName === "PRE - BUDGET") {
+      resp = result.rows?.map((po) => ({
+        finYear:   po[0],
+        compCode:  po[1],
+        typeName:  po[2],
+        docId:     po[3],
+        docDate:   po[4],
+        orderNo:   po[5],
+        orderDate: po[6],
+        buyerName: po[7],
+        age:       po[8],
+      }));
+    }
+
     return res.json({ statusCode: 0, data: resp });
   } catch (err) {
     console.error("Error retrieving data:", err);
@@ -265,6 +416,52 @@ GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.S
     await connection.close();
   }
 }
+
+// export async function getOrderEntryBuyerWiseStatusTable(req, res) {
+//   const connection = await getConnection(res);
+//   try {
+//     const { finYear, companyName, buyerCode } = req.query;
+//     const buyerFilter =
+//       buyerCode && buyerCode !== "ALL"
+//         ? `AND C.BUYERCODE = '${buyerCode}'`
+//         : "";
+
+//     const sql = `SELECT A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,
+// A.BUYERNAME,LISTAGG(A.BPONO,',') WITHIN GROUP (ORDER BY A.BPONO) BPONO,A.STYLEREFNO,A.ORDERPACKTYPE,
+// SUM(A.ORDERQTY) ORDERQTY,SUM(A.EXCESSQTY) EXCESSQTY,SUM(A.AMOUNT) AMOUNT FROM (
+// SELECT A.COMPCODE,'INTERNAL ORDER' TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYER BUYERCODE,
+// C.BUYERNAME,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,
+// SUM(A.SHIPQTY) ORDERQTY,SUM(A.PRODQTY) EXCESSQTY,SUM(A.SHIPQTY* A.BUYERPRICE * A.CONVALUE) AMOUNT FROM ORDERALLOWDET A
+// JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
+// WHERE A.COMPCODE = '${companyName}' AND A.FINYR = '${finYear}' ${buyerFilter}
+// GROUP BY A.COMPCODE,A.ORDERNO,A.ORDERDATE,A.BUYER,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,A.BUYER,C.BUYERNAME
+// ) A
+// GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.STYLEREFNO,A.ORDERPACKTYPE`;
+
+//     const result = await connection.execute(sql);
+
+//     let resp = result.rows?.map((po) => ({
+//       compCode: po[0],
+//       typeName: po[1],
+//       orderNo: po[2],
+//       orderDate: po[3],
+//       buyerCode: po[4],
+//       buyerName: po[5],
+//       bpoNo: po[6],
+//       styleRefNo: po[7],
+//       orderPackType: po[8],
+//       orderQty: po[9],
+//       excessQty: po[10],
+//       amount: po[11],
+//     }));
+//     return res.json({ statusCode: 0, data: resp });
+//   } catch (err) {
+//     console.error("Error retrieving data:", err);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   } finally {
+//     await connection.close();
+//   }
+// }
 
 export async function getOrderEntryBuyerPoNoWiseQtyStatusTable(req, res) {
   const connection = await getConnection(res);
@@ -313,7 +510,41 @@ GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.S
     await connection.close();
   }
 }
+export async function getOrderEntryBuyerWiseStatusTable(req, res) {
+  const connection = await getConnection(res);
 
+  try {
+    const { finYear, companyName, buyerCode } = req.query;
+
+    const buyerFilter =
+      buyerCode && buyerCode !== "ALL" ? `AND BUYERCODE = '${buyerCode}'` : "";
+
+    const sql = `
+      SELECT *
+      FROM FABINHOUSETOPACK
+      WHERE COMPCODE = '${companyName}'
+        AND FINYR = '${finYear}'
+        ${buyerFilter}
+    `;
+
+    const result = await connection.execute(sql, [], {
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
+
+    return res.json({
+      statusCode: 0,
+      data: result.rows,
+    });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  } finally {
+    await connection.close();
+  }
+}
 export async function getOrderEntryStyleItemGroupWiseQtyTable(req, res) {
   const connection = await getConnection(res);
   try {
