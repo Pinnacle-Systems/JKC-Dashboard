@@ -1,7 +1,8 @@
 import { getConnection } from "../constants/db.connection.js";
 import oracledb from "oracledb";
 
-// COMPCODE DROPDOWN DATA
+// The 5 five functions are not used for Order Entry Planning Status Table breakup
+
 export async function getOrderEntryStatusTable(req, res) {
   const connection = await getConnection(res);
   try {
@@ -220,6 +221,9 @@ ORDER BY 1,2,3,4,5,6,7,8`;
   }
 }
 
+// 1. Query for Order Entry Planning Status breakup
+
+
 export async function getOrderEntryStatusTableWithStatus(req, res) {
   const connection = await getConnection(res);
   try {
@@ -237,8 +241,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
     if (typeName === "INTERNAL ORDER") {
       sql = `
         SELECT A.COMPCODE, A.TYPENAME, A.ORDERNO, A.ORDERDATE, A.BUYERCODE,
-          A.BUYERNAME,
-          LISTAGG(A.BPONO, ',') WITHIN GROUP (ORDER BY A.BPONO) BPONO,
+          A.BUYERNAME,LISTAGG(A.BPONO, ',') WITHIN GROUP (ORDER BY A.BPONO) BPONO,
           A.STYLEREFNO, A.ORDERPACKTYPE,
           SUM(A.ORDERQTY) ORDERQTY, SUM(A.EXCESSQTY) EXCESSQTY, SUM(A.AMOUNT) AMOUNT
         FROM (
@@ -250,7 +253,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
             SUM(A.SHIPQTY * A.BUYERPRICE * A.CONVALUE) AMOUNT
           FROM ORDERALLOWDET A
           JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
-          WHERE A.COMPCODE = '${companyName}'
+          WHERE A.COMPCODE = '${companyName}' AND A.ORDERTYPE = 'ORDER'
             AND A.FINYR = '${finYear}' ${buyerFilter}
           GROUP BY A.COMPCODE, A.ORDERNO, A.ORDERDATE, A.BUYER,
             C.BUYERNAME, A.BPONO, A.STYLEREFNO, A.ORDERPACKTYPE
@@ -270,7 +273,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
         FROM ORDERALLOWDET A
         JOIN GTFYPPLAN B ON B.ORDERNO = A.GTNORDERENTRYID
         JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
-        WHERE A.COMPCODE = '${companyName}'
+        WHERE A.COMPCODE = '${companyName}' AND A.ORDERTYPE = 'ORDER'
           AND A.FINYR = '${finYear}' ${buyerFilter}
         GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
           C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
@@ -289,7 +292,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
         FROM ORDERALLOWDET A
         JOIN GTACCPLAN B ON B.ORDERNO = A.GTNORDERENTRYID
         JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
-        WHERE A.COMPCODE = '${companyName}'
+        WHERE A.COMPCODE = '${companyName}' AND A.ORDERTYPE = 'ORDER'
           AND A.FINYR = '${finYear}' ${buyerFilter}
         GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
           C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
@@ -308,7 +311,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
         FROM ORDERALLOWDET A
         JOIN GTCMTPLAN B ON B.ORDERNO = A.GTNORDERENTRYID
         JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
-        WHERE A.COMPCODE = '${companyName}'
+        WHERE A.COMPCODE = '${companyName}' AND A.ORDERTYPE = 'ORDER'
           AND A.FINYR = '${finYear}' ${buyerFilter}
         GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
           C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
@@ -327,7 +330,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
         FROM ORDERALLOWDET A
         JOIN GTBM B ON B.ORDERNO = A.GTNORDERENTRYID
         JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
-        WHERE A.COMPCODE = '${companyName}'
+        WHERE A.COMPCODE = '${companyName}' AND A.ORDERTYPE = 'ORDER'
           AND A.FINYR = '${finYear}' ${buyerFilter}
         GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
           C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
@@ -417,51 +420,95 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
   }
 }
 
-// export async function getOrderEntryBuyerWiseStatusTable(req, res) {
-//   const connection = await getConnection(res);
-//   try {
-//     const { finYear, companyName, buyerCode } = req.query;
-//     const buyerFilter =
-//       buyerCode && buyerCode !== "ALL"
-//         ? `AND C.BUYERCODE = '${buyerCode}'`
-//         : "";
+// 2. Order Entry — Buyer Wise Status Table
 
-//     const sql = `SELECT A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,
-// A.BUYERNAME,LISTAGG(A.BPONO,',') WITHIN GROUP (ORDER BY A.BPONO) BPONO,A.STYLEREFNO,A.ORDERPACKTYPE,
-// SUM(A.ORDERQTY) ORDERQTY,SUM(A.EXCESSQTY) EXCESSQTY,SUM(A.AMOUNT) AMOUNT FROM (
-// SELECT A.COMPCODE,'INTERNAL ORDER' TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYER BUYERCODE,
-// C.BUYERNAME,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,
-// SUM(A.SHIPQTY) ORDERQTY,SUM(A.PRODQTY) EXCESSQTY,SUM(A.SHIPQTY* A.BUYERPRICE * A.CONVALUE) AMOUNT FROM ORDERALLOWDET A
-// JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
-// WHERE A.COMPCODE = '${companyName}' AND A.FINYR = '${finYear}' ${buyerFilter}
-// GROUP BY A.COMPCODE,A.ORDERNO,A.ORDERDATE,A.BUYER,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,A.BUYER,C.BUYERNAME
-// ) A
-// GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.STYLEREFNO,A.ORDERPACKTYPE`;
+export async function getOrderEntryBuyerWiseStatusTable(req, res) {
+  const connection = await getConnection(res);
 
-//     const result = await connection.execute(sql);
+  try {
+    const { finYear, companyName, buyerCode } = req.query;
 
-//     let resp = result.rows?.map((po) => ({
-//       compCode: po[0],
-//       typeName: po[1],
-//       orderNo: po[2],
-//       orderDate: po[3],
-//       buyerCode: po[4],
-//       buyerName: po[5],
-//       bpoNo: po[6],
-//       styleRefNo: po[7],
-//       orderPackType: po[8],
-//       orderQty: po[9],
-//       excessQty: po[10],
-//       amount: po[11],
-//     }));
-//     return res.json({ statusCode: 0, data: resp });
-//   } catch (err) {
-//     console.error("Error retrieving data:", err);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   } finally {
-//     await connection.close();
-//   }
-// }
+    const buyerFilter =
+      buyerCode && buyerCode !== "ALL" ? `AND BUYERCODE = '${buyerCode}'` : "";
+
+    const sql = `
+      SELECT *
+      FROM FABINHOUSETOPACK
+      WHERE COMPCODE = '${companyName}'
+        AND FINYR = '${finYear}'
+        ${buyerFilter}
+    `;
+
+    const result = await connection.execute(sql, [], {
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
+
+    return res.json({
+      statusCode: 0,
+      data: result.rows,
+    });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  } finally {
+    await connection.close();
+  }
+}
+
+
+// 3. Order Entry — Buyer Wise Quantity Table
+
+export async function getOrderEntryBuyerWiseQuantityTable(req, res) {
+  const connection = await getConnection(res);
+  try {
+    const { finYear, companyName, buyerCode } = req.query;
+    const buyerFilter =
+      buyerCode && buyerCode !== "ALL"
+        ? `AND C.BUYERCODE = '${buyerCode}'`
+        : "";
+
+    const sql = `SELECT A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,
+A.BUYERNAME,LISTAGG(A.BPONO,',') WITHIN GROUP (ORDER BY A.BPONO) BPONO,A.STYLEREFNO,A.ORDERPACKTYPE,
+SUM(A.ORDERQTY) ORDERQTY,SUM(A.EXCESSQTY) EXCESSQTY,SUM(A.AMOUNT) AMOUNT FROM (
+SELECT A.COMPCODE,'INTERNAL ORDER' TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYER BUYERCODE,
+C.BUYERNAME,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,
+SUM(A.SHIPQTY) ORDERQTY,SUM(A.PRODQTY) EXCESSQTY,SUM(A.SHIPQTY* A.BUYERPRICE * A.CONVALUE) AMOUNT FROM ORDERALLOWDET A
+JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
+WHERE A.COMPCODE = '${companyName}' AND A.FINYR = '${finYear}' ${buyerFilter}
+GROUP BY A.COMPCODE,A.ORDERNO,A.ORDERDATE,A.BUYER,A.BPONO,A.BPODATE,A.STYLEREFNO,A.ORDERPACKTYPE,A.BUYER,C.BUYERNAME
+) A
+GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.STYLEREFNO,A.ORDERPACKTYPE`;
+
+    const result = await connection.execute(sql);
+
+    let resp = result.rows?.map((po) => ({
+      compCode: po[0],
+      typeName: po[1],
+      orderNo: po[2],
+      orderDate: po[3],
+      buyerCode: po[4],
+      buyerName: po[5],
+      bpoNo: po[6],
+      styleRefNo: po[7],
+      orderPackType: po[8],
+      orderQty: po[9],
+      excessQty: po[10],
+      amount: po[11],
+    }));
+    return res.json({ statusCode: 0, data: resp });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await connection.close();
+  }
+}
+
+
+// 4. Order Entry — Buyer — PO No. Wise Quantity Table
 
 export async function getOrderEntryBuyerPoNoWiseQtyStatusTable(req, res) {
   const connection = await getConnection(res);
@@ -510,41 +557,9 @@ GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.S
     await connection.close();
   }
 }
-export async function getOrderEntryBuyerWiseStatusTable(req, res) {
-  const connection = await getConnection(res);
 
-  try {
-    const { finYear, companyName, buyerCode } = req.query;
+// 5. Order Entry — Style —ItemGroup Wise Qty Table
 
-    const buyerFilter =
-      buyerCode && buyerCode !== "ALL" ? `AND BUYERCODE = '${buyerCode}'` : "";
-
-    const sql = `
-      SELECT *
-      FROM FABINHOUSETOPACK
-      WHERE COMPCODE = '${companyName}'
-        AND FINYR = '${finYear}'
-        ${buyerFilter}
-    `;
-
-    const result = await connection.execute(sql, [], {
-      outFormat: oracledb.OUT_FORMAT_OBJECT,
-    });
-
-    return res.json({
-      statusCode: 0,
-      data: result.rows,
-    });
-  } catch (err) {
-    console.error("Error retrieving data:", err);
-
-    return res.status(500).json({
-      error: "Internal Server Error",
-    });
-  } finally {
-    await connection.close();
-  }
-}
 export async function getOrderEntryStyleItemGroupWiseQtyTable(req, res) {
   const connection = await getConnection(res);
   try {
@@ -619,6 +634,8 @@ export async function getOrderEntryStyleItemGroupWiseQtyTable(req, res) {
     await connection.close();
   }
 }
+
+// 6. Order Entry — Color Wise Quantity Table
 
 export async function getOrderEntryColorWiseQtyTable(req, res) {
   const connection = await getConnection(res);

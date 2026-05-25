@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { useGetOrderEntryBuyerWiseStatusTableQuery } from "../../../../redux/service/OrderEntry";
+import { useGetOrderEntryBuyerWiseQuantityTableQuery } from "../../../../redux/service/OrderEntry";
 import moment from "moment";
 import {
   addInsightsRowTurnOver,
@@ -121,7 +121,7 @@ const OrderEntryBuyerQtyWise = ({
     data: ioRes,
     isLoading,
     isFetching,
-  } = useGetOrderEntryBuyerWiseStatusTableQuery(
+  } = useGetOrderEntryBuyerWiseQuantityTableQuery(
     {
       params: {
         finYear: selectedYear,

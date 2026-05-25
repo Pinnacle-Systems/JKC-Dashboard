@@ -236,12 +236,7 @@ const ProductionStatus = ({ companyName }) => {
                 value={fromDate}
                 max={toDate}
                 onChange={(e) => handleFromDateChange(e.target.value)}
-                style={{
-                  fontSize: "11px",
-                  padding: "3px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                }}
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600"
               />
 
               {/* TO DATE */}
@@ -250,25 +245,14 @@ const ProductionStatus = ({ companyName }) => {
                 value={toDate}
                 min={fromDate}
                 onChange={(e) => handleToDateChange(e.target.value)}
-                style={{
-                  fontSize: "11px",
-                  padding: "3px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                }}
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600"
               />
 
               {/* STORE DROPDOWN */}
               <select
                 value={selectedStore}
                 onChange={(e) => setSelectedStore(e.target.value)}
-                style={{
-                  fontSize: "11px",
-                  padding: "3px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                  width: "380px",
-                }}
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-92"
               >
                 {storeOptions.map((store) => (
                   <option key={store} value={store}>

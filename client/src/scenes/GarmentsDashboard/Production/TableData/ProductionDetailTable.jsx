@@ -11,7 +11,10 @@ import {
 } from "react-icons/fa";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { useGetProductionTableQuery, useGetProductionSummaryTableQuery } from "../../../../redux/service/production";
+import {
+  useGetProductionTableQuery,
+  useGetProductionSummaryTableQuery,
+} from "../../../../redux/service/production";
 import moment from "moment";
 import {
   addInsightsRowTurnOver,
@@ -86,11 +89,22 @@ const TH = ({ children, cls = "" }) => (
 );
 
 /* ── Summary Table ── */
-const SummaryTable = ({ data, isLoading, isFetching, page, setPage, search, setSearch }) => {
+const SummaryTable = ({
+  data,
+  isLoading,
+  isFetching,
+  page,
+  setPage,
+  search,
+  setSearch,
+}) => {
   const SUMMARY_RECORDS = 30;
 
   const textMatch = (row, field, val) =>
-    !val || String(row[field] ?? "").toLowerCase().includes(val.toLowerCase());
+    !val ||
+    String(row[field] ?? "")
+      .toLowerCase()
+      .includes(val.toLowerCase());
 
   const filteredData = useMemo(
     () =>
@@ -99,53 +113,25 @@ const SummaryTable = ({ data, isLoading, isFetching, page, setPage, search, setS
           textMatch(r, "ORDERNO", search.ORDERNO) &&
           textMatch(r, "BUYERNAME", search.BUYERNAME) &&
           textMatch(r, "STYLEREFNO", search.STYLEREFNO) &&
-          textMatch(r, "COLORNAME", search.COLORNAME)
+          textMatch(r, "COLORNAME", search.COLORNAME),
       ),
-    [data, search]
+    [data, search],
   );
 
   const totalPages = Math.ceil(filteredData.length / SUMMARY_RECORDS) || 1;
-  const currentRows = filteredData.slice((page - 1) * SUMMARY_RECORDS, page * SUMMARY_RECORDS);
-
-  const totals = useMemo(
-    () =>
-      filteredData.reduce(
-        (acc, r) => ({
-          ORDERQTY: acc.ORDERQTY + Number(r.ORDERQTY || 0),
-          CUTTING_QTY: acc.CUTTING_QTY + Number(r.CUTTING_QTY || 0),
-          SINGER_QTY: acc.SINGER_QTY + Number(r.SINGER_QTY || 0),
-          POWERTABLE_QTY: acc.POWERTABLE_QTY + Number(r.POWERTABLE_QTY || 0),
-          IRONING_QTY: acc.IRONING_QTY + Number(r.IRONING_QTY || 0),
-          SEWING_QTY: acc.SEWING_QTY + Number(r.SEWING_QTY || 0),
-          CHECKING_QTY: acc.CHECKING_QTY + Number(r.CHECKING_QTY || 0),
-          PACKING_QTY: acc.PACKING_QTY + Number(r.PACKING_QTY || 0),
-          TOTAL_QTY: acc.TOTAL_QTY + Number(r.TOTAL_QTY || 0),
-        }),
-        {
-          ORDERQTY: 0,
-          CUTTING_QTY: 0,
-          SINGER_QTY: 0,
-          POWERTABLE_QTY: 0,
-          IRONING_QTY: 0,
-          SEWING_QTY: 0,
-          CHECKING_QTY: 0,
-          PACKING_QTY: 0,
-          TOTAL_QTY: 0,
-        }
-      ),
-    [filteredData]
+  const currentRows = filteredData.slice(
+    (page - 1) * SUMMARY_RECORDS,
+    page * SUMMARY_RECORDS,
   );
 
   const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
 
   const qtyCell = (val) => (
-    <td className="border p-1 pr-2 text-right font-semibold text-green-700">
-      {fmt(val)}
-    </td>
+    <td className="border p-1 pr-2 text-right">{fmt(val)}</td>
   );
 
   return (
-    <div >
+    <div>
       {/* Summary Search Bar */}
       <SearchBar
         keys={["ORDERNO", "BUYERNAME", "STYLEREFNO", "COLORNAME"]}
@@ -156,39 +142,54 @@ const SummaryTable = ({ data, isLoading, isFetching, page, setPage, search, setS
           COLORNAME: "Color",
         }}
         state={search}
-        setState={(val) => { setSearch(val); setPage(1); }}
+        setState={(val) => {
+          setSearch(val);
+          setPage(1);
+        }}
       />
       <div
         className="overflow-x-auto border border-gray-300"
-              style={{ height: "455px", borderRadius: "12px" }}
+        style={{ height: "455px", borderRadius: "12px" }}
       >
-        <table className="w-[1600px] overflow-auto border-collapse text-[11px] table-fixed" >
+        <table className="w-[1830px] overflow-auto border-collapse text-[11px] table-fixed">
           <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
             <tr>
               <TH cls="w-6">S.No</TH>
-              <TH cls="w-28">Order No</TH>
+              <TH cls="w-32">Order No</TH>
               <TH cls="w-24">Style Ref</TH>
               <TH cls="w-36">Buyer Name</TH>
-              <TH cls="w-28">Color</TH>
+              <TH cls="w-40">Color</TH>
+              <TH cls="w-40">Style Group</TH>
+              <TH cls="w-48">Style Item</TH>
               <TH cls="w-16">Order Qty</TH>
               <TH cls="w-16">Cutting</TH>
+              <TH cls="w-20">Power Table</TH>
               <TH cls="w-16">Singer</TH>
-              <TH cls="w-16">Power Table</TH>
-              <TH cls="w-16">Ironing</TH>
               <TH cls="w-16">Sewing</TH>
               <TH cls="w-16">Checking</TH>
+              <TH cls="w-16">Ironing</TH>
               <TH cls="w-16">Packing</TH>
-              <TH cls="w-16">Total</TH>
+              {/* <TH cls="w-16">Total</TH> */}
             </tr>
           </thead>
           <tbody>
             {isLoading || isFetching ? (
               <tr>
-                <td colSpan={14} className="text-center py-10 text-gray-400 text-xs">Loading...</td>
+                <td
+                  colSpan={14}
+                  className="text-center py-10 text-gray-400 text-xs"
+                >
+                  Loading...
+                </td>
               </tr>
             ) : currentRows.length === 0 ? (
               <tr>
-                <td colSpan={14} className="text-center py-10 text-gray-500 text-xs">No data found</td>
+                <td
+                  colSpan={15}
+                  className="text-center py-10 text-gray-500 text-xs"
+                >
+                  No data found
+                </td>
               </tr>
             ) : (
               <>
@@ -200,24 +201,25 @@ const SummaryTable = ({ data, isLoading, isFetching, page, setPage, search, setS
                     <td className="border p-1 text-center text-gray-500">
                       {(page - 1) * SUMMARY_RECORDS + i + 1}
                     </td>
-                    <td className="border p-1 pl-2 font-medium text-indigo-700">{row.ORDERNO}</td>
+                    <td className="border p-1 pl-2 ">{row.ORDERNO}</td>
                     <td className="border p-1 pl-2">{row.STYLEREFNO}</td>
                     <td className="border p-1 pl-2">{row.BUYERNAME}</td>
                     <td className="border p-1 pl-2">{row.COLORNAME}</td>
+                    <td className="border p-1 pl-2">{row.STYLEGROUP}</td>
+                    <td className="border p-1 pl-2">{row.STYLEITEM}</td>
                     {qtyCell(row.ORDERQTY)}
                     {qtyCell(row.CUTTING_QTY)}
-                    {qtyCell(row.SINGER_QTY)}
                     {qtyCell(row.POWERTABLE_QTY)}
-                    {qtyCell(row.IRONING_QTY)}
+                    {qtyCell(row.SINGER_QTY)}
                     {qtyCell(row.SEWING_QTY)}
                     {qtyCell(row.CHECKING_QTY)}
+                    {qtyCell(row.IRONING_QTY)}
                     {qtyCell(row.PACKING_QTY)}
-                    <td className="border p-1 pr-2 text-right font-bold text-blue-700">
+                    {/* <td className="border p-1 pr-2 text-right font-bold text-blue-700">
                       {fmt(row.TOTAL_QTY)}
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
-               
               </>
             )}
           </tbody>
@@ -239,7 +241,9 @@ const ProductionDetailTable = ({
 }) => {
   const [fromDate, setFromDate] = useState(initFromDate);
   const [toDate, setToDate] = useState(initToDate);
-  const [selectedProcess, setSelectedProcess] = useState(initProcessName || "ALL");
+  const [selectedProcess, setSelectedProcess] = useState(
+    initProcessName || "ALL",
+  );
   const [selectedStore, setSelectedStore] = useState(initStoreId || "ALL");
   const [page, setPage] = useState(1);
   const [selectedComp, setSelectedComp] = useState(companyName);
@@ -272,11 +276,11 @@ const ProductionDetailTable = ({
         compCode: selectedComp,
         fromDate,
         toDate,
-        processName: selectedProcess,
-        storeId: selectedStore,
+        processName: "ALL", // ← always fetch ALL
+        storeId: "ALL", // ← always fetch ALL
       },
     },
-    { skip: !selectedComp || !fromDate || !toDate || isSummaryMode }
+    { skip: !selectedComp || !fromDate || !toDate || isSummaryMode },
   );
 
   /* ── Fetch Summary ── */
@@ -293,50 +297,68 @@ const ProductionDetailTable = ({
         storeId: selectedStore,
       },
     },
-    { skip: !selectedComp || !fromDate || !toDate || !isSummaryMode }
+    { skip: !selectedComp || !fromDate || !toDate || !isSummaryMode },
   );
 
   const rawData = useMemo(
     () => (Array.isArray(response?.data) ? response.data : []),
-    [response]
+    [response],
   );
 
   const summaryData = useMemo(
     () => (Array.isArray(summaryResponse?.data) ? summaryResponse.data : []),
-    [summaryResponse]
+    [summaryResponse],
   );
 
-  /* ── Derived filter options ── */
+  // Derive options from the FULL unfiltered rawData
   const processOptions = useMemo(() => {
-    const names = [...new Set(rawData.map((r) => r.PROCESSNAME).filter(Boolean))];
+    const names = [
+      ...new Set(rawData.map((r) => r.PROCESSNAME).filter(Boolean)),
+    ];
     return ["ALL", ...names];
   }, [rawData]);
 
   const storeOptions = useMemo(() => {
-    const stores = [...new Set(rawData.map((r) => r.STOREID).filter((x) => x?.trim()))];
+    const stores = [
+      ...new Set(rawData.map((r) => r.STOREID).filter((x) => x?.trim())),
+    ];
     return ["ALL", ...stores];
   }, [rawData]);
 
+  // Apply process + store filter client-side
+  const clientFiltered = useMemo(() => {
+    return rawData.filter((r) => {
+      const matchProcess =
+        selectedProcess === "ALL" || r.PROCESSNAME === selectedProcess;
+      const matchStore = selectedStore === "ALL" || r.STOREID === selectedStore;
+      return matchProcess && matchStore;
+    });
+  }, [rawData, selectedProcess, selectedStore]);
+
   /* ── Text filter ── */
   const textMatch = (row, field, val) =>
-    !val || String(row[field] ?? "").toLowerCase().includes(val.toLowerCase());
+    !val ||
+    String(row[field] ?? "")
+      .toLowerCase()
+      .includes(val.toLowerCase());
 
   const filtered = useMemo(
     () =>
-      rawData.filter(
+      clientFiltered.filter(
+        // ← was rawData
         (r) =>
           textMatch(r, "ORDERNO", search.ORDERNO) &&
           textMatch(r, "BUYERNAME", search.BUYERNAME) &&
           textMatch(r, "STYLEREFNO", search.STYLEREFNO) &&
-          textMatch(r, "COLORNAME", search.COLORNAME)
+          textMatch(r, "COLORNAME", search.COLORNAME),
       ),
-    [rawData, search]
+    [clientFiltered, search],
   );
 
   /* ── Totals ── */
   const totalQty = useMemo(
     () => filtered.reduce((sum, r) => sum + Number(r.QTY || 0), 0),
-    [filtered]
+    [filtered],
   );
 
   /* ── Pagination ── */
@@ -345,12 +367,16 @@ const ProductionDetailTable = ({
 
   const LoadingRow = ({ cols }) => (
     <tr>
-      <td colSpan={cols} className="text-center py-10 text-gray-400 text-xs">Loading...</td>
+      <td colSpan={cols} className="text-center py-10 text-gray-400 text-xs">
+        Loading...
+      </td>
     </tr>
   );
   const EmptyRow = ({ cols }) => (
     <tr>
-      <td colSpan={cols} className="text-center py-10 text-gray-500 text-xs">No data found</td>
+      <td colSpan={cols} className="text-center py-10 text-gray-500 text-xs">
+        No data found
+      </td>
     </tr>
   );
 
@@ -407,7 +433,11 @@ const ProductionDetailTable = ({
     hr.eachCell((cell) => {
       cell.font = { bold: true };
       cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9D9D9" } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFD9D9D9" },
+      };
       cell.border = {
         top: { style: "thin" },
         bottom: { style: "thin" },
@@ -436,7 +466,8 @@ const ProductionDetailTable = ({
       row.eachCell((cell, cn) => {
         const key = columns[cn - 1]?.key;
         cell.alignment = {
-          horizontal: key === "sno" ? "center" : key === "QTY" ? "right" : "left",
+          horizontal:
+            key === "sno" ? "center" : key === "QTY" ? "right" : "left",
           vertical: "middle",
           indent: 1,
         };
@@ -475,7 +506,7 @@ const ProductionDetailTable = ({
       new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }),
-      `Production_${selectedProcess}_${selectedComp}_${fromDate}_${toDate}.xlsx`
+      `Production_${selectedProcess}_${selectedComp}_${fromDate}_${toDate}.xlsx`,
     );
   };
 
@@ -492,9 +523,47 @@ const ProductionDetailTable = ({
 
           <div className="flex gap-2 items-center">
             <div className="bg-gray-300 rounded-lg shadow flex gap-x-2 p-2 flex-wrap items-center">
+              {/* ── Summary Toggle Button ── */}
+              <div className="flex gap-2">
+                {[
+                  {
+                    label: "Summary",
+                    value: true,
+                  },
+                  { label: "Detail", value: false },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      setIsSummaryMode(item.value);
+                      resetPage();
+                      setSummarySearch({
+                        ORDERNO: "",
+                        BUYERNAME: "",
+                        STYLEREFNO: "",
+                        COLORNAME: "",
+                      });
+                    }}
+                    title={`Switch to ${item.label} View`}
+                    className={`flex items-center gap-1 px-3 py-1 text-[11px] font-semibold rounded-full shadow-md transition-all
+        ${
+          isSummaryMode === item.value
+            ? "bg-blue-600 text-white scale-105"
+            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+        }
+        focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </button>
+                ))}
+              </div>
               <select
                 value={selectedComp}
-                onChange={(e) => { setSelectedComp(e.target.value); resetPage(); }}
+                onChange={(e) => {
+                  setSelectedComp(e.target.value);
+                  resetPage();
+                }}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
               >
                 <option value="JKC">JKC</option>
@@ -506,8 +575,16 @@ const ProductionDetailTable = ({
                 type="date"
                 value={fromDate}
                 max={toDate}
-                onChange={(e) => { setFromDate(e.target.value); resetPage(); }}
-                style={{ fontSize: "11px", padding: "0px 6px", borderRadius: "6px", border: "2px solid #2563eb" }}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  resetPage();
+                }}
+                style={{
+                  fontSize: "11px",
+                  padding: "0px 6px",
+                  borderRadius: "6px",
+                  border: "2px solid #2563eb",
+                }}
               />
 
               {/* TO DATE */}
@@ -521,18 +598,28 @@ const ProductionDetailTable = ({
                     resetPage();
                   }
                 }}
-                style={{ fontSize: "11px", padding: "0px 6px", borderRadius: "6px", border: "2px solid #2563eb" }}
+                style={{
+                  fontSize: "11px",
+                  padding: "0px 6px",
+                  borderRadius: "6px",
+                  border: "2px solid #2563eb",
+                }}
               />
 
               {/* PROCESS — hidden in summary mode */}
               {!isSummaryMode && (
                 <select
                   value={selectedProcess}
-                  onChange={(e) => { setSelectedProcess(e.target.value); resetPage(); }}
+                  onChange={(e) => {
+                    setSelectedProcess(e.target.value);
+                    resetPage();
+                  }}
                   className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-36"
                 >
                   {processOptions.map((p) => (
-                    <option key={p} value={p}>{p}</option>
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
                   ))}
                 </select>
               )}
@@ -540,27 +627,18 @@ const ProductionDetailTable = ({
               {/* STORE */}
               <select
                 value={selectedStore}
-                onChange={(e) => { setSelectedStore(e.target.value); resetPage(); }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-60"
+                onChange={(e) => {
+                  setSelectedStore(e.target.value);
+                  resetPage();
+                }}
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-92"
               >
                 {storeOptions.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
-
-              {/* ── Summary Toggle Button ── */}
-              <button
-                onClick={() => { setIsSummaryMode((prev) => !prev); resetPage(); setSummarySearch({ ORDERNO: "", BUYERNAME: "", STYLEREFNO: "", COLORNAME: "" }); }}
-                title={isSummaryMode ? "Switch to Detail View" : "Switch to Summary View"}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold border-2 transition-all duration-200 ${
-                  isSummaryMode
-                    ? "bg-blue-600 text-white border-blue-600 shadow-inner"
-                    : "bg-white text-blue-600 border-blue-600 hover:bg-blue-50"
-                }`}
-              >
-                {isSummaryMode ? <FaTable size={12} /> : <FaList size={12} />}
-                {isSummaryMode ? "Summary" : "Detail"}
-              </button>
 
               {/* Excel — only in detail mode */}
               {!isSummaryMode && (
@@ -589,12 +667,27 @@ const ProductionDetailTable = ({
           <p className="text-xs font-semibold text-gray-600">
             Total Records:{" "}
             <span className="text-blue-600">
-              {isSummaryMode ? summaryData.filter(r =>
-                (!summarySearch.ORDERNO || String(r.ORDERNO ?? "").toLowerCase().includes(summarySearch.ORDERNO.toLowerCase())) &&
-                (!summarySearch.BUYERNAME || String(r.BUYERNAME ?? "").toLowerCase().includes(summarySearch.BUYERNAME.toLowerCase())) &&
-                (!summarySearch.STYLEREFNO || String(r.STYLEREFNO ?? "").toLowerCase().includes(summarySearch.STYLEREFNO.toLowerCase())) &&
-                (!summarySearch.COLORNAME || String(r.COLORNAME ?? "").toLowerCase().includes(summarySearch.COLORNAME.toLowerCase()))
-              ).length : filtered.length}
+              {isSummaryMode
+                ? summaryData.filter(
+                    (r) =>
+                      (!summarySearch.ORDERNO ||
+                        String(r.ORDERNO ?? "")
+                          .toLowerCase()
+                          .includes(summarySearch.ORDERNO.toLowerCase())) &&
+                      (!summarySearch.BUYERNAME ||
+                        String(r.BUYERNAME ?? "")
+                          .toLowerCase()
+                          .includes(summarySearch.BUYERNAME.toLowerCase())) &&
+                      (!summarySearch.STYLEREFNO ||
+                        String(r.STYLEREFNO ?? "")
+                          .toLowerCase()
+                          .includes(summarySearch.STYLEREFNO.toLowerCase())) &&
+                      (!summarySearch.COLORNAME ||
+                        String(r.COLORNAME ?? "")
+                          .toLowerCase()
+                          .includes(summarySearch.COLORNAME.toLowerCase())),
+                  ).length
+                : filtered.length}
             </span>
           </p>
           {!isSummaryMode && (
@@ -619,7 +712,10 @@ const ProductionDetailTable = ({
                 COLORNAME: "Color",
               }}
               state={search}
-              setState={(val) => { setSearch(val); resetPage(); }}
+              setState={(val) => {
+                setSearch(val);
+                resetPage();
+              }}
             />
           </div>
         )}
@@ -659,16 +755,16 @@ const ProductionDetailTable = ({
                         <td className="border p-1 text-center text-gray-500">
                           {(page - 1) * RECORDS + i + 1}
                         </td>
-                        <td className="border p-1 pl-2 font-medium text-indigo-700">
-                          {row.PROCESSNAME}
-                        </td>
+                        <td className="border p-1 pl-2 ">{row.PROCESSNAME}</td>
                         <td className="border p-1 pl-2">{row.STOREID}</td>
-                        <td className="border p-1 pl-1">{fmtDate(row.DOCDATE)}</td>
+                        <td className="border p-1 pl-1">
+                          {fmtDate(row.DOCDATE)}
+                        </td>
                         <td className="border p-1 pl-2">{row.ORDERNO}</td>
                         <td className="border p-1 pl-2">{row.BUYERNAME}</td>
                         <td className="border p-1 pl-2">{row.STYLEREFNO}</td>
                         <td className="border p-1 pl-2">{row.COLORNAME}</td>
-                        <td className="border p-1 pr-2 text-right font-semibold text-green-700">
+                        <td className="border p-1 pr-2 text-right ">
                           {Number(row.QTY || 0).toLocaleString("en-IN")}
                         </td>
                       </tr>

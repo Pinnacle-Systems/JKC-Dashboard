@@ -226,7 +226,7 @@
 //       localCompany: selectedComp,
 //       dynamicField: "Buyer Code",
 //       dynamicValue: selectedBuyer,
-  
+
 //     });
 
 //     // Row 3: Headers
@@ -631,21 +631,24 @@ const OrderEntryBuyerWiseStatusTable = ({
   const skip = !selectedYear || !selectedComp;
 
   /* ── Fetch ── */
-  const { data: ioRes, isLoading, isFetching } =
-    useGetOrderEntryBuyerWiseStatusTableQuery(
-      {
-        params: {
-          finYear: selectedYear,
-          companyName: selectedComp,
-          buyerCode: selectedBuyer,
-        },
+  const {
+    data: ioRes,
+    isLoading,
+    isFetching,
+  } = useGetOrderEntryBuyerWiseStatusTableQuery(
+    {
+      params: {
+        finYear: selectedYear,
+        companyName: selectedComp,
+        buyerCode: selectedBuyer,
       },
-      { skip }
-    );
+    },
+    { skip },
+  );
 
   const rawData = useMemo(
     () => (Array.isArray(ioRes?.data) ? ioRes.data : []),
-    [ioRes]
+    [ioRes],
   );
 
   /* ── Filter ── */
@@ -662,16 +665,25 @@ const OrderEntryBuyerWiseStatusTable = ({
           textMatch(r, "ORDERNO", search.ORDERNO) &&
           textMatch(r, "BUYERNAME", search.BUYERNAME) &&
           textMatch(r, "BUYERPONO", search.BUYERPONO) &&
-          textMatch(r, "STYLE", search.STYLE)
+          textMatch(r, "STYLE", search.STYLE),
       ),
-    [rawData, search]
+    [rawData, search],
   );
 
   /* ── Totals ── */
   const NUM_FIELDS = [
-    "ORDERQTY","YARNQTY","KNITQTY","FINQTY",
-    "YBAL","KNITBAL","INBAL",
-    "CUTTING","SEWING","CHECKING","PACKING","BOX",
+    "ORDERQTY",
+    "YARNQTY",
+    "KNITQTY",
+    "FINQTY",
+    "YBAL",
+    "KNITBAL",
+    "INBAL",
+    "CUTTING",
+    "SEWING",
+    "CHECKING",
+    "PACKING",
+    "BOX",
   ];
 
   const totals = useMemo(() => {
@@ -703,138 +715,155 @@ const OrderEntryBuyerWiseStatusTable = ({
 
   /* ── Excel ── */
   /* ── Excel ── */
-const handleExport = async () => {
-  if (!filtered.length) { alert("No data"); return; }
+  const handleExport = async () => {
+    if (!filtered.length) {
+      alert("No data");
+      return;
+    }
 
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet("Order Entry Status");
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Order Entry Status");
 
-  const columns = [
-    { header: "S.No",        key: "sno",        width: 6  },
-    { header: "Order No",    key: "ORDERNO",    width: 30 },
-    { header: "Buyer Name",  key: "BUYERNAME",  width: 32 },
-    { header: "BPO No",      key: "BUYERPONO",  width: 30 },
-    { header: "Style",       key: "STYLE",      width: 20 },
-    { header: "Order Qty",   key: "ORDERQTY",   width: 14 },
-    { header: "Cutting",     key: "CUTTING",    width: 14 },
-    { header: "Sewing",      key: "SEWING",     width: 14 },
-    { header: "Power Table", key: "POWERTABLE", width: 14 },
-    { header: "Singer",      key: "SINGER",     width: 14 },
-    { header: "Checking",    key: "CHECKING",   width: 14 },
-    { header: "Packing",     key: "PACKING",    width: 14 },
-    { header: "Box",         key: "BOX",        width: 14 },
-  ];
+    const columns = [
+      { header: "S.No", key: "sno", width: 6 },
+      { header: "Order No", key: "ORDERNO", width: 30 },
+      { header: "Buyer Name", key: "BUYERNAME", width: 32 },
+      { header: "BPO No", key: "BUYERPONO", width: 30 },
+      { header: "Style", key: "STYLE", width: 20 },
+      { header: "Order Qty", key: "ORDERQTY", width: 14 },
+      { header: "Cutting", key: "CUTTING", width: 14 },
+      { header: "Sewing", key: "SEWING", width: 14 },
+      { header: "Power Table", key: "POWERTABLE", width: 14 },
+      { header: "Singer", key: "SINGER", width: 14 },
+      { header: "Checking", key: "CHECKING", width: 14 },
+      { header: "Packing", key: "PACKING", width: 14 },
+      { header: "Box", key: "BOX", width: 14 },
+    ];
 
-  const NUM_FIELDS_EXCEL = [
-    "ORDERQTY", "CUTTING", "SEWING", "POWERTABLE",
-    "SINGER", "CHECKING", "PACKING", "BOX",
-  ];
-  const numKeys = new Set(NUM_FIELDS_EXCEL);
+    const NUM_FIELDS_EXCEL = [
+      "ORDERQTY",
+      "CUTTING",
+      "SEWING",
+      "POWERTABLE",
+      "SINGER",
+      "CHECKING",
+      "PACKING",
+      "BOX",
+    ];
+    const numKeys = new Set(NUM_FIELDS_EXCEL);
 
-  ws.columns = columns;
-  const mergeEnd = String.fromCharCode(64 + columns.length);
+    ws.columns = columns;
+    const mergeEnd = String.fromCharCode(64 + columns.length);
 
-  // Row 1: Title
-  ws.insertRow(1, [`Order Entry Buyer Wise Status`]);
-  ws.mergeCells(`A1:${mergeEnd}1`);
-  const tc = ws.getCell("A1");
-  tc.font = { bold: true, size: 14, color: { argb: "FF000000" } };
-  tc.alignment = { horizontal: "center", vertical: "middle" };
-  ws.getRow(1).height = 30;
+    // Row 1: Title
+    ws.insertRow(1, [`Order Entry Buyer Wise Status`]);
+    ws.mergeCells(`A1:${mergeEnd}1`);
+    const tc = ws.getCell("A1");
+    tc.font = { bold: true, size: 14, color: { argb: "FF000000" } };
+    tc.alignment = { horizontal: "center", vertical: "middle" };
+    ws.getRow(1).height = 30;
 
-  // Row 2: Insights
-  addInsightsRowTurnOver({
-    worksheet: ws,
-    startRow: 2,
-    totalColumns: 4,
-    selectedYear,
-    localCompany: selectedComp,
-    dynamicField: "Buyer Code",
-    dynamicValue: selectedBuyer,
-  });
-
-  // Row 3: Headers
-  const hr = ws.getRow(3);
-  hr.height = 26;
-  hr.eachCell((cell) => {
-    cell.font = { bold: true };
-    cell.alignment = { horizontal: "center", vertical: "middle" };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9D9D9" } };
-    cell.border = {
-      top: { style: "thin" }, bottom: { style: "thin" },
-      left: { style: "thin" }, right: { style: "thin" },
-    };
-  });
-
-  // Data rows
-  filtered.forEach((r, i) => {
-    ws.addRow({
-      sno:        i + 1,
-      ORDERNO:    r.ORDERNO,
-      BUYERNAME:  r.BUYERNAME,
-      BUYERPONO:  r.BUYERPONO,
-      STYLE:      r.STYLE,
-      ORDERQTY:   Number(r.ORDERQTY  || 0),
-      CUTTING:    r.CUTTING    != null ? Number(r.CUTTING)    : null,
-      SEWING:     r.SEWING     != null ? Number(r.SEWING)     : null,
-      POWERTABLE: r.POWERTABLE != null ? Number(r.POWERTABLE) : null,
-      SINGER:     r.SINGER     != null ? Number(r.SINGER)     : null,
-      CHECKING:   r.CHECKING   != null ? Number(r.CHECKING)   : null,
-      PACKING:    r.PACKING    != null ? Number(r.PACKING)    : null,
-      BOX:        r.BOX        != null ? Number(r.BOX)        : null,
+    // Row 2: Insights
+    addInsightsRowTurnOver({
+      worksheet: ws,
+      startRow: 2,
+      totalColumns: 4,
+      selectedYear,
+      localCompany: selectedComp,
+      dynamicField: "Buyer Code",
+      dynamicValue: selectedBuyer,
     });
-  });
 
-  // Style data rows
-  ws.eachRow((row, rn) => {
-    if (rn <= 3) return;
-    row.height = 22;
-    row.eachCell((cell, cn) => {
+    // Row 3: Headers
+    const hr = ws.getRow(3);
+    hr.height = 26;
+    hr.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFD9D9D9" },
+      };
+      cell.border = {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+    // Data rows
+    filtered.forEach((r, i) => {
+      ws.addRow({
+        sno: i + 1,
+        ORDERNO: r.ORDERNO,
+        BUYERNAME: r.BUYERNAME,
+        BUYERPONO: r.BUYERPONO,
+        STYLE: r.STYLE,
+        ORDERQTY: Number(r.ORDERQTY || 0),
+        CUTTING: r.CUTTING != null ? Number(r.CUTTING) : null,
+        SEWING: r.SEWING != null ? Number(r.SEWING) : null,
+        POWERTABLE: r.POWERTABLE != null ? Number(r.POWERTABLE) : null,
+        SINGER: r.SINGER != null ? Number(r.SINGER) : null,
+        CHECKING: r.CHECKING != null ? Number(r.CHECKING) : null,
+        PACKING: r.PACKING != null ? Number(r.PACKING) : null,
+        BOX: r.BOX != null ? Number(r.BOX) : null,
+      });
+    });
+
+    // Style data rows
+    ws.eachRow((row, rn) => {
+      if (rn <= 3) return;
+      row.height = 22;
+      row.eachCell((cell, cn) => {
+        const key = columns[cn - 1]?.key;
+        cell.alignment = {
+          horizontal:
+            key === "sno" ? "center" : numKeys.has(key) ? "right" : "left",
+          vertical: "middle",
+          indent: 1,
+        };
+        if (numKeys.has(key)) cell.numFmt = "#,##0.00";
+      });
+    });
+
+    // Totals row
+    const totalRow = ws.addRow({
+      sno: "",
+      ORDERNO: "",
+      BUYERNAME: "",
+      BUYERPONO: "TOTAL",
+      STYLE: "",
+      ...Object.fromEntries(NUM_FIELDS_EXCEL.map((f) => [f, totals[f] ?? 0])),
+    });
+    totalRow.height = 24;
+    totalRow.eachCell((cell, cn) => {
       const key = columns[cn - 1]?.key;
+      cell.font = { bold: true };
+      cell.border = { top: { style: "thin" } };
       cell.alignment = {
-        horizontal: key === "sno" ? "center" : numKeys.has(key) ? "right" : "left",
+        horizontal: numKeys.has(key) ? "right" : "center",
         vertical: "middle",
         indent: 1,
       };
       if (numKeys.has(key)) cell.numFmt = "#,##0.00";
     });
-  });
 
-  // Totals row
-  const totalRow = ws.addRow({
-    sno: "", ORDERNO: "", BUYERNAME: "", BUYERPONO: "TOTAL", STYLE: "",
-    ...Object.fromEntries(
-      NUM_FIELDS_EXCEL.map((f) => [f, totals[f] ?? 0])
-    ),
-  });
-  totalRow.height = 24;
-  totalRow.eachCell((cell, cn) => {
-    const key = columns[cn - 1]?.key;
-    cell.font = { bold: true };
-    cell.border = { top: { style: "thin" } };
-    cell.alignment = {
-      horizontal: numKeys.has(key) ? "right" : "center",
-      vertical: "middle",
-      indent: 1,
-    };
-    if (numKeys.has(key)) cell.numFmt = "#,##0.00";
-  });
-
-  ws.views = [{ state: "frozen", ySplit: 3 }];
-  const buf = await wb.xlsx.writeBuffer();
-  saveAs(
-    new Blob([buf], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    }),
-    `OrderEntry_BuyerWise_${selectedBuyer}_${selectedYear}.xlsx`
-  );
-};
+    ws.views = [{ state: "frozen", ySplit: 3 }];
+    const buf = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([buf], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+      `OrderEntry_BuyerWise_${selectedBuyer}_${selectedYear}.xlsx`,
+    );
+  };
 
   /* ── Render ── */
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex justify-center items-center">
       <div className="bg-white w-[1500px] h-[650px] p-4 rounded-xl relative">
-
         {/* HEADER */}
         <div className="flex justify-between items-center">
           <h2 className="font-bold uppercase">
@@ -846,19 +875,29 @@ const handleExport = async () => {
               {/* Year */}
               <select
                 value={selectedYear}
-                onChange={(e) => { setSelectedYear(e.target.value); resetPage(); }}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  resetPage();
+                }}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
               >
-                <option value="" disabled>Select Year</option>
+                <option value="" disabled>
+                  Select Year
+                </option>
                 {(finYr?.data || []).map((item) => (
-                  <option key={item.finYear} value={item.finYear}>{item.finYear}</option>
+                  <option key={item.finYear} value={item.finYear}>
+                    {item.finYear}
+                  </option>
                 ))}
               </select>
 
               {/* Company */}
               <select
                 value={selectedComp}
-                onChange={(e) => { setSelectedComp(e.target.value); resetPage(); }}
+                onChange={(e) => {
+                  setSelectedComp(e.target.value);
+                  resetPage();
+                }}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
               >
                 <option value="JKC">JKC</option>
@@ -868,11 +907,16 @@ const handleExport = async () => {
               {/* Buyer */}
               <select
                 value={selectedBuyer}
-                onChange={(e) => { setSelectedBuyer(e.target.value); resetPage(); }}
+                onChange={(e) => {
+                  setSelectedBuyer(e.target.value);
+                  resetPage();
+                }}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-28"
               >
                 {buyerCodes.map((code) => (
-                  <option key={code} value={code}>{code}</option>
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
                 ))}
               </select>
 
@@ -898,10 +942,12 @@ const handleExport = async () => {
         {/* RECORD COUNT & TOTALS */}
         <div className="flex gap-6 mt-0.5 flex-wrap">
           <p className="text-xs font-semibold text-gray-600">
-            Total Records: <span className="text-blue-600">{filtered.length}</span>
+            Total Records:{" "}
+            <span className="text-blue-600">{filtered.length}</span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
-            Order Qty: <span className="text-green-600">{INR(totals.ORDERQTY)}</span>
+            Order Qty:{" "}
+            <span className="text-green-600">{INR(totals.ORDERQTY)}</span>
           </p>
           {/* <p className="text-xs font-semibold text-gray-600">
             Yarn Qty: <span className="text-amber-600">{INR(totals.YARNQTY)}</span>
@@ -928,16 +974,26 @@ const handleExport = async () => {
           <SearchBar
             keys={["ORDERNO", "BUYERNAME", "BUYERPONO", "STYLE"]}
             state={search}
-            setState={(val) => { setSearch(val); resetPage(); }}
+            setState={(val) => {
+              setSearch(val);
+              resetPage();
+            }}
           />
         </div>
 
         {/* TABLE */}
         <div
           className="overflow-x-auto border border-gray-300"
-          style={{ height: "460px", border: "1px solid gray", borderRadius: "16px" }}
+          style={{
+            height: "460px",
+            border: "1px solid gray",
+            borderRadius: "16px",
+          }}
         >
-          <table className="w-full border-collapse text-[11px] table-fixed" style={{ minWidth: "1800px" }}>
+          <table
+            className="w-full border-collapse text-[11px] table-fixed"
+            style={{ minWidth: "1800px" }}
+          >
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-8">S.No</TH>
@@ -945,18 +1001,22 @@ const handleExport = async () => {
                 <TH cls="w-40">Buyer Name</TH>
                 <TH cls="w-36">BPO No</TH>
                 <TH cls="w-28">Style</TH>
-                <TH cls="w-20">Order Qty</TH>
+                <TH cls="w-32">Order Qty</TH>
+                <TH cls="w-32">Fabric Inhouse Qty</TH>
+                <TH cls="w-32">Fabric Balance</TH>
+
                 {/* <TH cls="w-20">Yarn Qty</TH>
                 <TH cls="w-20">Knit Qty</TH>
                 <TH cls="w-20">Fin Qty</TH>
                 <TH cls="w-20">Y Bal</TH>
                 <TH cls="w-20">Knit Bal</TH>
                 <TH cls="w-20">In Bal</TH> */}
-                <TH cls="w-20">Cutting</TH>
-                <TH cls="w-20">Sewing</TH>
-                                <TH cls="w-20">POWERTABLE</TH>
-                                <TH cls="w-20">SINGER</TH>
 
+                <TH cls="w-20">Cutting</TH>
+
+                <TH cls="w-20">Power Table</TH>
+                <TH cls="w-20">Singer</TH>
+                <TH cls="w-20">Sewing</TH>
                 <TH cls="w-20">Checking</TH>
                 <TH cls="w-20">Packing</TH>
                 <TH cls="w-20">Box</TH>
@@ -981,6 +1041,8 @@ const handleExport = async () => {
                     <td className="border p-1 pl-2">{row.BUYERPONO}</td>
                     <td className="border p-1 pl-2">{row.STYLE}</td>
                     <NumCell val={row.ORDERQTY} />
+                    <NumCell val={row.DYERECQTY} />
+                    <NumCell val={row.INBAL} />
                     {/* <NumCell val={row.YARNQTY} />
                     <NumCell val={row.KNITQTY} />
                     <NumCell val={row.FINQTY} />
@@ -988,9 +1050,9 @@ const handleExport = async () => {
                     <NumCell val={row.KNITBAL} />
                     <NumCell val={row.INBAL} /> */}
                     <NumCell val={row.CUTTING} />
-                    <NumCell val={row.SEWING} />
                     <NumCell val={row.POWERTABLE} />
                     <NumCell val={row.SINGER} />
+                    <NumCell val={row.SEWING} />
                     <NumCell val={row.CHECKING} />
                     <NumCell val={row.PACKING} />
                     <NumCell val={row.BOX} />

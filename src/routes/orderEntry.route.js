@@ -15,7 +15,7 @@ import {
   getCMTPlanTable,
   getPreBudjetTable,
   getOrderEntryBuyerWiseStatusTable,
-  getOrderEntryBuyerPoNoWiseQtyStatusTable,
+  getOrderEntryBuyerPoNoWiseQtyStatusTable,getOrderEntryBuyerWiseQuantityTable,
   getOrderEntryStyleItemGroupWiseQtyTable,
   getOrderEntryColorWiseQtyTable,getOrderEntryStatusTableWithStatus
 } from "../services/orderEntryTable.service.js";
@@ -37,10 +37,23 @@ router.get("/getfabricProcessPlanTable", getfabricProcessPlanTable);
 router.get("/getAccessoriesPlanTable", getAccessoriesPlanTable);
 router.get("/getCMTPlanTable", getCMTPlanTable);
 router.get("/getPreBudjetTable", getPreBudjetTable);
+
+
+router.get("/getOrderEntryStatusTableWithStatus", getOrderEntryStatusTableWithStatus);
+
+
+
 router.get(
   "/getOrderEntryBuyerWiseStatusTable",
   getOrderEntryBuyerWiseStatusTable,
 );
+router.get(
+  "/getOrderEntryBuyerWiseQuantityTable",
+  getOrderEntryBuyerWiseQuantityTable,
+);
+
+
+
 router.get(
   "/getOrderEntryBuyerPoNoWiseStatusTable",
   getOrderEntryBuyerPoNoWiseQtyStatusTable,
@@ -50,6 +63,5 @@ router.get(
   getOrderEntryStyleItemGroupWiseQtyTable,
 );
 router.get("/getOrderEntryColorWiseTable", getOrderEntryColorWiseQtyTable);
-router.get("/getOrderEntryStatusTableWithStatus", getOrderEntryStatusTableWithStatus);
 
 export default router;
