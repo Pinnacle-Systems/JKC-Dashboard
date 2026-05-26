@@ -274,7 +274,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
         JOIN GTFYPPLAN B ON B.ORDERNO = A.GTNORDERENTRYID
         JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
         WHERE A.COMPCODE = '${companyName}' AND A.ORDERTYPE = 'ORDER'
-          AND A.FINYR = '${finYear}' ${buyerFilter}
+          AND A.FINYR = '${finYear}'  AND B.TRANSTYPE = 'PLANNING' ${buyerFilter}
         GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
           C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
           A.ORDERPACKTYPE, B.PLANNO, B.PLANDATE, B.TRANSTYPE
@@ -293,7 +293,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
         JOIN GTACCPLAN B ON B.ORDERNO = A.GTNORDERENTRYID
         JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.GTBUYERMASTID
         WHERE A.COMPCODE = '${companyName}' AND A.ORDERTYPE = 'ORDER'
-          AND A.FINYR = '${finYear}' ${buyerFilter}
+          AND A.FINYR = '${finYear}' AND B.TRANSTYPE = 'PLANNING' ${buyerFilter}
         GROUP BY A.FINYR, A.COMPCODE, A.ORDERNO, A.ORDERDATE,
           C.BUYERNAME, A.BPONO, A.BPODATE, A.STYLEREFNO, A.COLOR,
           A.ORDERPACKTYPE, B.ACCPLANNO, B.ACCPLANDATE, B.TRANSTYPE
