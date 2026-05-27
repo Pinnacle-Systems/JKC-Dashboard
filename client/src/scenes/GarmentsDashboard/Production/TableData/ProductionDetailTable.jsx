@@ -509,7 +509,186 @@ const ProductionDetailTable = ({
       `Production_${selectedProcess}_${selectedComp}_${fromDate}_${toDate}.xlsx`,
     );
   };
+  const handleSummaryExport = async () => {
+    const summaryFiltered = summaryData.filter(
+      (r) =>
+        (!summarySearch.ORDERNO ||
+          String(r.ORDERNO ?? "")
+            .toLowerCase()
+            .includes(summarySearch.ORDERNO.toLowerCase())) &&
+        (!summarySearch.BUYERNAME ||
+          String(r.BUYERNAME ?? "")
+            .toLowerCase()
+            .includes(summarySearch.BUYERNAME.toLowerCase())) &&
+        (!summarySearch.STYLEREFNO ||
+          String(r.STYLEREFNO ?? "")
+            .toLowerCase()
+            .includes(summarySearch.STYLEREFNO.toLowerCase())) &&
+        (!summarySearch.COLORNAME ||
+          String(r.COLORNAME ?? "")
+            .toLowerCase()
+            .includes(summarySearch.COLORNAME.toLowerCase())),
+    );
 
+    if (!summaryFiltered.length) {
+      alert("No data to export");
+      return;
+    }
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Production Summary");
+
+    const columns = [
+      { header: "S.No", key: "sno", width: 6 },
+      { header: "Order No", key: "ORDERNO", width: 32 },
+      { header: "Style Ref", key: "STYLEREFNO", width: 22 },
+      { header: "Buyer Name", key: "BUYERNAME", width: 40 },
+      { header: "Color", key: "COLORNAME", width: 30 },
+      { header: "Style Group", key: "STYLEGROUP", width: 30 },
+      { header: "Style Item", key: "STYLEITEM", width: 40 },
+      { header: "Order Qty", key: "ORDERQTY", width: 14 },
+      { header: "Cutting", key: "CUTTING_QTY", width: 14 },
+      { header: "Power Table", key: "POWERTABLE_QTY", width: 14 },
+      { header: "Singer", key: "SINGER_QTY", width: 14 },
+      { header: "Sewing", key: "SEWING_QTY", width: 14 },
+      { header: "Checking", key: "CHECKING_QTY", width: 14 },
+      { header: "Ironing", key: "IRONING_QTY", width: 14 },
+      { header: "Packing", key: "PACKING_QTY", width: 14 },
+    ];
+
+    ws.columns = columns;
+    const mergeEnd = String.fromCharCode(64 + columns.length);
+
+    // Title row
+    ws.insertRow(1, ["Production Summary"]);
+    ws.mergeCells(`A1:${mergeEnd}1`);
+    const tc = ws.getCell("A1");
+    tc.font = { bold: true, size: 13, color: { argb: "FF000000" } };
+    tc.alignment = { horizontal: "center", vertical: "middle" };
+    ws.getRow(1).height = 28;
+
+    // Insights row (from/to date, unit)
+    addInsightsRowTurnOver({
+      worksheet: ws,
+      startRow: 2,
+      totalColumns: columns.length,
+      localCompany: selectedComp,
+      disableFinYear: true,
+      dynamicField: "From Date",
+      dynamicValue: fmtDate(fromDate),
+      secondDynamicField: "To Date",
+      seconddynamicValue: fmtDate(toDate),
+      thirdDynamicField: "Unit",
+      thirdDynamicValue: selectedStore,
+    });
+
+    // Header row styling
+    const hr = ws.getRow(3);
+    hr.height = 24;
+    hr.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFD9D9D9" },
+      };
+      cell.border = {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+    const qtyKeys = [
+      "ORDERQTY",
+      "CUTTING_QTY",
+      "POWERTABLE_QTY",
+      "SINGER_QTY",
+      "SEWING_QTY",
+      "CHECKING_QTY",
+      "IRONING_QTY",
+      "PACKING_QTY",
+    ];
+
+    // Data rows
+    summaryFiltered.forEach((r, i) => {
+      ws.addRow({
+        sno: i + 1,
+        ORDERNO: r.ORDERNO,
+        STYLEREFNO: r.STYLEREFNO,
+        BUYERNAME: r.BUYERNAME,
+        COLORNAME: r.COLORNAME,
+        STYLEGROUP: r.STYLEGROUP,
+        STYLEITEM: r.STYLEITEM,
+        ORDERQTY: Number(r.ORDERQTY || 0),
+        CUTTING_QTY: Number(r.CUTTING_QTY || 0),
+        POWERTABLE_QTY: Number(r.POWERTABLE_QTY || 0),
+        SINGER_QTY: Number(r.SINGER_QTY || 0),
+        SEWING_QTY: Number(r.SEWING_QTY || 0),
+        CHECKING_QTY: Number(r.CHECKING_QTY || 0),
+        IRONING_QTY: Number(r.IRONING_QTY || 0),
+        PACKING_QTY: Number(r.PACKING_QTY || 0),
+      });
+    });
+
+    // Cell alignment + number format
+    ws.eachRow((row, rn) => {
+      if (rn <= 3) return;
+      row.height = 20;
+      row.eachCell((cell, cn) => {
+        const key = columns[cn - 1]?.key;
+        const isQty = qtyKeys.includes(key);
+        cell.alignment = {
+          horizontal: key === "sno" ? "center" : isQty ? "right" : "left",
+          vertical: "middle",
+          indent: 1,
+        };
+        if (isQty) cell.numFmt = "#,##0";
+      });
+    });
+
+    // Totals row
+    const totals = qtyKeys.reduce((acc, k) => {
+      acc[k] = summaryFiltered.reduce((s, r) => s + Number(r[k] || 0), 0);
+      return acc;
+    }, {});
+
+    const tr = ws.addRow({
+      sno: "",
+      ORDERNO: "",
+      STYLEREFNO: "",
+      BUYERNAME: "",
+      COLORNAME: "",
+      STYLEGROUP: "",
+      STYLEITEM: "TOTAL",
+      ...totals,
+    });
+    tr.height = 22;
+    tr.eachCell((cell, cn) => {
+      const key = columns[cn - 1]?.key;
+      const isQty = qtyKeys.includes(key);
+      cell.font = { bold: true };
+      cell.border = { top: { style: "thin" } };
+      cell.alignment = {
+        horizontal: isQty ? "right" : "left",
+        vertical: "middle",
+        indent: 1,
+      };
+      if (isQty) cell.numFmt = "#,##0";
+    });
+
+    ws.views = [{ state: "frozen", ySplit: 3 }];
+
+    const buf = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([buf], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+      `ProductionSummary_${selectedComp}_${fromDate}_${toDate}.xlsx`,
+    );
+  };
   /* ── Render ── */
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex justify-center items-center">
@@ -569,7 +748,6 @@ const ProductionDetailTable = ({
                 <option value="JKC">JKC</option>
                 <option value="PSS">PSS</option>
               </select>
-
               {/* FROM DATE */}
               <input
                 type="date"
@@ -586,7 +764,6 @@ const ProductionDetailTable = ({
                   border: "2px solid #2563eb",
                 }}
               />
-
               {/* TO DATE */}
               <input
                 type="date"
@@ -605,7 +782,6 @@ const ProductionDetailTable = ({
                   border: "2px solid #2563eb",
                 }}
               />
-
               {/* PROCESS — hidden in summary mode */}
               {!isSummaryMode && (
                 <select
@@ -623,7 +799,6 @@ const ProductionDetailTable = ({
                   ))}
                 </select>
               )}
-
               {/* STORE */}
               <select
                 value={selectedStore}
@@ -639,11 +814,24 @@ const ProductionDetailTable = ({
                   </option>
                 ))}
               </select>
-
               {/* Excel — only in detail mode */}
               {!isSummaryMode && (
                 <button
                   onClick={handleExport}
+                  className="p-0 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
+                  title="Download Excel"
+                >
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/512/732/732220.png"
+                    alt="Excel"
+                    className="w-7 h-7 rounded-lg"
+                  />
+                </button>
+              )}
+              {/* Excel — summary mode */} {/* ← ADD THIS */}
+              {isSummaryMode && (
+                <button
+                  onClick={handleSummaryExport}
                   className="p-0 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
                   title="Download Excel"
                 >
