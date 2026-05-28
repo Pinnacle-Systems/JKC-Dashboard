@@ -116,6 +116,8 @@ const FabricPendingTable = ({
   buyerCode,
   buyerCodes,
 }) => {
+  console.log(typeName, buyerCode, "typeName");
+
   const [selectedYear, setSelectedYear] = useState(finYear);
   const [selectedBuyer, setSelectedBuyer] = useState(buyerCode || "ALL");
   const [selectedTypeName, setSelectedTypeName] = useState(typeName || "ALL");

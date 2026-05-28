@@ -223,7 +223,6 @@ ORDER BY 1,2,3,4,5,6,7,8`;
 
 // 1. Query for Order Entry Planning Status breakup
 
-
 export async function getOrderEntryStatusTableWithStatus(req, res) {
   const connection = await getConnection(res);
   try {
@@ -262,7 +261,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
           A.BUYERCODE, A.BUYERNAME, A.STYLEREFNO, A.ORDERPACKTYPE
       `;
 
-    /* ════════════════════════════════════════════
+      /* ════════════════════════════════════════════
        FABRIC PROCESS PLAN — always completed
     ════════════════════════════════════════════ */
     } else if (typeName === "FABRIC PROCESS PLAN") {
@@ -281,7 +280,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
         ORDER BY 1,2,3,4,5,6,7,8
       `;
 
-    /* ════════════════════════════════════════════
+      /* ════════════════════════════════════════════
        ACCESSORIES PLAN — always completed
     ════════════════════════════════════════════ */
     } else if (typeName === "ACCESSORIES PLAN") {
@@ -300,7 +299,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
         ORDER BY 1,2,3,4,5,6,7,8
       `;
 
-    /* ════════════════════════════════════════════
+      /* ════════════════════════════════════════════
        CMT PLAN — always completed
     ════════════════════════════════════════════ */
     } else if (typeName === "CMT PLAN") {
@@ -319,7 +318,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
         ORDER BY 1,2,3,4,5,6,7,8
       `;
 
-    /* ════════════════════════════════════════════
+      /* ════════════════════════════════════════════
        PRE - BUDGET — always completed
     ════════════════════════════════════════════ */
     } else if (typeName === "PRE - BUDGET") {
@@ -346,68 +345,68 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
 
     if (typeName === "INTERNAL ORDER") {
       resp = result.rows?.map((po) => ({
-        compCode:      po[0],
-        typeName:      po[1],
-        orderNo:       po[2],
-        orderDate:     po[3],
-        buyerCode:     po[4],
-        buyerName:     po[5],
-        bpoNo:         po[6],
-        styleRefNo:    po[7],
+        compCode: po[0],
+        typeName: po[1],
+        orderNo: po[2],
+        orderDate: po[3],
+        buyerCode: po[4],
+        buyerName: po[5],
+        bpoNo: po[6],
+        styleRefNo: po[7],
         orderPackType: po[8],
-        orderQty:      po[9],
-        excessQty:     po[10],
-        amount:        po[11],
+        orderQty: po[9],
+        excessQty: po[10],
+        amount: po[11],
       }));
     } else if (typeName === "FABRIC PROCESS PLAN") {
       resp = result.rows?.map((po) => ({
-        finYear:   po[0],
-        compCode:  po[1],
-        typeName:  po[2],
-        planNo:    po[3],
-        planDate:  po[4],
+        finYear: po[0],
+        compCode: po[1],
+        typeName: po[2],
+        planNo: po[3],
+        planDate: po[4],
         transType: po[5],
-        orderNo:   po[6],
+        orderNo: po[6],
         orderDate: po[7],
         buyerName: po[8],
-        age:       po[9],
+        age: po[9],
       }));
     } else if (typeName === "ACCESSORIES PLAN") {
       resp = result.rows?.map((po) => ({
-        finYear:     po[0],
-        compCode:    po[1],
-        typeName:    po[2],
-        accplanNo:   po[3],
+        finYear: po[0],
+        compCode: po[1],
+        typeName: po[2],
+        accplanNo: po[3],
         accplanDate: po[4],
-        transType:   po[5],
-        orderNo:     po[6],
-        orderDate:   po[7],
-        buyerName:   po[8],
-        age:         po[9],
+        transType: po[5],
+        orderNo: po[6],
+        orderDate: po[7],
+        buyerName: po[8],
+        age: po[9],
       }));
     } else if (typeName === "CMT PLAN") {
       resp = result.rows?.map((po) => ({
-        finYear:   po[0],
-        compCode:  po[1],
-        typeName:  po[2],
-        docId:     po[3],
-        docDate:   po[4],
-        orderNo:   po[5],
+        finYear: po[0],
+        compCode: po[1],
+        typeName: po[2],
+        docId: po[3],
+        docDate: po[4],
+        orderNo: po[5],
         orderDate: po[6],
         buyerName: po[7],
-        age:       po[8],
+        age: po[8],
       }));
     } else if (typeName === "PRE - BUDGET") {
       resp = result.rows?.map((po) => ({
-        finYear:   po[0],
-        compCode:  po[1],
-        typeName:  po[2],
-        docId:     po[3],
-        docDate:   po[4],
-        orderNo:   po[5],
+        finYear: po[0],
+        compCode: po[1],
+        typeName: po[2],
+        docId: po[3],
+        docDate: po[4],
+        orderNo: po[5],
         orderDate: po[6],
         buyerName: po[7],
-        age:       po[8],
+        age: po[8],
       }));
     }
 
@@ -433,7 +432,7 @@ export async function getOrderEntryBuyerWiseStatusTable(req, res) {
 
     const sql = `
       SELECT *
-      FROM FABINHOUSETOPACK
+      FROM FABINHOUSETOPACK_V2
       WHERE COMPCODE = '${companyName}'
         AND FINYR = '${finYear}'
         ${buyerFilter}
@@ -457,7 +456,6 @@ export async function getOrderEntryBuyerWiseStatusTable(req, res) {
     await connection.close();
   }
 }
-
 
 // 3. Order Entry — Buyer Wise Quantity Table
 
@@ -506,7 +504,6 @@ GROUP BY A.COMPCODE,A.TYPENAME,A.ORDERNO,A.ORDERDATE,A.BUYERCODE,A.BUYERNAME,A.S
     await connection.close();
   }
 }
-
 
 // 4. Order Entry — Buyer — PO No. Wise Quantity Table
 

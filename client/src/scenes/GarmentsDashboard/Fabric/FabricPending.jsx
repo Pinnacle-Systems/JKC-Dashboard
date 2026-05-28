@@ -1,14 +1,6 @@
 import React, { useMemo, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  useTheme,
-  Box,
-  IconButton,
-} from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Card, CardContent, CardHeader, useTheme, Box } from "@mui/material";
+
 import ReactECharts from "echarts-for-react";
 import { useGetFabricPendingQuery } from "../../../redux/service/fabric";
 import FabricPendingTable from "./TableData/FabricPendingTable";
@@ -22,10 +14,8 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
   /* ---------------- PAGINATION ---------------- */
 
   const [selectedBuyer, setSelectedBuyer] = useState("");
-  const itemsPerPage = 10;
 
   /* ---------------- DETAIL TABLE STATE ---------------- */
-  const [startIndex, setStartIndex] = useState(0);
   const [tableParams, setTableParams] = useState(null);
 
   /* ---------------- FETCH DATA ---------------- */
@@ -46,11 +36,6 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
       setSelectedBuyer(buyerOptions[0]);
     }
   }, [buyerOptions]);
-  console.log(response, "response");
-
-  /* ---------------- DATE HANDLERS ---------------- */
-
-  /* ---------------- BUYER CHART DATA ---------------- */
 
   const buyerData = useMemo(() => {
     if (!response?.data || !selectedBuyer) return [];
@@ -67,44 +52,16 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
       }));
   }, [response, selectedBuyer]);
 
-  /* ---------------- PAGINATED DATA ---------------- */
-
-  const paginatedData = useMemo(() => {
-    return buyerData.slice(startIndex, startIndex + itemsPerPage);
-  }, [buyerData, startIndex]);
-
-  const hasNext = startIndex + itemsPerPage < buyerData.length;
-
-  const hasPrev = startIndex > 0;
-
-  const handleNext = () => {
-    setStartIndex((prev) => prev + itemsPerPage);
-  };
-
-  const handlePrev = () => {
-    setStartIndex((prev) => prev - itemsPerPage);
-  };
-
-  /* ---------------- CHART DATA ---------------- */
-
-  //   const categories = paginatedData.map((x) => x.typeName);
-  const inProgressData = paginatedData.map((x) => ({
-    value: x.inProgress,
-
-    itemStyle: {
-      color: "#ef4444", // RED
-      borderRadius: [8, 8, 0, 0],
-    },
-  }));
-
   /* ---------------- BAR CLICK HANDLER ---------------- */
 
   const onChartEvents = {
     click: (params) => {
       if (params.componentType !== "series") return;
-      const clickedItem = paginatedData[params.dataIndex];
+      const clickedItem = buyerData.find(
+        (item) => item.typeName === params.name,
+      );
       setTableParams({
-        typeName: clickedItem?.typeName, // ← TYPENAME from pie slice
+        typeName: clickedItem?.typeName,
         buyerName: clickedItem?.buyerName,
         buyerCode: clickedItem?.buyerCode,
       });
@@ -113,7 +70,7 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
 
   /* ---------------- CHART OPTIONS ---------------- */
 
-  const pieData = paginatedData.map((item, index) => ({
+  const pieData = buyerData.map((item, index) => ({
     name: item.typeName,
     value: item.inProgress,
     itemStyle: {
@@ -241,25 +198,6 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
             <Box sx={{ textAlign: "center", py: 10 }}>Loading...</Box>
           ) : (
             <Box position="relative">
-              {/* PREVIOUS BUTTON */}
-
-              {hasPrev && (
-                <IconButton
-                  onClick={handlePrev}
-                  sx={{
-                    position: "absolute",
-                    left: 0,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    zIndex: 10,
-                    bgcolor: "background.paper",
-                    boxShadow: 1,
-                  }}
-                >
-                  <ChevronLeftIcon fontSize="small" />
-                </IconButton>
-              )}
-
               <ReactECharts
                 option={options}
                 onEvents={onChartEvents}
@@ -268,25 +206,6 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
                   cursor: "pointer",
                 }}
               />
-
-              {/* NEXT BUTTON */}
-
-              {hasNext && (
-                <IconButton
-                  onClick={handleNext}
-                  sx={{
-                    position: "absolute",
-                    right: 0,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    zIndex: 10,
-                    bgcolor: "background.paper",
-                    boxShadow: 1,
-                  }}
-                >
-                  <ChevronRightIcon fontSize="small" />
-                </IconButton>
-              )}
             </Box>
           )}
         </CardContent>
