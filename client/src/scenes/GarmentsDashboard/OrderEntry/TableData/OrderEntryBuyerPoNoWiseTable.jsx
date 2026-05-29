@@ -209,15 +209,16 @@ const OrderEntryBuyerPoNoWiseTable = ({
 
     const columns = [
       { header: "S.No", key: "sno", width: 6 },
+      { header: "BPO No", key: "bpoNo", width: 36 },
       { header: "Order No", key: "orderNo", width: 28 },
       { header: "Order Date", key: "orderDate", width: 14 },
-      { header: "Buyer Name", key: "buyerName", width: 32 },
-      { header: "BPO No", key: "bpoNo", width: 36 },
-      { header: "Style Ref No", key: "styleRefNo", width: 18 },
+      { header: "Buyer Name", key: "buyerName", width: 44 },
+
+      { header: "Style Ref No", key: "styleRefNo", width: 22 },
       { header: "Pack Type", key: "orderPackType", width: 18 },
       { header: "Order Qty", key: "orderQty", width: 18 },
       { header: "Excess Qty", key: "excessQty", width: 18 },
-      { header: "Amount", key: "amount", width: 18 },
+      { header: "Amount", key: "amount", width: 22 },
     ];
 
     ws.columns = columns;
@@ -267,10 +268,11 @@ const OrderEntryBuyerPoNoWiseTable = ({
     filtered.forEach((r, i) => {
       ws.addRow({
         sno: i + 1,
+        bpoNo: r.bpoNo,
         orderNo: r.orderNo,
         orderDate: fmtDate(r.orderDate),
         buyerName: r.buyerName,
-        bpoNo: r.bpoNo,
+
         styleRefNo: r.styleRefNo,
         orderPackType: r.orderPackType,
         orderQty: Number(r.orderQty || 0),
@@ -305,12 +307,13 @@ const OrderEntryBuyerPoNoWiseTable = ({
     // Totals row
     const tr = ws.addRow({
       sno: "",
+      bpoNo: "",
       orderNo: "",
       orderDate: "",
       buyerName: "",
-      bpoNo: "TOTAL",
+
       styleRefNo: "",
-      orderPackType: "",
+      orderPackType: "TOTAL",
       orderQty: totals.orderQty,
       excessQty: totals.excessQty,
       amount: totals.amount,
@@ -486,10 +489,11 @@ const OrderEntryBuyerPoNoWiseTable = ({
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-8">S.No</TH>
+                <TH cls="w-44">BPO No</TH>
                 <TH cls="w-32">Order No</TH>
                 <TH cls="w-20">Order Date</TH>
                 <TH cls="w-44">Buyer Name</TH>
-                <TH cls="w-44">BPO No</TH>
+
                 <TH cls="w-28">Style Ref No</TH>
                 <TH cls="w-20">Pack Type</TH>
                 <TH cls="w-20">Order Qty</TH>
@@ -511,12 +515,13 @@ const OrderEntryBuyerPoNoWiseTable = ({
                     <td className="border p-1 text-center text-gray-500">
                       {(page - 1) * RECORDS + i + 1}
                     </td>
+                    <td className="border p-1 pl-2 break-words">{row.bpoNo}</td>
                     <td className="border p-1 pl-2">{row.orderNo}</td>
                     <td className="border p-1 pl-1">
                       {fmtDate(row.orderDate)}
                     </td>
                     <td className="border p-1 pl-2">{row.buyerName}</td>
-                    <td className="border p-1 pl-2">{row.bpoNo}</td>
+
                     <td className="border p-1 pl-2">{row.styleRefNo}</td>
                     <td className="border p-1 text-left pl-2">
                       {row.orderPackType}

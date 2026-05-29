@@ -30,6 +30,7 @@ import {
 import { useGetuserpagesQuery } from "../../redux/service/Rolemaster.js";
 import ProductionIndex from "./Production/index.jsx";
 import FabricIndex from "./Fabric/index.jsx";
+import TAReportIndex from "./TAReport/index.jsx";
 const GarmentsDashboard = () => {
   const dispatch = useDispatch();
   const {
@@ -249,6 +250,22 @@ const GarmentsDashboard = () => {
         </Grid>
         <Grid item xs={12} md={6}>
           <FabricIndex
+            filterBuyer={filterBuyer}
+            selectedYear={selectedYear}
+            selectMonths={selectMonths}
+            finYr={finYr}
+            user={user}
+            onFilterBuyerChange={(val) => dispatch(setFilterBuyer(val))}
+            onYearChange={(val) => dispatch(setSelectedYear(val))}
+            onMonthChange={(val) => dispatch(setSelectMonths(val))}
+            filterBuyerList={filterBuyerListPurchase}
+            poType={poType}
+            setPoType={setPoType}
+            onOpen={() => dispatch(setLastSection("purchase"))}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TAReportIndex
             filterBuyer={filterBuyer}
             selectedYear={selectedYear}
             selectMonths={selectMonths}

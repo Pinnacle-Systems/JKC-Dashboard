@@ -241,13 +241,14 @@ const OrderEntryColorWisetable = ({
 
     const columns = [
       { header: "S.No", key: "sno", width: 6 },
+      { header: "Color", key: "color", width: 20 }, // ← NEW
       { header: "Order No", key: "orderNo", width: 28 },
       { header: "Order Date", key: "orderDate", width: 14 },
       { header: "Buyer Name", key: "buyerName", width: 32 },
       { header: "BPO No", key: "bpoNo", width: 36 },
       { header: "Style Ref No", key: "styleRefNo", width: 18 },
       { header: "Pack Type", key: "orderPackType", width: 18 },
-      { header: "Color", key: "color", width: 20 }, // ← NEW
+
       { header: "Order Qty", key: "orderQty", width: 18 },
       { header: "Excess Qty", key: "excessQty", width: 18 },
       { header: "Amount", key: "amount", width: 18 },
@@ -300,13 +301,14 @@ const OrderEntryColorWisetable = ({
     filtered.forEach((r, i) => {
       ws.addRow({
         sno: i + 1,
+        color: r.color,
         orderNo: r.orderNo,
         orderDate: fmtDate(r.orderDate),
         buyerName: r.buyerName,
         bpoNo: r.bpoNo,
         styleRefNo: r.styleRefNo,
         orderPackType: r.orderPackType,
-        color: r.color,
+
         orderQty: Number(r.orderQty || 0),
         excessQty: Number(r.excessQty || 0),
         amount: Number(r.amount || 0),
@@ -339,13 +341,14 @@ const OrderEntryColorWisetable = ({
     // Totals row
     const tr = ws.addRow({
       sno: "",
+      color: "",
       orderNo: "",
       orderDate: "",
       buyerName: "",
-      bpoNo: "TOTAL",
+      bpoNo: "",
       styleRefNo: "",
-      orderPackType: "",
-      color: "",
+      orderPackType: "TOTAL",
+
       orderQty: totals.orderQty,
       excessQty: totals.excessQty,
       amount: totals.amount,
@@ -445,7 +448,7 @@ const OrderEntryColorWisetable = ({
                   setSelectedColor(e.target.value);
                   resetPage();
                 }}
-                className="px-2 py-1 text-xs border-2 rounded-md  w-52"
+                className="px-2 py-1 text-xs border-2 border-blue-600 rounded-md  w-52"
               >
                 {colorList.map((c) => (
                   <option key={c} value={c}>
@@ -523,13 +526,13 @@ const OrderEntryColorWisetable = ({
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-8">S.No</TH>
+                <TH cls="w-52">Color</TH> {/* ← NEW column */}
                 <TH cls="w-32">Order No</TH>
                 <TH cls="w-20">Order Date</TH>
                 <TH cls="w-44">Buyer Name</TH>
                 <TH cls="w-44">BPO No</TH>
                 <TH cls="w-28">Style Ref No</TH>
                 <TH cls="w-20">Pack Type</TH>
-                <TH cls="w-52">Color</TH> {/* ← NEW column */}
                 <TH cls="w-20">Order Qty</TH>
                 <TH cls="w-20">Excess Qty</TH>
                 <TH cls="w-24">Amount</TH>
@@ -549,19 +552,19 @@ const OrderEntryColorWisetable = ({
                     <td className="border p-1 text-center text-gray-500">
                       {(page - 1) * RECORDS + i + 1}
                     </td>
+                    <td className="border p-1 pl-2 text-orange-600 font-medium">
+                      {row.color}
+                    </td>{" "}
                     <td className="border p-1 pl-2">{row.orderNo}</td>
                     <td className="border p-1 pl-1">
                       {fmtDate(row.orderDate)}
                     </td>
                     <td className="border p-1 pl-2">{row.buyerName}</td>
-                    <td className="border p-1 pl-2">{row.bpoNo}</td>
+                    <td className="border p-1 pl-2 break-words">{row.bpoNo}</td>
                     <td className="border p-1 pl-2">{row.styleRefNo}</td>
                     <td className="border p-1 text-left pl-2">
                       {row.orderPackType}
                     </td>
-                    <td className="border p-1 pl-2 text-orange-600 font-medium">
-                      {row.color}
-                    </td>{" "}
                     {/* ← NEW cell */}
                     <td className="border p-1 pr-2 text-right">
                       {formatQtyByUOM(row.orderQty, row.orderPackType)}
