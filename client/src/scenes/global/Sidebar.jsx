@@ -240,7 +240,7 @@ const Sidebar = () => {
               </StyledListItemButton>
             </Tooltip> */}
 
-            {/* <Tooltip
+            <Tooltip
               title="MIS Dashborad"
               placement="right"
               disableHoverListener={!isCollapsed}
@@ -268,7 +268,7 @@ const Sidebar = () => {
                 />
             
               </StyledListItemButton>
-            </Tooltip> */}
+            </Tooltip>
 
             {/* <Tooltip
               title="HR Dashboard"

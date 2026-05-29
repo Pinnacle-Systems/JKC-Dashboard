@@ -202,51 +202,48 @@ const HomeESI = () => {
   const { data: ESIdata, isLoading, isError } = useGetEsilastmonthQuery();
 
   // console.log(ESIdata,"ESIdata");
-  
 
   if (isLoading) return <CircularProgress />;
-  if (isError) return <div>Error loading data</div>;
-  if (!ESIdata?.data?.length) return <div>No data found</div>;
+  // if (isError) return <div>Error loading data</div>;
+  // if (!ESIdata?.data?.length) return <div>No data found</div>;
 
-  const chartData1 = ESIdata.data.map((e) => e.customer);
+  const chartData1 = ESIdata?.data.map((e) => e.customer);
 
   // const month = ESIdata.data[0]?.month;
-  const year = ESIdata.data.map((e) => e.Year);
+  const year = ESIdata?.data.map((e) => e.Year);
 
-  const colors = chartData1.map(
-    () => "#" + Math.floor(Math.random() * 16777215).toString(16)
+  const colors = chartData1?.map(
+    () => "#" + Math.floor(Math.random() * 16777215).toString(16),
   );
 
-  const formattedData = ESIdata.data.map((item, i) => ({
+  const formattedData = ESIdata?.data.map((item, i) => ({
     name: item.customer,
     y: item.esi,
     color: colors[i],
     headCount: item.headCount,
     Year: year[i],
-    month:item.month
-    
+    month: item.month,
   }));
 
   // console.log(formattedData,"formattedData");
-  
 
-  const totalESI = ESIdata.data
+  const totalESI = ESIdata?.data
     .map((x) => Number(x.esi ?? 0))
     .reduce((a, b) => a + b, 0);
 
   const options = {
     chart: {
-      height:250,
+      height: 250,
       plotBackgroundColor: null,
       plotBorderWidth: 0,
       plotShadow: true,
-      spacing: [0, 0, 0, 0],     
+      spacing: [0, 0, 0, 0],
     },
     title: {
       text: `ESI<br>shares of<br>Latest month`,
       align: "center",
       verticalAlign: "middle",
-      y:70,
+      y: 70,
       style: { fontSize: ".9em" },
     },
     tooltip: {
@@ -276,14 +273,19 @@ const HomeESI = () => {
           events: {
             click: function () {
               // console.log(this.month,"thismontyh");
-              
+
               dispatch(
                 push({
                   id: "ESIDetail",
                   name: "ESIDetail",
                   component: "DetailedDashBoard",
-                  data: { companyName: this.name, Year: this.Year ,autoFocusBuyer: true,selectedmonth:this.month},
-                })
+                  data: {
+                    companyName: this.name,
+                    Year: this.Year,
+                    autoFocusBuyer: true,
+                    selectedmonth: this.month,
+                  },
+                }),
               );
             },
           },
@@ -314,7 +316,7 @@ const HomeESI = () => {
       <CardHeader
         title="ESI Contribution"
         titleTypographyProps={{
-          sx: { fontSize: "1rem", fontWeight: 600,  },
+          sx: { fontSize: "1rem", fontWeight: 600 },
         }}
         sx={{
           borderBottom: (theme) => `2px solid ${theme.palette.divider}`,
@@ -336,7 +338,7 @@ const HomeESI = () => {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            OverAll Contribution : {totalESI.toLocaleString('en-IN')}
+            OverAll Contribution : {totalESI?.toLocaleString("en-IN")}
           </Typography>
         </Box>
       </CardContent>

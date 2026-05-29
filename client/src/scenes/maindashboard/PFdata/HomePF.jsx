@@ -21,31 +21,31 @@ const HomePF = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
 
-  const { data: pfdata  ,isLoading, isError} = useGetEPFlastmonthQuery();
+  const { data: pfdata, isLoading, isError } = useGetEPFlastmonthQuery();
 
   if (isLoading) return <CircularProgress />;
-    if (isError) return <div>Error loading data</div>;
-    if (!pfdata?.data?.length) return <div>No data found</div>;
-  
-    const chartData1 = pfdata.data.map((e) => e.customer);
-  
-    // const month = ESIdata.data[0]?.month;
-    // const year = pfdata.data.map((e) => e.Year);
-  
-    const colors = chartData1.map(
-      () => "#" + Math.floor(Math.random() * 16777215).toString(16)
-    );
-    const year = pfdata?.data.map((item) => item.Year);
-  
-    // const formattedData = pfdata.data.map((item, i) => ({
-    //   name: item.customer,
-    //   y: item.pf,
-    //   color: colors[i],
-    //   headCount: item.headCount,
-    //   Year: year[i],
-    //   month:item.month
-      
-    // }));
+  // if (isError) return <div>Error loading data</div>;
+  // if (!pfdata?.data?.length) return <div>No data found</div>;
+
+  const chartData1 = pfdata?.data?.map((e) => e.customer);
+
+  // const month = ESIdata.data[0]?.month;
+  // const year = pfdata.data.map((e) => e.Year);
+
+  const colors = chartData1?.map(
+    () => "#" + Math.floor(Math.random() * 16777215).toString(16),
+  );
+  const year = pfdata?.data.map((item) => item.Year);
+
+  // const formattedData = pfdata.data.map((item, i) => ({
+  //   name: item.customer,
+  //   y: item.pf,
+  //   color: colors[i],
+  //   headCount: item.headCount,
+  //   Year: year[i],
+  //   month:item.month
+
+  // }));
 
   // console.log(pfdata, "PFdata");
 
@@ -60,7 +60,7 @@ const HomePF = () => {
         alpha: 40,
       },
       backgroundColor: "#FFFFFF",
-   
+
       height: 265,
       borderRadius: 10,
       margin: [0, 0, 0, 0],
@@ -85,11 +85,11 @@ const HomePF = () => {
       pie: {
         innerSize: 100,
         depth: 60,
-         center: ["50%", "50%"],
-         size: "100%",
+        center: ["50%", "50%"],
+        size: "100%",
 
         dataLabels: {
-          distance:-5,
+          distance: -5,
           formatter: function () {
             return `${this.point.name}`;
           },
@@ -111,8 +111,13 @@ const HomePF = () => {
                   id: "PFDetails",
                   name: "PFDetails",
                   component: "PFIndex",
-                  data: { companyName, Year,autoFocusBuyer: true,selectedmonth:this.month },
-                })
+                  data: {
+                    companyName,
+                    Year,
+                    autoFocusBuyer: true,
+                    selectedmonth: this.month,
+                  },
+                }),
               );
             },
           },
@@ -128,8 +133,8 @@ const HomePF = () => {
       pointFormatter: function () {
         return `
                     <span style="color:${this.color}">\u25CF</span>
-                    <span style="color: #2d2d2d;"> PF Amount: <b>${this.y.toLocaleString('en-IN')}</b></span><br/>
-                    <span style="color: #2d2d2d;"> headCount: <b>${this.count.toLocaleString('en-IN')}</b></span><br/>
+                    <span style="color: #2d2d2d;"> PF Amount: <b>${this.y.toLocaleString("en-IN")}</b></span><br/>
+                    <span style="color: #2d2d2d;"> headCount: <b>${this.count.toLocaleString("en-IN")}</b></span><br/>
                     <span style="color: #2d2d2d;"> headCount: <b>${this.month}</b></span><br/>
                 `;
       },
@@ -142,7 +147,7 @@ const HomePF = () => {
           y: item.pf,
           count: item.headCount,
           Year: year[index],
-          month:item.month
+          month: item.month,
         })),
       },
     ],
@@ -196,7 +201,7 @@ const HomePF = () => {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            OverAll Contribution : {headcount?.toLocaleString('en-IN')}
+            OverAll Contribution : {headcount?.toLocaleString("en-IN")}
           </Typography>
         </Box>
       </Card>
