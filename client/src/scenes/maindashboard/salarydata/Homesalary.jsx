@@ -10,7 +10,11 @@ import {
   CardHeader,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
-import { useGetMisDashboardSalaryDetQuery, useGetsalarydelQuery, useGetsallastmonthQuery } from "../../../redux/service/misDashboardService";
+import {
+  useGetMisDashboardSalaryDetQuery,
+  useGetsalarydelQuery,
+  useGetsallastmonthQuery,
+} from "../../../redux/service/misDashboardService";
 import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
 
@@ -23,25 +27,24 @@ const HomeSalary = () => {
   //   error,
   // } = useGetMisDashboardSalaryDetQuery({ params: {} });
 
-  const [selectedmonth,setSelectedmonth]=useState("")
- 
+  const [selectedmonth, setSelectedmonth] = useState("");
 
   const dispatch = useDispatch();
 
-  const{data:lastmonth,isLoading,isError,error}=useGetsallastmonthQuery()
-
+  const {
+    data: lastmonth,
+    isLoading,
+    isError,
+    error,
+  } = useGetsallastmonthQuery();
 
   // console.log(lastmonth,"lastmonth");
-  
 
-  const Year =lastmonth?.data.find((x)=>x.Year)
+  const Year = lastmonth?.data.find((x) => x.Year);
 
-  useEffect(()=>{
-    setSelectedmonth(Year?.month)
-  },[Year])
- 
- 
-  
+  useEffect(() => {
+    setSelectedmonth(Year?.month);
+  }, [Year]);
 
   if (isLoading)
     return (
@@ -50,16 +53,14 @@ const HomeSalary = () => {
       </Card>
     );
 
-  if (isError)
-    return (
-      <Typography color="error" sx={{ p: 2 }}>
-        Error: {error?.message || "Failed to load data"}
-      </Typography>
-    );
+  // if (isError)
+  //   return (
+  //     <Typography color="error" sx={{ p: 2 }}>
+  //       Error: {error?.message || "Failed to load data"}
+  //     </Typography>
+  //   );
 
   // const employees = Salarydata?.data || [];
-
-
 
   //  const totalsByComp = employees.reduce((acc, emp) => {
   //   const code = emp.COMPCODE || "Unknown";
@@ -79,7 +80,7 @@ const HomeSalary = () => {
   const Totalvalue = lastmonth?.data.map((x) => x.netpay);
   const company = lastmonth?.data.map((x) => x.customer);
 
-  const Sumtotal = Totalvalue?.reduce((sum, total) => sum + total);
+  const Sumtotal = Totalvalue?.reduce((sum, total) => sum + total, 0) ?? 0;
 
   const options = {
     chart: {
@@ -87,7 +88,7 @@ const HomeSalary = () => {
       height: 250,
       zoomType: null,
       enabled: true,
-         },
+    },
 
     title: {
       text: null,
@@ -99,7 +100,6 @@ const HomeSalary = () => {
     },
 
     xAxis: {
-     
       title: { text: "Company", style: { fontSize: "12px" } },
       labels: { style: { fontSize: "10px" } },
       categories: company,
@@ -116,26 +116,25 @@ const HomeSalary = () => {
       verticalAlign: "bottom",
     },
     tooltip: {
-  useHTML: true,
-  shared: true,
-  formatter: function () {
-    const value = this.y.toLocaleString("en-IN");
+      useHTML: true,
+      shared: true,
+      formatter: function () {
+        const value = this.y.toLocaleString("en-IN");
 
-    return `
+        return `
       <b>${this.point.month || this.key}</b><br/>
       <span style="color:${this.series.color}">Netpay</span>: 
       <b>${value}</b>
     `;
-  },
-}
-,
+      },
+    },
     plotOptions: {
       series: {
         dataLabels: {
           enabled: true,
           rotation: -45,
           formatter: function () {
-            return this.y.toLocaleString('en-IN');
+            return this.y.toLocaleString("en-IN");
           },
         },
       },
@@ -149,25 +148,30 @@ const HomeSalary = () => {
 
     series: [
       {
-        name:  `Lastest Month Netpay`,
+        name: `Lastest Month Netpay`,
         data: lastmonth?.data.map((value, index) => ({
-          name:value.customer,
+          name: value.customer,
           y: value.netpay,
-          month:value.month,
+          month: value.month,
         })),
         point: {
           events: {
             click: function () {
               const company = this.category;
               // console.log(this.month,"this");
-              
+
               dispatch(
                 push({
                   id: `SalaryDetail`,
                   name: `SalaryDetail`,
                   component: "SalaryIndex",
-                  data: { companyName: company,Year: Year.Year,selectedmonth:this.month,autoFocusBuyer: true}
-                })
+                  data: {
+                    companyName: company,
+                    Year: Year.Year,
+                    selectedmonth: this.month,
+                    autoFocusBuyer: true,
+                  },
+                }),
               );
             },
           },
@@ -176,10 +180,10 @@ const HomeSalary = () => {
     ],
   };
 
-  return ( 
+  return (
     <Card
       sx={{
-          borderRadius: 3,
+        borderRadius: 3,
         boxShadow: 4,
         width: "100%",
 
@@ -210,7 +214,7 @@ const HomeSalary = () => {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            OverAll Distribution : {Sumtotal?.toLocaleString('en-IN')}
+            OverAll Distribution : {Sumtotal?.toLocaleString("en-IN")}
           </Typography>
         </Box>
       </CardContent>
