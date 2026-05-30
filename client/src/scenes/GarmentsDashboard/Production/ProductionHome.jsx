@@ -8,6 +8,7 @@ import {
 import { useGetCompanyQuery } from "../../../redux/service/purchaseService";
 import { useEffect, useRef, useState } from "react";
 import ProductionStatus from "./ProductionStatus";
+import ProductionEfficiency from "./ProductionEfficiency";
 
 const ProductionHome = ({ filterBuyerList }) => {
   const dispatch = useDispatch();
@@ -120,6 +121,17 @@ const ProductionHome = ({ filterBuyerList }) => {
       <Grid container className="">
         <Grid item xs={12} md={12}>
           <ProductionStatus
+            key={filterBuyer}
+            companyName={filterBuyer}
+            finYear={selectedYear}
+            finYr={finYr}
+            poType={poType}
+            companyList={companyList}
+            filterBuyerList={filterBuyerList}
+          />
+        </Grid>
+        <Grid item xs={12} md={12}>
+          <ProductionEfficiency
             key={filterBuyer}
             companyName={filterBuyer}
             finYear={selectedYear}

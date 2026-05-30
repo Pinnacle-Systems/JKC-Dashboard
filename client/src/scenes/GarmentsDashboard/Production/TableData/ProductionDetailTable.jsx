@@ -800,7 +800,7 @@ const ProductionDetailTable = ({
                     setSelectedProcess(e.target.value);
                     resetPage();
                   }}
-                  className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-36"
+                  className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-48"
                 >
                   {processOptions.map((p) => (
                     <option key={p} value={p}>
@@ -816,7 +816,7 @@ const ProductionDetailTable = ({
                   setSelectedStore(e.target.value);
                   resetPage();
                 }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-92"
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-80"
               >
                 {storeOptions.map((s) => (
                   <option key={s} value={s}>
@@ -925,11 +925,11 @@ const ProductionDetailTable = ({
               className="overflow-x-auto border border-gray-300"
               style={{ height: "470px", borderRadius: "12px" }}
             >
-              <table className="w-[1500px] overflow-y-auto border-collapse text-[11px] table-fixed">
+              <table className="w-[1600px] overflow-y-auto border-collapse text-[11px] table-fixed">
                 <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
                   <tr>
                     <TH cls="w-6">S.No</TH>
-                    <TH cls="w-24">Process</TH>
+                    <TH cls="w-40">Process</TH>
                     <TH cls="w-60">Store ID</TH>
                     <TH cls="w-20">Doc Date</TH>
                     <TH cls="w-32">Order No</TH>

@@ -60,6 +60,19 @@ const fabricApi = createApi({
       },
       providesTags: ["fabricApi"],
     }),
+    getFabricDetails: builder.query({
+      query: ({ params }) => {
+        return {
+          url: FABRIC + "/getFabricDetails",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["fabricApi"],
+    }),
   }),
 });
 
@@ -68,6 +81,7 @@ export const {
   useGetFabricStatusTableQuery,
   useGetFabricPendingQuery,
   useGetFabricPendingTableQuery,
+  useGetFabricDetailsQuery,
 } = fabricApi;
 
 export default fabricApi;

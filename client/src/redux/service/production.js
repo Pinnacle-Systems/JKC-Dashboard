@@ -47,13 +47,41 @@ const production = createApi({
       },
       providesTags: ["production"],
     }),
+    getProductionEfficiency: builder.query({
+      query: ({ params }) => {
+        return {
+          url: PRODUCTION + "/getProductionEfficiency",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["production"],
+    }),
+    getProductionEfficiencyTable: builder.query({
+      query: ({ params }) => {
+        return {
+          url: PRODUCTION + "/getProductionEfficiencyTable",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["production"],
+    }),
   }),
 });
 
 export const {
   useGetProductionQuery,
   useGetProductionTableQuery,
-  useGetProductionSummaryTableQuery
+  useGetProductionSummaryTableQuery,
+  useGetProductionEfficiencyQuery,
+  useGetProductionEfficiencyTableQuery,
   // table
 } = production;
 

@@ -11,7 +11,7 @@ export async function getFabricStatus(req, res) {
 SELECT A.FINYR,A.BUYERNAME,A.BUYERCODE,SUM(A.INHOUSE) INHOUSE,SUM(A.INPROGRESS) INPROGRESS FROM (
 SELECT A.FINYR,A.BUYERNAME,A.BUYERCODE,
 CASE WHEN A.INBAL<=0 THEN 1 ELSE 0 END INHOUSE,
-CASE WHEN A.INBAL<=0 THEN 0 ELSE 1 END INPROGRESS FROM FABINHOUSE A
+CASE WHEN A.INBAL<=0 THEN 0 ELSE 1 END INPROGRESS FROM FABINHOUSE_V2 A
 ) A
 WHERE A.FINYR = '${finyear}'
 GROUP BY A.FINYR,A.BUYERNAME,A.BUYERCODE
@@ -61,14 +61,14 @@ SELECT A.FINYR,
        A.STYLE,
        A.ORDERQTY,
        A.YPOQTY,
-       A.YARNQTY,
+       A.YGRNQTY,
        A.KNITRECQTY,
        A.KNITBAL,
        A.DYERECQTY,
        A.INBAL,
           CASE WHEN A.INBAL <= 0 THEN 1 ELSE 0 END INHOUSE,
        CASE WHEN A.INBAL <= 0 THEN 0 ELSE 1 END INPROGRESS
-FROM FABINHOUSE A
+FROM FABINHOUSE_V2 A
 WHERE A.FINYR = '${finyear}'
 AND ('${buyer}' = 'ALL' OR A.BUYERNAME = '${buyer}')
 AND (
@@ -118,6 +118,44 @@ ORDER BY A.ORDERNO
   }
 }
 
+export async function getFabricDetails(req, res) {
+  const connection = await getConnection(res);
+
+  try {
+    const { orderNo } = req.query;
+
+    const sql = `
+      SELECT *
+      FROM FABINHOUSE_DETAILS_V2
+      WHERE ORDERNO = :ORDERNO
+    `;
+
+    const result = await connection.execute(
+      sql,
+      { ORDERNO: orderNo },
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+      },
+    );
+
+    return res.json({
+      statusCode: 0,
+      data: result.rows || [],
+    });
+  } catch (err) {
+    console.error("Error retrieving getFabricDetails data:", err);
+
+    return res.status(500).json({
+      statusCode: 1,
+      error: err.message,
+    });
+  } finally {
+    if (connection) {
+      await connection.close();
+    }
+  }
+}
+
 export async function getFabricPending(req, res) {
   const connection = await getConnection(res);
   const { finyear } = req.query;
@@ -129,17 +167,17 @@ FROM (
 SELECT A.FINYR,A.BUYERNAME,A.BUYERCODE,3 ORD,'FABRIC INHOUSE PENDING' TYPENAME,
 CASE WHEN A.INBAL<=0 THEN 1 ELSE 0 END INHOUSE,
 CASE WHEN A.INBAL<=0 THEN 0 ELSE 1 END INPROGRESS
-FROM FABINHOUSE A
+FROM FABINHOUSE_V2 A
 UNION ALL
 SELECT A.FINYR,A.BUYERNAME,A.BUYERCODE,2 ORD,'KNITTING INHOUSE' TYPENAME,
 CASE WHEN A.KNITBAL<=0 THEN 1 ELSE 0 END INHOUSE,
 CASE WHEN A.KNITBAL<=0 THEN 0 ELSE 1 END INPROGRESS
-FROM FABINHOUSE A
+FROM FABINHOUSE_V2 A
 UNION ALL
 SELECT A.FINYR,A.BUYERNAME,A.BUYERCODE,1 ORD,'YARN' TYPENAME,
 CASE WHEN A.YBAL<=0 THEN 1 ELSE 0 END INHOUSE,
 CASE WHEN A.YBAL<=0 THEN 0 ELSE 1 END INPROGRESS
-FROM FABINHOUSE A
+FROM FABINHOUSE_V2 A
 ) A
 WHERE A.FINYR = '${finyear}'
 GROUP BY A.FINYR,A.BUYERNAME,A.BUYERCODE,A.ORD,A.TYPENAME
@@ -191,7 +229,7 @@ SELECT A.FINYR,
        A.STYLE,
        A.ORDERQTY,
        A.YPOQTY,
-       A.YARNQTY,
+       A.YGRNQTY,
        A.KNITRECQTY,
        A.KNITBAL,
        A.DYERECQTY,
@@ -208,14 +246,14 @@ FROM (
            A.STYLE,
            A.ORDERQTY,
            A.YPOQTY,
-           A.YARNQTY,
+           A.YGRNQTY,
            A.KNITRECQTY,
            A.KNITBAL,
            A.DYERECQTY,
            A.INBAL,
            3 ORD,
            'FABRIC INHOUSE PENDING' TYPENAME
-    FROM FABINHOUSE A
+    FROM FABINHOUSE_V2 A
     WHERE CASE WHEN A.INBAL <= 0 THEN 0 ELSE 1 END = 1
 
     UNION ALL
@@ -228,14 +266,14 @@ FROM (
            A.STYLE,
            A.ORDERQTY,
            A.YPOQTY,
-           A.YARNQTY,
+           A.YGRNQTY,
            A.KNITRECQTY,
            A.KNITBAL,
            A.DYERECQTY,
            A.INBAL,
            2 ORD,
            'KNITTING INHOUSE' TYPENAME
-    FROM FABINHOUSE A
+    FROM FABINHOUSE_V2 A
     WHERE CASE WHEN A.KNITBAL <= 0 THEN 0 ELSE 1 END = 1
 
     UNION ALL
@@ -248,14 +286,14 @@ FROM (
            A.STYLE,
            A.ORDERQTY,
            A.YPOQTY,
-           A.YARNQTY,
+           A.YGRNQTY,
            A.KNITRECQTY,
            A.KNITBAL,
            A.DYERECQTY,
            A.INBAL,
            1 ORD,
            'YARN' TYPENAME
-    FROM FABINHOUSE A
+    FROM FABINHOUSE_V2 A
     WHERE CASE WHEN A.YBAL <= 0 THEN 0 ELSE 1 END = 1
 
 ) A

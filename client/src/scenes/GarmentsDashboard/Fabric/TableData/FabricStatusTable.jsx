@@ -9,7 +9,10 @@ import {
 } from "react-icons/fa";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { useGetFabricStatusTableQuery } from "../../../../redux/service/fabric";
+import {
+  useGetFabricStatusTableQuery,
+  useGetFabricDetailsQuery,
+} from "../../../../redux/service/fabric";
 import { addInsightsRowTurnOver } from "../../../../utils/hleper";
 
 const RECORDS = 34;
@@ -97,6 +100,87 @@ const StatusBadge = ({ inbal }) => {
   );
 };
 
+/* ── Fabric Details Modal ── */
+const FabricDetailsModal = ({ data, orderNo, onClose }) => {
+  const rows = Array.isArray(data?.data) ? data.data : [];
+
+  const cols = [
+    { key: "FABRIC", label: "Fabric Name", cls: "w-60 text-left" },
+    { key: "COLORNAME", label: "Color Name", cls: "w-44 text-left" },
+    { key: "DESIGN", label: "Design", cls: "w-32 text-left" },
+    { key: "QTY", label: "Qty", cls: "w-20" },
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-[10000] flex justify-center items-center">
+      <div className="bg-white w-[880px] h-[520px] overflow-y-auto p-4 rounded-xl relative flex flex-col">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="font-bold uppercase text-sm text-gray-800">
+            Fabric Details — <span className="text-blue-600">{orderNo}</span>
+          </h2>
+          <button onClick={onClose} className="text-red-600 hover:text-red-800">
+            <FaTimes size={18} />
+          </button>
+        </div>
+
+        {/* Record count */}
+        <p className="text-xs font-semibold text-gray-600 mb-1">
+          Total Records: <span className="text-blue-600">{rows.length}</span>
+        </p>
+
+        {/* Table — mirrors parent exactly */}
+        <div
+          className="overflow-auto border border-gray-300"
+          style={{ borderRadius: "12px" }}
+        >
+          <table className="w-full border-collapse text-[11px] table-fixed">
+            <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
+              <tr>
+                <TH cls="w-6">S.No</TH>
+                {cols.map((c) => (
+                  <TH key={c.key} cls={c.cls}>
+                    {c.label}
+                  </TH>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={cols.length + 1}
+                    className="text-center py-10 text-gray-500 text-xs"
+                  >
+                    No data found
+                  </td>
+                </tr>
+              ) : (
+                rows.map((row, i) => (
+                  <tr
+                    key={i}
+                    className="text-gray-800 bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors"
+                  >
+                    <td className="border p-1 text-center text-gray-500">
+                      {i + 1}
+                    </td>
+                    <td className="border p-1 pl-2">{row.FABRIC ?? ""}</td>
+                    <td className="border p-1 pl-2">{row.COLORNAME ?? ""}</td>
+                    <td className="border p-1 pl-2">{row.DESIGN ?? ""}</td>
+                    <td className="border p-1 pr-2 text-right">
+                      {fmt(row.QTY)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ── Main ── */
 const FabricStatusTable = ({
   companyName,
@@ -112,6 +196,7 @@ const FabricStatusTable = ({
   const [selectedBuyer, setSelectedBuyer] = useState(buyerName || "ALL");
   const [selectedStatus, setSelectedStatus] = useState(initialStatus || "ALL"); // ← NEW
   const [page, setPage] = useState(1);
+  const [orderNo, setOrderNo] = useState("");
 
   const resetPage = () => setPage(1);
 
@@ -142,6 +227,13 @@ const FabricStatusTable = ({
       },
     },
     { skip: !selectedYear },
+  );
+
+  const { data: fabricDetails } = useGetFabricDetailsQuery(
+    {
+      params: { orderNo },
+    },
+    { skip: !orderNo },
   );
 
   const rawData = useMemo(
@@ -556,7 +648,8 @@ const FabricStatusTable = ({
                   {currentRows.map((row, i) => (
                     <tr
                       key={i}
-                      className="text-gray-800 bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors"
+                      onClick={() => setOrderNo(row.ORDERNO)}
+                      className="text-gray-800 bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors cursor-pointer"
                     >
                       <td className="border p-1 text-center text-gray-500">
                         {(page - 1) * RECORDS + i + 1}
@@ -606,6 +699,15 @@ const FabricStatusTable = ({
 
         {/* ── PAGINATION ── */}
         <Pagination page={page} total={totalPages} setPage={setPage} />
+
+        {/* ── FABRIC DETAILS MODAL ── */}
+        {fabricDetails && orderNo && (
+          <FabricDetailsModal
+            data={fabricDetails}
+            orderNo={orderNo}
+            onClose={() => setOrderNo("")}
+          />
+        )}
       </div>
     </div>
   );
