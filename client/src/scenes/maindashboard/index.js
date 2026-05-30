@@ -42,23 +42,20 @@ import { useGetuserpagesQuery } from "../../redux/service/Rolemaster.js";
 import { getCommonParams } from "../../utils/hleper.js";
 // import CompanywiseEsi from "./DetailedDashboard/companywiseEsi.js";
 
-
-
 const Main_Dashboad = () => {
   const params = getCommonParams();
   const { userId } = params;
-  const { data: allPages } = useGetuserpagesQuery(
-    { params: { userId } },
+  const { data: allPages } = useGetuserpagesQuery({ params: { userId } });
+  const usernames = [...new Set(allPages?.map((item) => item.username))].join(
+    ", ",
   );
-  const usernames = [...new Set(allPages?.map(item => item.username))]
-  .join(", ");
   console.log(allPages, "allPages");
   console.log(usernames, "checkingname");
   return (
-    <div  className="w-full  mx-auto rounded-md shadow-lg py-1 overflow-y-auto">
+    <div className="w-full  mx-auto rounded-md shadow-lg py-1 overflow-y-auto">
       <Grid container spacing={2}>
         <Grid item xs={12} md={12}>
-          <DashboardHeader usernames={usernames}/>
+          <DashboardHeader usernames={usernames} />
         </Grid>
         <Grid item xs={12} md={4}>
           <Trophy />
@@ -66,60 +63,59 @@ const Main_Dashboad = () => {
         <Grid item xs={12} md={8}>
           <StatisticsCard />
         </Grid>
-      <Grid container spacing={1} sx={{mt:1,ml:1}}>
-        <Grid item xs={12} md={3}>
-          <CardStatisticsVerticalComponent
-            stats="$78"
-            title="Revenue"
-            trend="negative"
-            color="secondary"
-            trendNumber="-15%"
-            subtitle="Past Month"
-            icon={<CurrencyUsd />}
-          />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <CardStatisticsVerticalComponent
-            stats="$25.6k"
-            icon={<ReceiptLongIcon />}
-            color="success"
-            trendNumber="+42%"
-            title="Expense"
-            subtitle="Weekly Profit"
-          />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <CardStatisticsVerticalComponent
-            stats="$25.6k"
-            icon={<Poll />}
-            color="primary"
-            trendNumber="+42%"
-            title="Sales"
-            subtitle="Weekly Profit"
-          />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <CardStatisticsVerticalComponent
-            stats="$25.6k"
-            icon={<Poll />}
-            color="warning"
-            trendNumber="+42%"
-            title="Orders"
-            subtitle="Weekly Profit"
-          />
+        <Grid container spacing={1} sx={{ mt: 1, ml: 1 }}>
+          <Grid item xs={12} md={3}>
+            <CardStatisticsVerticalComponent
+              stats="$78"
+              title="Revenue"
+              trend="negative"
+              color="secondary"
+              trendNumber="-15%"
+              subtitle="Past Month"
+              icon={<CurrencyUsd />}
+            />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <CardStatisticsVerticalComponent
+              stats="$25.6k"
+              icon={<ReceiptLongIcon />}
+              color="success"
+              trendNumber="+42%"
+              title="Expense"
+              subtitle="Weekly Profit"
+            />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <CardStatisticsVerticalComponent
+              stats="$25.6k"
+              icon={<Poll />}
+              color="primary"
+              trendNumber="+42%"
+              title="Sales"
+              subtitle="Weekly Profit"
+            />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <CardStatisticsVerticalComponent
+              stats="$25.6k"
+              icon={<Poll />}
+              color="warning"
+              trendNumber="+42%"
+              title="Orders"
+              subtitle="Weekly Profit"
+            />
+          </Grid>
         </Grid>
 
-      </Grid>
-        
         <Grid item xs={12} md={7}>
-          <HomeSalary/>
+          <HomeSalary />
         </Grid>
 
         <Grid item xs={12} md={5}>
           <HomeESI />
         </Grid>
-        <Grid item xs={12} md={4} >
-           <HomePF />
+        <Grid item xs={12} md={4}>
+          <HomePF />
         </Grid>
         <Grid item xs={12} md={4}>
           <HeadCount />
@@ -127,13 +123,13 @@ const Main_Dashboad = () => {
         <Grid item xs={12} md={4}>
           <HomeAttrition />
         </Grid>
-        <Grid item xs={12} md={6} >
+        <Grid item xs={12} md={6}>
           {/* <HomeRegion /> */}
         </Grid>
 
-        <Grid item xs={12} md={6} >
+        <Grid item xs={12} md={6}>
           {/* <Table /> */}
-            {/* <HomeOTWages/> */}
+          {/* <HomeOTWages/> */}
         </Grid>
       </Grid>
     </div>

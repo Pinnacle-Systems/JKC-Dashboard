@@ -80,7 +80,7 @@ const HomeSalary = () => {
   const Totalvalue = lastmonth?.data.map((x) => x.netpay);
   const company = lastmonth?.data.map((x) => x.customer);
 
-  const Sumtotal = Totalvalue?.reduce((sum, total) => sum + total);
+  const Sumtotal = Totalvalue?.reduce((sum, total) => sum + total, 0) ?? 0;
 
   const options = {
     chart: {
