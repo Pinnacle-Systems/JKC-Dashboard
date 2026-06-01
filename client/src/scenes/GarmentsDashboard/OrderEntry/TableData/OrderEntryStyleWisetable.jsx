@@ -252,13 +252,13 @@ const OrderEntryStyleWisetable = ({
       { header: "S.No", key: "sno", width: 6 },
       { header: "Order No", key: "orderNo", width: 28 },
       { header: "Order Date", key: "orderDate", width: 14 },
-      { header: "Buyer Name", key: "buyerName", width: 32 },
-      { header: "BPO No", key: "bpoNo", width: 36 },
-      { header: "Style Ref No", key: "styleRefNo", width: 18 },
-      { header: "Pack Type", key: "orderPackType", width: 18 },
+      { header: "Buyer Name", key: "buyerName", width: 44 },
+      { header: "BPO No", key: "bpoNo", width: 44 },
+      { header: "Style Ref No", key: "styleRefNo", width: 22 },
+      { header: "Pack Type", key: "orderPackType", width: 22 },
       { header: "Order Qty", key: "orderQty", width: 18 },
       { header: "Excess Qty", key: "excessQty", width: 18 },
-      { header: "Amount", key: "amount", width: 18 },
+      { header: "Amount", key: "amount", width: 20 },
     ];
 
     ws.columns = columns;
@@ -351,9 +351,9 @@ const OrderEntryStyleWisetable = ({
       orderNo: "",
       orderDate: "",
       buyerName: "",
-      bpoNo: "TOTAL",
+      bpoNo: "",
       styleRefNo: "",
-      orderPackType: "",
+      orderPackType: "TOTAL",
       orderQty: totals.orderQty,
       excessQty: totals.excessQty,
       amount: totals.amount,
@@ -455,7 +455,7 @@ const OrderEntryStyleWisetable = ({
                   setSelectedStyleItem("ALL");
                   resetPage();
                 }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-purple-600 w-52"
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-52"
               >
                 {styleGroups.map((g) => (
                   <option key={g} value={g}>
@@ -471,7 +471,7 @@ const OrderEntryStyleWisetable = ({
                   setSelectedStyleItem(e.target.value);
                   resetPage();
                 }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-green-600 w-60"
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-60"
               >
                 {styleItems.map((item) => (
                   <option key={item} value={item}>
@@ -579,8 +579,8 @@ const OrderEntryStyleWisetable = ({
                       {fmtDate(row.orderDate)}
                     </td>
                     <td className="border p-1 pl-2">{row.buyerName}</td>
-                    <td className="border p-1 pl-2">{row.bpoNo}</td>
-                    <td className="border p-1 pl-2">{row.styleRefNo}</td>
+                    <td className="border p-1 pl-2 break-words">{row.bpoNo}</td>
+                    <td className="border p-1 pl-2 ">{row.styleRefNo}</td>
                     <td className="border p-1 text-left pl-2">
                       {row.orderPackType}
                     </td>

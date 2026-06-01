@@ -36,6 +36,7 @@ import PurchaseHome from "../GarmentsDashboard/Purchase/PurchaseHome.jsx";
 import OrderEntryHome from "../GarmentsDashboard/OrderEntry/OrderEntryHome.jsx";
 import ProductionHome from "../GarmentsDashboard/Production/ProductionHome.jsx";
 import FabricHome from "../GarmentsDashboard/Fabric/FabricHome.jsx";
+import TAReportHome from "../GarmentsDashboard/TAReport/TAReportHome.jsx";
 
 const ActiveTabList = () => {
   const { color } = useContext(ColorContext);
@@ -175,6 +176,20 @@ const ActiveTabList = () => {
     ),
     FabricStatus: (tabData) => (
       <FabricHome
+        companyName={tabData?.companyName}
+        finYear={tabData?.finYear}
+        selectedYear={tabData?.selectedYear}
+        filterBuyer={tabData?.filterBuyer}
+        user={tabData?.user}
+        selectMonths={tabData?.selectMonths}
+        filterBuyerList={tabData?.filterBuyerList}
+        finYr={tabData?.finYr}
+        poType={tabData?.poType}
+        autoFocusBuyer={tabData?.autoFocusBuyer}
+      />
+    ),
+    "T&A Delay Report": (tabData) => (
+      <TAReportHome
         companyName={tabData?.companyName}
         finYear={tabData?.finYear}
         selectedYear={tabData?.selectedYear}

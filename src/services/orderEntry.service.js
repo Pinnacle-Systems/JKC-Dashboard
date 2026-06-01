@@ -185,6 +185,8 @@ ORDER BY 1,2,3,4
   }
 }
 
+// 3. Order Entry — Buyer Wise Quantity Chart
+
 export async function getOrderEntryBuyerQtyWise(req, res) {
   const connection = await getConnection(res);
   try {
@@ -221,7 +223,7 @@ LEFT JOIN (
     ON A.GTNORDERENTRYID = ZA.ORDERNO
 WHERE 
     B.COMPCODE = '${companyName}' 
-    AND D.FINYR = '${finYear}'
+    AND D.FINYR = '${finYear}' AND A.ORDERTYPE = 'ORDER'
 GROUP BY 
     D.FINYR,
     B.COMPCODE,
@@ -249,6 +251,8 @@ ORDER BY
   }
 }
 
+// 4. Order Entry — Buyer Po No Wise Quantity Chart
+
 export async function getOrderEntryBuyerWisePoNoQty(req, res) {
   const connection = await getConnection(res);
   try {
@@ -272,7 +276,7 @@ JOIN GTFINANCIALYEAR D
     ON D.GTFINANCIALYEARID = A.FINYEAR
 WHERE 
     B.COMPCODE = '${companyName}'
-    AND D.FINYR = '${finYear}'
+    AND D.FINYR = '${finYear}' AND A.ORDERTYPE = 'ORDER'
 GROUP BY 
     D.FINYR,
     B.COMPCODE,
@@ -302,6 +306,8 @@ ORDER BY
   }
 }
 
+// 5. Style Item Group Wise Quantity Chart
+
 export async function getOrderEntryStyleWisePoNoQty(req, res) {
   const connection = await getConnection(res);
   try {
@@ -319,7 +325,7 @@ SELECT A.STYLEITEM,B.STYLEGROUP,C.STYLESUBGROUP FROM GTSTYLEITEMMAST A
 JOIN GTSTYLEGROUPMAST B ON A.STYLEGROUP = B.GTSTYLEGROUPMASTID
 JOIN GTSTYLESUBGROUPMAST C ON C.GTSTYLESUBGROUPMASTID = A.STYLESUBGROUP
 ) Z ON Z.STYLEITEM = OAD.STYLEITEM
-WHERE B.COMPCODE = '${companyName}' AND D.FINYR = '${finYear}'
+WHERE B.COMPCODE = '${companyName}' AND D.FINYR = '${finYear}' AND A.ORDERTYPE = 'ORDER'
 GROUP BY D.FINYR,B.COMPCODE,OAD.STYLEITEM,C.BUYERCODE,Z.STYLEGROUP,Z.STYLESUBGROUP
 ORDER BY D.FINYR,B.COMPCODE,BUYERCODE,STYLEGROUP,STYLESUBGROUP,STYLEITEM
      `;
@@ -343,6 +349,8 @@ ORDER BY D.FINYR,B.COMPCODE,BUYERCODE,STYLEGROUP,STYLESUBGROUP,STYLEITEM
   }
 }
 
+// 6. Order Entry — Color Wise Quantity Chart
+
 export async function getOrderEntryColorWiseQty(req, res) {
   const connection = await getConnection(res);
   try {
@@ -355,7 +363,7 @@ JOIN ORDERALLOWDET OAD ON OAD.GTNORDERENTRYID = A.GTNORDERENTRYID
 JOIN GTCOMPMAST B ON A.COMPCODE = B.GTCOMPMASTID
 JOIN GTBUYERMAST C ON C.GTBUYERMASTID = A.BUYER
 JOIN GTFINANCIALYEAR D ON D.GTFINANCIALYEARID = A.FINYEAR
-WHERE B.COMPCODE = '${companyName}' AND D.FINYR = '${finYear}'
+WHERE B.COMPCODE = '${companyName}' AND D.FINYR = '${finYear}' AND A.ORDERTYPE = 'ORDER'
 GROUP BY D.FINYR,B.COMPCODE,OAD.COLOR,C.BUYERCODE
 ORDER BY D.FINYR,B.COMPCODE,BUYERCODE,COLOR
      `;

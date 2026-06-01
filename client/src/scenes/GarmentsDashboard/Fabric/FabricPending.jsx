@@ -36,6 +36,7 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
       setSelectedBuyer(buyerOptions[0]);
     }
   }, [buyerOptions]);
+  console.log(selectedBuyer, buyerOptions, "selectedBuyer");
 
   const buyerData = useMemo(() => {
     if (!response?.data || !selectedBuyer) return [];
@@ -54,19 +55,29 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
 
   /* ---------------- BAR CLICK HANDLER ---------------- */
 
-  const onChartEvents = {
-    click: (params) => {
-      if (params.componentType !== "series") return;
-      const clickedItem = buyerData.find(
-        (item) => item.typeName === params.name,
-      );
-      setTableParams({
-        typeName: clickedItem?.typeName,
-        buyerName: clickedItem?.buyerName,
-        buyerCode: clickedItem?.buyerCode,
-      });
-    },
-  };
+  // FabricPending.jsx
+
+  const onChartEvents = useMemo(
+    () => ({
+      // ← useMemo so it re-creates when deps change
+      click: (params) => {
+        if (params.componentType !== "series") return;
+
+        const clickedItem = buyerData.find(
+          (item) => item.typeName === params.name,
+        );
+
+        console.log("click fired", params.name, selectedBuyer, clickedItem); // debug
+
+        setTableParams({
+          typeName: params.name,
+          buyerName: clickedItem?.buyerName ?? "",
+          buyerCode: selectedBuyer, // ← now correctly captured
+        });
+      },
+    }),
+    [buyerData, selectedBuyer],
+  );
 
   /* ---------------- CHART OPTIONS ---------------- */
 
@@ -199,6 +210,7 @@ const FabricPending = ({ companyName, finYear, finYr }) => {
           ) : (
             <Box position="relative">
               <ReactECharts
+                key={selectedBuyer}
                 option={options}
                 onEvents={onChartEvents}
                 style={{

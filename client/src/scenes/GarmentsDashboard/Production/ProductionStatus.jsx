@@ -252,7 +252,7 @@ const ProductionStatus = ({ companyName }) => {
               <select
                 value={selectedStore}
                 onChange={(e) => setSelectedStore(e.target.value)}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-92"
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-[400px]"
               >
                 {storeOptions.map((store) => (
                   <option key={store} value={store}>

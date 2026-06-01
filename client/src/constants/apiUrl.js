@@ -20,3 +20,4 @@ export const PURCHASE_TABLE = "/purchaseTable";
 export const ORDER_ENTRY = "/orderEntry";
 export const PRODUCTION = "/production";
 export const FABRIC = "/fabric";
+export const TAReport = "/taReport";

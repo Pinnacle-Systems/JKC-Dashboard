@@ -10,7 +10,11 @@ import {
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { useGetOrderEntryBuyerWiseStatusTableQuery } from "../../../../redux/service/OrderEntry";
-import { addInsightsRowTurnOver } from "../../../../utils/hleper";
+import {
+  addInsightsRowTurnOver,
+  formatQtyByUOM,
+  getExcelQtyFormatByUOM,
+} from "../../../../utils/hleper";
 
 const RECORDS = 34;
 
@@ -222,6 +226,8 @@ const OrderEntryBuyerWiseStatusTable = ({
       { header: "Buyer Name", key: "BUYERNAME", width: 44 },
       { header: "BPO No", key: "BUYERPONO", width: 30 },
       { header: "Style", key: "STYLE", width: 25 },
+      { header: "Uom", key: "UOM", width: 20 },
+      { header: "Pack Type", key: "PACKTYPE", width: 20 },
       { header: "Order Qty", key: "ORDERQTY", width: 16 },
       { header: "Production Qty", key: "PRODQTY", width: 18 },
       { header: "Fabric Inhouse Qty", key: "DYERECQTY", width: 20 },
@@ -250,27 +256,10 @@ const OrderEntryBuyerWiseStatusTable = ({
     ];
     const numKeys = new Set(NUM_FIELDS_EXCEL);
 
-    // ── Only these four get 3 decimal places ──
-    const threeDecKeys = new Set([
-      "ORDERQTY",
-      "PRODQTY",
-      "DYERECQTY",
-      "INBAL",
-      "CUTTING",
-      "SEWING",
-      "POWERTABLE",
-      "SINGER",
-      "CHECKING",
-      "PACKING",
-      "BOX",
-    ]);
-    const getNumFmt = (key) =>
-      threeDecKeys.has(key) ? "#,##0.000" : "#,##0.00";
-
     ws.columns = columns;
     const mergeEnd = String.fromCharCode(64 + columns.length);
 
-    // Row 1: Title
+    // ── Row 1: Title ──
     ws.insertRow(1, [`Order Entry Buyer Wise Status`]);
     ws.mergeCells(`A1:${mergeEnd}1`);
     const tc = ws.getCell("A1");
@@ -278,7 +267,7 @@ const OrderEntryBuyerWiseStatusTable = ({
     tc.alignment = { horizontal: "center", vertical: "middle" };
     ws.getRow(1).height = 30;
 
-    // Row 2: Insights
+    // ── Row 2: Insights ──
     addInsightsRowTurnOver({
       worksheet: ws,
       startRow: 2,
@@ -289,7 +278,7 @@ const OrderEntryBuyerWiseStatusTable = ({
       dynamicValue: selectedBuyer,
     });
 
-    // Row 3: Headers
+    // ── Row 3: Headers ──
     const hr = ws.getRow(3);
     hr.height = 26;
     hr.eachCell((cell) => {
@@ -308,14 +297,19 @@ const OrderEntryBuyerWiseStatusTable = ({
       };
     });
 
-    // Data rows
+    // ── Data rows + per-row UOM-aware formatting ──
     filtered.forEach((r, i) => {
-      ws.addRow({
+      const uom = r.ORDERUOM;
+      const excelFmt = getExcelQtyFormatByUOM(uom); // ← UOM-aware format
+
+      const dataRow = ws.addRow({
         sno: i + 1,
         ORDERNO: r.ORDERNO,
         BUYERNAME: r.BUYERNAME,
         BUYERPONO: r.BUYERPONO,
         STYLE: r.STYLE,
+        UOM: uom,
+        PACKTYPE: r.ORDERPACKTYPE,
         ORDERQTY: Number(r.ORDERQTY || 0),
         PRODQTY: Number(r.PRODQTY || 0),
         DYERECQTY: Number(r.DYERECQTY || 0),
@@ -328,60 +322,58 @@ const OrderEntryBuyerWiseStatusTable = ({
         PACKING: r.PACKING != null ? Number(r.PACKING) : null,
         BOX: r.BOX != null ? Number(r.BOX) : null,
       });
-    });
 
-    // Style data rows
-    ws.eachRow((row, rn) => {
-      if (rn <= 3) return;
-      row.height = 22;
-      row.eachCell((cell, cn) => {
+      dataRow.height = 22;
+
+      dataRow.eachCell((cell, cn) => {
         const key = columns[cn - 1]?.key;
+        const isNum = numKeys.has(key);
+
         cell.alignment = {
-          horizontal:
-            key === "sno" ? "center" : numKeys.has(key) ? "right" : "left",
+          horizontal: key === "sno" ? "center" : isNum ? "right" : "left",
           vertical: "middle",
           indent: 1,
         };
-        if (numKeys.has(key)) cell.numFmt = getNumFmt(key); // ← updated
+
+        if (isNum) {
+          if (cell.value === null || cell.value === undefined) {
+            cell.value = null;
+          } else {
+            // ← DYERECQTY and INBAL always 3 decimals regardless of UOM
+            const alwaysThree = key === "DYERECQTY" || key === "INBAL";
+            cell.numFmt = alwaysThree ? "#,##,##0.000" : excelFmt;
+          }
+        }
       });
     });
 
-    // AFTER
+    // ── Totals row ──
+    // For totals we pick the most common UOM in the filtered set as the format
+
+    // ── Totals row ──
+    // Remove the dominantUOM logic entirely
     const totalRow = ws.addRow({
       sno: "",
       ORDERNO: "",
       BUYERNAME: "",
       BUYERPONO: "",
-      STYLE: "TOTAL", // ← moved to STYLE so numeric cols stay right-aligned
+      STYLE: "",
+      UOM: "",
+      PACKTYPE: "TOTAL",
       ...Object.fromEntries(NUM_FIELDS_EXCEL.map((f) => [f, totals[f] ?? 0])),
     });
     totalRow.height = 24;
     totalRow.eachCell((cell, cn) => {
       const key = columns[cn - 1]?.key;
+      const isNum = numKeys.has(key);
       cell.font = { bold: true };
       cell.border = { top: { style: "thin" } };
       cell.alignment = {
-        horizontal: numKeys.has(key)
-          ? "right"
-          : key === "STYLE"
-            ? "right"
-            : "center",
+        horizontal: isNum ? "right" : "center",
         vertical: "middle",
         indent: 1,
       };
-      if (numKeys.has(key)) cell.numFmt = getNumFmt(key);
-    });
-    totalRow.height = 24;
-    totalRow.eachCell((cell, cn) => {
-      const key = columns[cn - 1]?.key;
-      cell.font = { bold: true };
-      cell.border = { top: { style: "thin" } };
-      cell.alignment = {
-        horizontal: numKeys.has(key) ? "right" : "center",
-        vertical: "middle",
-        indent: 1,
-      };
-      if (numKeys.has(key)) cell.numFmt = getNumFmt(key); // ← updated
+      if (isNum) cell.numFmt = "#,##,##0.000"; // ← always 3 decimals for totals
     });
 
     ws.views = [{ state: "frozen", ySplit: 3 }];
@@ -508,23 +500,23 @@ const OrderEntryBuyerWiseStatusTable = ({
         >
           <table
             className="w-full border-collapse text-[11px] table-fixed"
-            style={{ minWidth: "1850px" }}
+            style={{ minWidth: "2150px" }}
           >
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-8">S.No</TH>
-                <TH cls="w-36">Order No</TH>
-                <TH cls="w-40">Buyer Name</TH>
+                <TH cls="w-40">Order No</TH>
+                <TH cls="w-44">Buyer Name</TH>
                 <TH cls="w-36">BPO No</TH>
-                <TH cls="w-28">Style</TH>
+                <TH cls="w-32">Style</TH>
+                <TH cls="w-28">Uom</TH>
+                <TH cls="w-28">Pack Type</TH>
                 <TH cls="w-32">Order Qty</TH>
                 <TH cls="w-36">Production Qty</TH>
                 <TH cls="w-32">Fabric Inhouse Qty</TH>
-                <TH cls="w-32">Fabric Balance</TH>
-
+                <TH cls="w-32">Fabric Balance Qty</TH>
                 <TH cls="w-20">Cutting</TH>
-
-                <TH cls="w-20">Power Table</TH>
+                <TH cls="w-24">Power Table</TH>
                 <TH cls="w-20">Singer</TH>
                 <TH cls="w-20">Sewing</TH>
                 <TH cls="w-20">Checking</TH>
@@ -548,20 +540,57 @@ const OrderEntryBuyerWiseStatusTable = ({
                     </td>
                     <td className="border p-1 pl-2">{row.ORDERNO}</td>
                     <td className="border p-1 pl-2">{row.BUYERNAME}</td>
-                    <td className="border p-1 pl-2">{row.BUYERPONO}</td>
+                    <td className="border p-1 pl-2 break-words">
+                      {row.BUYERPONO}
+                    </td>
                     <td className="border p-1 pl-2">{row.STYLE}</td>
-                    <NumCell val={row.ORDERQTY} decimals={3} />
-                    <NumCell val={row.PRODQTY} decimals={3} />
+                    <td className="border p-1 pl-2">{row.ORDERUOM}</td>
+                    <td className="border p-1 pl-2">{row.ORDERPACKTYPE}</td>
+                    <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.ORDERQTY, row.ORDERUOM)}
+                    </td>
+                    {/* <NumCell val={row.ORDERQTY} decimals={3} /> */}
+                    <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.PRODQTY, row.ORDERUOM)}
+                    </td>
+                    {/* <NumCell val={row.PRODQTY} decimals={3} /> */}
+                    {/* <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.DYERECQTY, row.ORDERUOM)}
+                    </td> */}
                     <NumCell val={row.DYERECQTY} decimals={3} />
+                    {/* <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.INBAL, row.ORDERUOM)}
+                    </td> */}
                     <NumCell val={row.INBAL} decimals={3} />
 
-                    <NumCell val={row.CUTTING} decimals={3} />
-                    <NumCell val={row.POWERTABLE} decimals={3} />
-                    <NumCell val={row.SINGER} decimals={3} />
-                    <NumCell val={row.SEWING} decimals={3} />
-                    <NumCell val={row.CHECKING} decimals={3} />
-                    <NumCell val={row.PACKING} decimals={3} />
-                    <NumCell val={row.BOX} />
+                    <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.CUTTING, row.ORDERUOM)}
+                    </td>
+                    {/* <NumCell val={row.CUTTING} decimals={3} /> */}
+                    <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.POWERTABLE, row.ORDERUOM)}
+                    </td>
+                    {/* <NumCell val={row.POWERTABLE} decimals={3} /> */}
+                    <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.SINGER, row.ORDERUOM)}
+                    </td>
+                    {/* <NumCell val={row.SINGER} decimals={3} /> */}
+                    <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.SEWING, row.ORDERUOM)}
+                    </td>
+                    {/* <NumCell val={row.SEWING} decimals={3} /> */}
+                    <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.CHECKING, row.ORDERUOM)}
+                    </td>
+                    {/* <NumCell val={row.CHECKING} decimals={3} /> */}
+                    <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.PACKING, row.ORDERUOM)}
+                    </td>
+                    {/* <NumCell val={row.PACKING} decimals={3} /> */}
+                    <td className="border p-1 pr-2 text-right">
+                      {formatQtyByUOM(row.BOX, row.ORDERUOM)}
+                    </td>
+                    {/* <NumCell val={row.BOX} /> */}
                   </tr>
                 ))
               )}

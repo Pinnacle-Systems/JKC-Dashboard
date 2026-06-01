@@ -483,7 +483,7 @@ const OrderEntryBuyerQtyWise = ({
                       {fmtDate(row.orderDate)}
                     </td>
                     <td className="border p-1 pl-2">{row.buyerName}</td>
-                    <td className="border p-1 pl-2">{row.bpoNo}</td>
+                    <td className="border p-1 pl-2 break-words">{row.bpoNo}</td>
                     <td className="border p-1 pl-2">{row.styleRefNo}</td>
                     <td className="border p-1 text-left pl-2">
                       {row.orderPackType}

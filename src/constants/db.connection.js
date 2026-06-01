@@ -20,11 +20,11 @@ export async function initPool() {
 
       // 🔥 pool tuning
       poolMin: 5,
-      poolMax: 25,        // ⬆ was 13 — allows more concurrent queries
-      poolIncrement: 2,   // grow gradually instead of large jumps
+      poolMax: 25, // ⬆ was 13 — allows more concurrent queries
+      poolIncrement: 2, // grow gradually instead of large jumps
       poolTimeout: 180,
-      queueTimeout: 30000,  // fail faster (30s) instead of silently queuing for 2min
-      queueMax: 500,        // cap the wait queue to avoid unbounded memory growth
+      queueTimeout: 30000, // fail faster (30s) instead of silently queuing for 2min
+      queueMax: 500, // cap the wait queue to avoid unbounded memory growth
     });
 
     console.log("✅ Oracle Pool Created Successfully");
@@ -36,7 +36,15 @@ export async function initPool() {
 
 export async function getConnection() {
   try {
-    const connection = await oracledb.getConnection(); // 👈 FROM POOL
+    const pool = oracledb.getPool();
+
+    console.log("📊 Pool Status:", {
+      open: pool.connectionsOpen,
+      inUse: pool.connectionsInUse,
+    });
+
+    const connection = await oracledb.getConnection();
+
     return connection;
   } catch (err) {
     console.error("❌ DB Connection Error:", err);

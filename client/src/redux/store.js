@@ -20,6 +20,7 @@ import {
   OrderEntry,
   production,
   fabric,
+  taReport,
 } from "./service";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
@@ -45,6 +46,7 @@ export const store = configureStore({
     [OrderEntry.reducerPath]: OrderEntry.reducer,
     [production.reducerPath]: production.reducer,
     [fabric.reducerPath]: fabric.reducer,
+    [taReport.reducerPath]: taReport.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat([
@@ -65,6 +67,7 @@ export const store = configureStore({
       OrderEntry.middleware,
       production.middleware,
       fabric.middleware,
+      taReport.middleware,
     ]),
 });
 

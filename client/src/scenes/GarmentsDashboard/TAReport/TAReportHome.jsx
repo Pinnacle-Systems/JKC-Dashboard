@@ -7,10 +7,9 @@ import {
 } from "../../../redux/features/dashboardFiltersSlice";
 import { useGetCompanyQuery } from "../../../redux/service/purchaseService";
 import { useEffect, useRef, useState } from "react";
-import ProductionStatus from "./ProductionStatus";
-import ProductionEfficiency from "./ProductionEfficiency";
+import TAReportStatus from "./TAReportStatus";
 
-const ProductionHome = ({ filterBuyerList }) => {
+const TAReportHome = ({ filterBuyerList }) => {
   const dispatch = useDispatch();
   const buyerRef = useRef();
   // Redux state
@@ -61,7 +60,7 @@ const ProductionHome = ({ filterBuyerList }) => {
               variant="h4"
               sx={{ fontWeight: 600, textAlign: "start", pt: 0.5, ml: 1 }}
             >
-              Overview of Production - {filterBuyer}
+              Overview of T&A Delay Report - {filterBuyer}
             </Typography>
           </Grid>
 
@@ -109,7 +108,7 @@ const ProductionHome = ({ filterBuyerList }) => {
                   </option>
                 ))} */}
                 <option value="JKC">JKC</option>
-                <option value="PSS">PSS</option>
+                {/* <option value="PSS">PSS</option> */}
               </select>
             </Box>
           </Grid>
@@ -120,18 +119,7 @@ const ProductionHome = ({ filterBuyerList }) => {
 
       <Grid container className="">
         <Grid item xs={12} md={12}>
-          <ProductionStatus
-            key={filterBuyer}
-            companyName={filterBuyer}
-            finYear={selectedYear}
-            finYr={finYr}
-            poType={poType}
-            companyList={companyList}
-            filterBuyerList={filterBuyerList}
-          />
-        </Grid>
-        <Grid item xs={12} md={12}>
-          <ProductionEfficiency
+          <TAReportStatus
             key={filterBuyer}
             companyName={filterBuyer}
             finYear={selectedYear}
@@ -146,4 +134,4 @@ const ProductionHome = ({ filterBuyerList }) => {
   );
 };
 
-export default ProductionHome;
+export default TAReportHome;
