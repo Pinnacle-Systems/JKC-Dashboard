@@ -177,7 +177,7 @@ const ProductionEfficiencytable = ({
     }
 
     const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet("Production Efficiency");
+    const ws = wb.addWorksheet("Production_Quantity");
 
     const columns = [
       { header: "S.No", key: "sno", width: 6 },
@@ -305,7 +305,7 @@ const ProductionEfficiencytable = ({
       new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }),
-      `ProductionEfficiency_${companyName}_${selectedProcess}_${selectedDate}.xlsx`,
+      `Production_Quantity_${companyName}_${selectedProcess}_${selectedDate}.xlsx`,
     );
   };
 
@@ -316,7 +316,7 @@ const ProductionEfficiencytable = ({
         {/* HEADER */}
         <div className="flex justify-between items-center">
           <h2 className="font-bold uppercase text-sm">
-            Production Efficiency —{" "}
+            Production Quantity —{" "}
             <span className="text-green-700">{companyName}</span>
           </h2>
 
