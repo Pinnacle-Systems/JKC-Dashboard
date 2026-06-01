@@ -60,6 +60,58 @@ const production = createApi({
       },
       providesTags: ["production"],
     }),
+    getProductionEfficiencyManpower: builder.query({
+      query: ({ params }) => {
+        return {
+          url: PRODUCTION + "/getProductionEfficiencyManpower",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["production"],
+    }),
+    getProductionEfficiencyManpowertable: builder.query({
+      query: ({ params }) => {
+        return {
+          url: PRODUCTION + "/getProductionEfficiencyManpowertable",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["production"],
+    }),
+    getProductionEff: builder.query({
+      query: ({ params }) => {
+        return {
+          url: PRODUCTION + "/getProductionEff",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["production"],
+    }),
+    getProductionEfftable: builder.query({
+      query: ({ params }) => {
+        return {
+          url: PRODUCTION + "/getProductionEfftable",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["production"],
+    }),
     getProductionEfficiencyTable: builder.query({
       query: ({ params }) => {
         return {
@@ -82,6 +134,10 @@ export const {
   useGetProductionSummaryTableQuery,
   useGetProductionEfficiencyQuery,
   useGetProductionEfficiencyTableQuery,
+  useGetProductionEffQuery,
+  useGetProductionEfficiencyManpowerQuery,
+  useGetProductionEfficiencyManpowertableQuery,
+  useGetProductionEfftableQuery,
   // table
 } = production;
 

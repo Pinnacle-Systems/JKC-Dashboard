@@ -869,7 +869,7 @@ const ProductionEfficiency = ({ companyName }) => {
         }}
       >
         <CardHeader
-          title="Production Efficiency"
+          title="Production Quantity"
           titleTypographyProps={{
             sx: { fontSize: ".95rem", fontWeight: 700, color: "#111827" },
           }}
