@@ -21,11 +21,11 @@ const tabs = [
   // { key: 'User', name: "User", component: Users ,list:true,list_name:"User Management"},
   // { key: "Roles", name: "Roles", component: Roles,list:true,list_name:"Role Management" },
   {
-    key: "MISDashboard",
-    name: "MIS Dashboard",
+    key: "HRDashboard",
+    name: "HR Dashboard",
     component: mainDashboard,
     list: true,
-    list_name: "MIS Dashboard",
+    list_name: "HR Dashboard",
   },
   // {
   //   key: "HR Dashboard",

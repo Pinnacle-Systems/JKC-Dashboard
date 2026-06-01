@@ -241,12 +241,12 @@ const Sidebar = () => {
             </Tooltip> */}
 
             <Tooltip
-              title="MIS Dashborad"
+              title="HR Dashborad"
               placement="right"
               disableHoverListener={!isCollapsed}
             >
               <StyledListItemButton
-                onClick={() => dispatch(push({ id: 7, name: "MIS Dashboard" }))}
+                onClick={() => dispatch(push({ id: 7, name: "HR Dashboard" }))}
               >
                 <StyledListItemIcon>
                   <PersonIcon
@@ -257,16 +257,15 @@ const Sidebar = () => {
                     }}
                   />
                 </StyledListItemIcon>
-               
+
                 <ListItemText
-                  primary="MIS Dashboard"
+                  primary="HR Dashboard"
                   primaryTypographyProps={{
                     fontSize: "0.8rem",
                     fontWeight: "500",
                   }}
                   sx={{ ml: 1 }}
                 />
-            
               </StyledListItemButton>
             </Tooltip>
 
@@ -440,8 +439,8 @@ const Sidebar = () => {
                 {page.link === "Dashboard" && <DashboardIcon sx={{ color }} />}
                 {page.link === "ERP" && <FaDatabase style={{ color }} />}
                 {page.link === "User" && <PersonIcon sx={{ color }} />}
-                {page.link === "MIS Dashboard" && <PersonIcon sx={{ color }} />}
-                {page.link === "HR Dashboard" && <GroupIcon sx={{ color }} />}
+                {page.link === "HR Dashboard" && <PersonIcon sx={{ color }} />}
+                {/* {page.link === "HR Dashboard" && <GroupIcon sx={{ color }} />} */}
                 {page.link === "Dyeing Dashboard" && (
                   <OpacityIcon sx={{ color }} />
                 )}
