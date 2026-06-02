@@ -247,11 +247,11 @@ const ProductionEffTable = ({
         ORDERNO: r.ORDERNO,
         STYLEITEM: r.STYLEITEM,
         COLORNAME: r.COLORNAME,
-        CUTTING: Number(r.CUTTING || 0),
-        CHECKING: Number(r.CHECKING || 0),
-        SINGER: Number(r.SINGER || 0),
-        POWERTABLE: Number(r.POWERTABLE || 0),
-        SEWING: Number(r.SEWING || 0),
+        CUTTING: String(r.CUTTING),
+        CHECKING: String(r.CHECKING),
+        SINGER: String(r.SINGER),
+        POWERTABLE: String(r.POWERTABLE),
+        SEWING: String(r.SEWING),
       });
     });
 
@@ -266,7 +266,6 @@ const ProductionEffTable = ({
           vertical: "middle",
           indent: 1,
         };
-        if (isQty) cell.numFmt = "#,##0";
       });
     });
 
@@ -279,11 +278,12 @@ const ProductionEffTable = ({
       ORDERNO: "",
       STYLEITEM: "TOTAL",
       COLORNAME: "",
-      CUTTING: totals.CUTTING,
-      CHECKING: totals.CHECKING,
-      SINGER: totals.SINGER,
-      POWERTABLE: totals.POWERTABLE,
-      SEWING: totals.SEWING,
+      // ← Also strings for totals
+      CUTTING: String(totals.CUTTING),
+      CHECKING: String(totals.CHECKING),
+      SINGER: String(totals.SINGER),
+      POWERTABLE: String(totals.POWERTABLE),
+      SEWING: String(totals.SEWING),
     });
     tr.height = 22;
     tr.eachCell((cell, cn) => {
@@ -296,7 +296,6 @@ const ProductionEffTable = ({
         vertical: "middle",
         indent: 1,
       };
-      if (isQty) cell.numFmt = "#,##0";
     });
 
     ws.views = [{ state: "frozen", ySplit: 3 }];
