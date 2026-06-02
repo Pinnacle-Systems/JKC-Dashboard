@@ -21,6 +21,19 @@ const purchase = createApi({
       },
       providesTags: ["TAReport"],
     }),
+    getTaReportOrderMdCount: builder.query({
+      query: ({ params }) => {
+        return {
+          url: TAReport + "/getTAReportOrderMdCount",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["TAReport"],
+    }),
     getTaReportOrderCountByCompany: builder.query({
       query: ({ params }) => {
         return {
@@ -52,6 +65,7 @@ const purchase = createApi({
 
 export const {
   useGetTaReportOrderCountQuery,
+  useGetTaReportOrderMdCountQuery,
   useGetTaReportOrderCountByCompanyQuery,
   useGetTaReportQuery,
 } = purchase;

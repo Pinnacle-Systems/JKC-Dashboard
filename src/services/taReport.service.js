@@ -24,6 +24,36 @@ SELECT DISTINCT A.ORDERNO,A.COMPCODE  FROM TANDATABLE A
   }
 }
 
+export async function getOrderEntryTAMdCount(req, res) {
+  const connection = await getConnection(res);
+  try {
+    const { filterBuyer } = req.query;
+
+    const sql = `
+SELECT X.COMPCODE,COUNT(*) ORDCNT
+FROM(
+SELECT A.COMPCODE,COUNT(A.ORDERNO)
+FROM VW_ESTACTDATE A
+WHERE A.COMPCODE= 'JKC'
+GROUP BY A.COMPCODE,ORDERNO
+)X
+GROUP BY X.COMPCODE
+     `;
+
+    const result = await connection.execute(sql);
+    let resp = result.rows?.map((po) => ({
+      compcode: po[0],
+      count: po[1],
+    }));
+    return res.json({ statusCode: 0, data: resp });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await connection.close();
+  }
+}
+
 export async function getOrderEntryTACountByCompany(req, res) {
   const connection = await getConnection(res);
   try {
