@@ -33,7 +33,7 @@ const dashboardFiltersSlice = createSlice({
       state.lastSection = action.payload;
     },
     setPoType: (state, action) => {
-      state.poType  = action.payload;
+      state.poType = action.payload;
     },
     resetDashboardFilters: () => initialState,
   },
@@ -46,7 +46,8 @@ export const {
   setFinYr,
   setUser,
   setLastSection,
-  resetDashboardFilters,setPoType
+  resetDashboardFilters,
+  setPoType,
 } = dashboardFiltersSlice.actions;
 
 export default dashboardFiltersSlice.reducer;

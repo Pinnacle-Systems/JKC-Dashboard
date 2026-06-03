@@ -60,6 +60,32 @@ const purchase = createApi({
       },
       providesTags: ["TAReport"],
     }),
+    getTaMdReport: builder.query({
+      query: ({ params }) => {
+        return {
+          url: TAReport + "/getTaMdReport",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["TAReport"],
+    }),
+    getTaMdReportDropdown: builder.query({
+      query: ({ params }) => {
+        return {
+          url: TAReport + "/getTaMdReportDropdown",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["TAReport"],
+    }),
   }),
 });
 
@@ -68,6 +94,8 @@ export const {
   useGetTaReportOrderMdCountQuery,
   useGetTaReportOrderCountByCompanyQuery,
   useGetTaReportQuery,
+  useGetTaMdReportDropdownQuery,
+  useGetTaMdReportQuery,
 } = purchase;
 
 export default purchase;
