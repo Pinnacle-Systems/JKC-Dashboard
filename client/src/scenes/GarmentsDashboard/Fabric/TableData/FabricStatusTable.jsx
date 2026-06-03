@@ -106,14 +106,17 @@ const FabricDetailsModal = ({ data, orderNo, onClose }) => {
 
   const cols = [
     { key: "FABRIC", label: "Fabric Name", cls: "w-60 text-left" },
-    { key: "COLORNAME", label: "Color Name", cls: "w-44 text-left" },
-    { key: "DESIGN", label: "Design", cls: "w-32 text-left" },
-    { key: "QTY", label: "Qty", cls: "w-20" },
+    { key: "COLORNAME", label: "Color Name", cls: "w-48 text-left" },
+    { key: "DESIGN", label: "Design", cls: "w-48 text-left" },
+
+    { key: "PLANQTY", label: "Plan Qty", cls: "w-24 text-left" },
+    { key: "QTY", label: "Fabric Inhouse Qty", cls: "w-36" },
+    { key: "BALANCEQTY", label: "Balance Qty", cls: "w-28 text-left" },
   ];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-[10000] flex justify-center items-center">
-      <div className="bg-white w-[880px] h-[520px] overflow-y-auto p-4 rounded-xl relative flex flex-col">
+      <div className="bg-white w-[1150px] h-[520px] overflow-y-auto p-4 rounded-xl relative flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-bold uppercase text-sm text-gray-800">
@@ -167,8 +170,15 @@ const FabricDetailsModal = ({ data, orderNo, onClose }) => {
                     <td className="border p-1 pl-2">{row.FABRIC ?? ""}</td>
                     <td className="border p-1 pl-2">{row.COLORNAME ?? ""}</td>
                     <td className="border p-1 pl-2">{row.DESIGN ?? ""}</td>
+
                     <td className="border p-1 pr-2 text-right">
-                      {fmt(row.QTY)}
+                      {fmt(row.PLANQTY)}
+                    </td>
+                    <td className="border p-1 pr-2 text-right">
+                      {fmt(row.FINQTY)}
+                    </td>
+                    <td className="border p-1 pr-2 text-right">
+                      {fmt(row.BALQTY)}
                     </td>
                   </tr>
                 ))

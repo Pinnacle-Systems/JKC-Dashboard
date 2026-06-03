@@ -200,6 +200,7 @@ const ActiveTabList = () => {
         finYr={tabData?.finYr}
         poType={tabData?.poType}
         autoFocusBuyer={tabData?.autoFocusBuyer}
+        reportType={tabData?.reportType}
       />
     ),
     "Purchase Dashboard": (tabData) => (

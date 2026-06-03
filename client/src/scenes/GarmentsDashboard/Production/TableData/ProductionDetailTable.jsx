@@ -159,7 +159,7 @@ const SummaryTable = ({
               <TH cls="w-24">Style Ref</TH>
               <TH cls="w-36">Buyer Name</TH>
               <TH cls="w-40">Color</TH>
-              <TH cls="w-40">Style Group</TH>
+              {/* <TH cls="w-40">Style Group</TH> */}
               <TH cls="w-48">Style Item</TH>
               <TH cls="w-24">Uom</TH>
               <TH cls="w-20">Order Qty</TH>
@@ -207,7 +207,7 @@ const SummaryTable = ({
                     <td className="border p-1 pl-2">{row.STYLEREFNO}</td>
                     <td className="border p-1 pl-2">{row.BUYERNAME}</td>
                     <td className="border p-1 pl-2">{row.COLORNAME}</td>
-                    <td className="border p-1 pl-2">{row.STYLEGROUP}</td>
+                    {/* <td className="border p-1 pl-2">{row.STYLEGROUP}</td> */}
                     <td className="border p-1 pl-2">{row.STYLEITEM}</td>
                     <td className="border p-1 pl-2">{row.ORDERUOM}</td>
                     {qtyCell(row.ORDERQTY)}
@@ -397,10 +397,11 @@ const ProductionDetailTable = ({
     const columns = [
       { header: "S.No", key: "sno", width: 6 },
       { header: "Process", key: "PROCESSNAME", width: 25 },
-      { header: "Store ID", key: "STOREID", width: 45 },
+      { header: "Store", key: "STOREID", width: 45 },
       { header: "Doc Date", key: "DOCDATE", width: 16 },
       { header: "Order No", key: "ORDERNO", width: 32 },
       { header: "Style Ref No", key: "STYLEREFNO", width: 22 },
+      { header: "Style Item", key: "STYLEITEM", width: 44 },
       { header: "Buyer Name", key: "BUYERNAME", width: 40 },
       { header: "Color", key: "COLORNAME", width: 40 },
       { header: "Qty", key: "QTY", width: 16 },
@@ -458,6 +459,7 @@ const ProductionDetailTable = ({
         DOCDATE: fmtDate(r.DOCDATE),
         ORDERNO: r.ORDERNO,
         STYLEREFNO: r.STYLEREFNO,
+        STYLEITEM: r.STYLEITEM,
         BUYERNAME: r.BUYERNAME,
         COLORNAME: r.COLORNAME,
         QTY: Number(r.QTY || 0),
@@ -486,8 +488,9 @@ const ProductionDetailTable = ({
       DOCDATE: "",
       ORDERNO: "",
       STYLEREFNO: "",
-      BUYERNAME: "TOTAL",
-      COLORNAME: "",
+      STYLEITEM: "",
+      BUYERNAME: "",
+      COLORNAME: "TOTAL",
       QTY: totalQty,
     });
     tr.height = 22;
@@ -548,7 +551,7 @@ const ProductionDetailTable = ({
       { header: "Style Ref", key: "STYLEREFNO", width: 22 },
       { header: "Buyer Name", key: "BUYERNAME", width: 44 },
       { header: "Color", key: "COLORNAME", width: 30 },
-      { header: "Style Group", key: "STYLEGROUP", width: 30 },
+      // { header: "Style Group", key: "STYLEGROUP", width: 30 },
       { header: "Style Item", key: "STYLEITEM", width: 44 },
       { header: "UOM", key: "ORDERUOM", width: 16 },
       { header: "Order Qty", key: "ORDERQTY", width: 16 },
@@ -627,7 +630,7 @@ const ProductionDetailTable = ({
         STYLEREFNO: r.STYLEREFNO,
         BUYERNAME: r.BUYERNAME,
         COLORNAME: r.COLORNAME,
-        STYLEGROUP: r.STYLEGROUP,
+        // STYLEGROUP: r.STYLEGROUP,
         STYLEITEM: r.STYLEITEM,
         ORDERUOM: r.ORDERUOM,
         ORDERQTY: Number(r.ORDERQTY || 0),
@@ -670,7 +673,7 @@ const ProductionDetailTable = ({
       STYLEREFNO: "",
       BUYERNAME: "",
       COLORNAME: "",
-      STYLEGROUP: "",
+      // STYLEGROUP: "",
       STYLEITEM: "",
       ORDERUOM: "TOTAL",
       ...totals,
@@ -930,11 +933,12 @@ const ProductionDetailTable = ({
                   <tr>
                     <TH cls="w-6">S.No</TH>
                     <TH cls="w-40">Process</TH>
-                    <TH cls="w-60">Store ID</TH>
+                    <TH cls="w-60">Store</TH>
                     <TH cls="w-20">Doc Date</TH>
                     <TH cls="w-32">Order No</TH>
                     <TH cls="w-44">Buyer Name</TH>
                     <TH cls="w-28">Style Ref No</TH>
+                    <TH cls="w-44">Style Item</TH>
                     <TH cls="w-44">Color</TH>
                     <TH cls="w-16">Qty</TH>
                   </tr>
@@ -961,6 +965,7 @@ const ProductionDetailTable = ({
                         <td className="border p-1 pl-2">{row.ORDERNO}</td>
                         <td className="border p-1 pl-2">{row.BUYERNAME}</td>
                         <td className="border p-1 pl-2">{row.STYLEREFNO}</td>
+                        <td className="border p-1 pl-2">{row.STYLEITEM}</td>
                         <td className="border p-1 pl-2">{row.COLORNAME}</td>
                         <td className="border p-1 pr-2 text-right ">
                           {Number(row.QTY || 0).toLocaleString("en-IN")}

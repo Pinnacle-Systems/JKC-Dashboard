@@ -158,6 +158,7 @@ const TAReportIndex = ({
                     filterBuyerList,
                     finYr,
                     poType,
+                    reportType,
                   },
                 }),
               );

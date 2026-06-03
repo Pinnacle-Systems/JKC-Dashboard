@@ -15,9 +15,12 @@ import {
   getCMTPlanTable,
   getPreBudjetTable,
   getOrderEntryBuyerWiseStatusTable,
-  getOrderEntryBuyerPoNoWiseQtyStatusTable,getOrderEntryBuyerWiseQuantityTable,
+  getOrderEntryBuyerWiseStatusStyleTopBottomTable,
+  getOrderEntryBuyerPoNoWiseQtyStatusTable,
+  getOrderEntryBuyerWiseQuantityTable,
   getOrderEntryStyleItemGroupWiseQtyTable,
-  getOrderEntryColorWiseQtyTable,getOrderEntryStatusTableWithStatus
+  getOrderEntryColorWiseQtyTable,
+  getOrderEntryStatusTableWithStatus,
 } from "../services/orderEntryTable.service.js";
 
 const router = Router();
@@ -38,21 +41,23 @@ router.get("/getAccessoriesPlanTable", getAccessoriesPlanTable);
 router.get("/getCMTPlanTable", getCMTPlanTable);
 router.get("/getPreBudjetTable", getPreBudjetTable);
 
-
-router.get("/getOrderEntryStatusTableWithStatus", getOrderEntryStatusTableWithStatus);
-
-
+router.get(
+  "/getOrderEntryStatusTableWithStatus",
+  getOrderEntryStatusTableWithStatus,
+);
 
 router.get(
   "/getOrderEntryBuyerWiseStatusTable",
   getOrderEntryBuyerWiseStatusTable,
 );
 router.get(
+  "/getOrderEntryBuyerWiseStatusStyleTable",
+  getOrderEntryBuyerWiseStatusStyleTopBottomTable,
+);
+router.get(
   "/getOrderEntryBuyerWiseQuantityTable",
   getOrderEntryBuyerWiseQuantityTable,
 );
-
-
 
 router.get(
   "/getOrderEntryBuyerPoNoWiseStatusTable",

@@ -15,8 +15,10 @@ import { addInsightsRowTurnOver } from "../../../../utils/hleper";
 
 const RECORDS = 34;
 const fmtDate = (d) => (d ? moment(d).format("DD-MM-YYYY") : "");
-const fmtQty = (n) => Number(n || 0).toLocaleString("en-IN");
-
+const fmtPct = (n) => {
+  const val = Number(n || 0);
+  return val === 0 ? "0%" : `${val.toFixed(2)}%`;
+};
 /* ── Pagination ── */
 const Pagination = ({ page, total, setPage }) => (
   <div
@@ -150,20 +152,28 @@ const ProductionEffTable = ({
   );
 
   /* ── Totals ── */
-  const totals = useMemo(
-    () =>
-      filtered.reduce(
-        (acc, r) => ({
-          CUTTING: acc.CUTTING + Number(r.CUTTING || 0),
-          CHECKING: acc.CHECKING + Number(r.CHECKING || 0),
-          SINGER: acc.SINGER + Number(r.SINGER || 0),
-          POWERTABLE: acc.POWERTABLE + Number(r.POWERTABLE || 0),
-          SEWING: acc.SEWING + Number(r.SEWING || 0),
-        }),
-        { CUTTING: 0, CHECKING: 0, SINGER: 0, POWERTABLE: 0, SEWING: 0 },
-      ),
-    [filtered],
-  );
+  const totals = useMemo(() => {
+    if (!filtered.length)
+      return { CUTTING: 0, CHECKING: 0, SINGER: 0, POWERTABLE: 0, SEWING: 0 };
+    const sum = filtered.reduce(
+      (acc, r) => ({
+        CUTTING: acc.CUTTING + Number(r.CUTTING || 0),
+        CHECKING: acc.CHECKING + Number(r.CHECKING || 0),
+        SINGER: acc.SINGER + Number(r.SINGER || 0),
+        POWERTABLE: acc.POWERTABLE + Number(r.POWERTABLE || 0),
+        SEWING: acc.SEWING + Number(r.SEWING || 0),
+      }),
+      { CUTTING: 0, CHECKING: 0, SINGER: 0, POWERTABLE: 0, SEWING: 0 },
+    );
+    const count = filtered.length;
+    return {
+      CUTTING: sum.CUTTING / count,
+      CHECKING: sum.CHECKING / count,
+      SINGER: sum.SINGER / count,
+      POWERTABLE: sum.POWERTABLE / count,
+      SEWING: sum.SEWING / count,
+    };
+  }, [filtered]);
 
   /* ── Pagination ── */
   const totalPages = Math.ceil(filtered.length / RECORDS) || 1;
@@ -247,11 +257,11 @@ const ProductionEffTable = ({
         ORDERNO: r.ORDERNO,
         STYLEITEM: r.STYLEITEM,
         COLORNAME: r.COLORNAME,
-        CUTTING: String(r.CUTTING),
-        CHECKING: String(r.CHECKING),
-        SINGER: String(r.SINGER),
-        POWERTABLE: String(r.POWERTABLE),
-        SEWING: String(r.SEWING),
+        CUTTING: `${Number(r.CUTTING || 0).toFixed(2)}%`,
+        CHECKING: `${Number(r.CHECKING || 0).toFixed(2)}%`,
+        SINGER: `${Number(r.SINGER || 0).toFixed(2)}%`,
+        POWERTABLE: `${Number(r.POWERTABLE || 0).toFixed(2)}%`,
+        SEWING: `${Number(r.SEWING || 0).toFixed(2)}%`,
       });
     });
 
@@ -279,11 +289,11 @@ const ProductionEffTable = ({
       STYLEITEM: "TOTAL",
       COLORNAME: "",
       // ← Also strings for totals
-      CUTTING: String(totals.CUTTING),
-      CHECKING: String(totals.CHECKING),
-      SINGER: String(totals.SINGER),
-      POWERTABLE: String(totals.POWERTABLE),
-      SEWING: String(totals.SEWING),
+      CUTTING: `${totals.CUTTING.toFixed(2)}%`,
+      CHECKING: `${totals.CHECKING.toFixed(2)}%`,
+      SINGER: `${totals.SINGER.toFixed(2)}%`,
+      POWERTABLE: `${totals.POWERTABLE.toFixed(2)}%`,
+      SEWING: `${totals.SEWING.toFixed(2)}%`,
     });
     tr.height = 22;
     tr.eachCell((cell, cn) => {
@@ -397,23 +407,23 @@ const ProductionEffTable = ({
           </p>
           <p className="text-xs font-semibold text-gray-600">
             Cutting:{" "}
-            <span className="text-green-600">{fmtQty(totals.CUTTING)}</span>
+            <span className="text-green-600">{fmtPct(totals.CUTTING)}</span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
             Checking:{" "}
-            <span className="text-green-600">{fmtQty(totals.CHECKING)}</span>
+            <span className="text-green-600">{fmtPct(totals.CHECKING)}</span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
             Singer:{" "}
-            <span className="text-green-600">{fmtQty(totals.SINGER)}</span>
+            <span className="text-green-600">{fmtPct(totals.SINGER)}</span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
             Power Table:{" "}
-            <span className="text-green-600">{fmtQty(totals.POWERTABLE)}</span>
+            <span className="text-green-600">{fmtPct(totals.POWERTABLE)}</span>
           </p>
           <p className="text-xs font-semibold text-gray-600">
             Sewing:{" "}
-            <span className="text-green-600">{fmtQty(totals.SEWING)}</span>
+            <span className="text-green-600">{fmtPct(totals.SEWING)}</span>
           </p>
         </div>
 
@@ -491,19 +501,19 @@ const ProductionEffTable = ({
                     <td className="border p-1 pl-2">{row.STYLEITEM}</td>
                     <td className="border p-1 pl-2">{row.COLORNAME}</td>
                     <td className="border p-1 pr-2 text-right">
-                      {fmtQty(row.CUTTING)}
+                      {fmtPct(row.CUTTING)}
                     </td>
                     <td className="border p-1 pr-2 text-right">
-                      {fmtQty(row.CHECKING)}
+                      {fmtPct(row.CHECKING)}
                     </td>
                     <td className="border p-1 pr-2 text-right">
-                      {fmtQty(row.SINGER)}
+                      {fmtPct(row.SINGER)}
                     </td>
                     <td className="border p-1 pr-2 text-right">
-                      {fmtQty(row.POWERTABLE)}
+                      {fmtPct(row.POWERTABLE)}
                     </td>
                     <td className="border p-1 pr-2 text-right">
-                      {fmtQty(row.SEWING)}
+                      {fmtPct(row.SEWING)}
                     </td>
                   </tr>
                 ))

@@ -419,7 +419,7 @@ export async function getOrderEntryStatusTableWithStatus(req, res) {
   }
 }
 
-// 2. Order Entry — Buyer Wise Status Table
+// 2. Order Entry — Buyer Wise Status fabric Table
 
 export async function getOrderEntryBuyerWiseStatusTable(req, res) {
   const connection = await getConnection(res);
@@ -441,6 +441,45 @@ export async function getOrderEntryBuyerWiseStatusTable(req, res) {
     const result = await connection.execute(sql, [], {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
+
+    return res.json({
+      statusCode: 0,
+      data: result.rows,
+    });
+  } catch (err) {
+    console.error("Error retrieving data:", err);
+
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  } finally {
+    await connection.close();
+  }
+}
+
+// 2. Order Entry — Buyer Wise Status Style Top Bottom Table
+
+export async function getOrderEntryBuyerWiseStatusStyleTopBottomTable(
+  req,
+  res,
+) {
+  const connection = await getConnection(res);
+
+  try {
+    const { orderNo } = req.query;
+
+    const sql = `
+      SELECT * FROM FABINHOUSETOPACK_STYLEITEM
+      WHERE ORDERNO = :ORDERNO
+    `;
+
+    const result = await connection.execute(
+      sql,
+      { ORDERNO: orderNo },
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+      },
+    );
 
     return res.json({
       statusCode: 0,

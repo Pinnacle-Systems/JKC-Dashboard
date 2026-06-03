@@ -180,6 +180,19 @@ const purchase = createApi({
       },
       providesTags: ["orderEntry"],
     }),
+    getOrderEntryBuyerWiseStatusStyleTable: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryBuyerWiseStatusStyleTable",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
     getOrderEntryBuyerWiseQuantityTable: builder.query({
       query: ({ params }) => {
         return {
@@ -264,13 +277,13 @@ export const {
   useGetAccessoriesPlanTableQuery,
   useGetCMTPlanTableQuery,
   useGetPreBudjetTableQuery,
-   useGetOrderEntryStatusTableWithStatusQuery,
-   useGetOrderEntryBuyerWiseQuantityTableQuery,
+  useGetOrderEntryStatusTableWithStatusQuery,
+  useGetOrderEntryBuyerWiseQuantityTableQuery,
   useGetOrderEntryBuyerWiseStatusTableQuery,
   useGetOrderEntryBuyerPoNoWiseStatusTableQuery,
   useGetOrderEntryStyleWiseTableQuery,
   useGetOrderEntryColorWiseTableQuery,
- 
+  useGetOrderEntryBuyerWiseStatusStyleTableQuery,
 } = purchase;
 
 export default purchase;

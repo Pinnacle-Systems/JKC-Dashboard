@@ -22,9 +22,13 @@ const ProductionEff = ({ companyName }) => {
     const year = d.getFullYear();
     return `${year}-${month}-${day}`;
   };
+  const toPercentage = (value) => {
+    const num = Number(value || 0);
+    return num < 1 ? num * 100 : num;
+  };
 
   const [date, setDate] = useState(formatDate(new Date()));
-  const [selectedProcess, setSelectedProcess] = useState("CUTTING");
+  const [selectedProcess, setSelectedProcess] = useState("ALL");
   const [tableParams, setTableParams] = useState(null);
 
   const processOptions = [
@@ -72,7 +76,7 @@ const ProductionEff = ({ companyName }) => {
     formatter: (params) => {
       const value = Number(params.value || 0);
       if (value <= 0) return "";
-      return `${processName}\n${value.toLocaleString("en-IN")}`;
+      return `${processName}\n${value.toFixed(2)}%`;
     },
   });
 
@@ -83,7 +87,7 @@ const ProductionEff = ({ companyName }) => {
             name: "CUTTING",
             type: "bar",
             barGap: "10%",
-            data: chartData.map((x) => Number(x.CUTTING || 0)),
+            data: chartData.map((x) => toPercentage(x.CUTTING)),
             itemStyle: {
               color: makeGradient("CUTTING"),
               borderRadius: [8, 8, 0, 0],
@@ -93,7 +97,7 @@ const ProductionEff = ({ companyName }) => {
           {
             name: "CHECKING",
             type: "bar",
-            data: chartData.map((x) => Number(x.CHECKING || 0)),
+            data: chartData.map((x) => toPercentage(x.CHECKING)),
             itemStyle: {
               color: makeGradient("CHECKING"),
               borderRadius: [8, 8, 0, 0],
@@ -103,7 +107,7 @@ const ProductionEff = ({ companyName }) => {
           {
             name: "SINGER",
             type: "bar",
-            data: chartData.map((x) => Number(x.SINGER || 0)),
+            data: chartData.map((x) => toPercentage(x.SINGER)),
             itemStyle: {
               color: makeGradient("SINGER"),
               borderRadius: [8, 8, 0, 0],
@@ -113,7 +117,7 @@ const ProductionEff = ({ companyName }) => {
           {
             name: "POWER TABLE",
             type: "bar",
-            data: chartData.map((x) => Number(x.POWERTABLE || 0)),
+            data: chartData.map((x) => toPercentage(x.POWERTABLE)),
             itemStyle: {
               color: makeGradient("POWERTABLE"),
               borderRadius: [8, 8, 0, 0],
@@ -123,7 +127,7 @@ const ProductionEff = ({ companyName }) => {
           {
             name: "SEWING",
             type: "bar",
-            data: chartData.map((x) => Number(x.SEWING || 0)),
+            data: chartData.map((x) => toPercentage(x.SEWING)),
             itemStyle: {
               color: makeGradient("SEWING"),
               borderRadius: [8, 8, 0, 0],
@@ -138,15 +142,15 @@ const ProductionEff = ({ companyName }) => {
             data: chartData.map((x) => {
               switch (selectedProcess) {
                 case "CUTTING":
-                  return Number(x.CUTTING || 0);
+                  return toPercentage(x.CUTTING);
                 case "CHECKING":
-                  return Number(x.CHECKING || 0);
+                  return toPercentage(x.CHECKING);
                 case "SINGER":
-                  return Number(x.SINGER || 0);
+                  return toPercentage(x.SINGER);
                 case "POWER TABLE":
-                  return Number(x.POWERTABLE || 0);
+                  return toPercentage(x.POWERTABLE);
                 case "SEWING":
-                  return Number(x.SEWING || 0);
+                  return toPercentage(x.SEWING);
                 default:
                   return 0;
               }
@@ -182,8 +186,23 @@ const ProductionEff = ({ companyName }) => {
       backgroundColor: "#ffffff",
       borderColor: "#e5e7eb",
       borderWidth: 1,
-      textStyle: { color: "#374151", fontSize: 12, fontWeight: 600 },
-      valueFormatter: (value) => Number(value).toLocaleString("en-IN"),
+      textStyle: {
+        color: "#374151",
+        fontSize: 12,
+        fontWeight: 600,
+      },
+      formatter: (params) => {
+        let result = `${params[0].axisValue}<br/>`;
+
+        params.forEach((item) => {
+          result += `
+        ${item.marker}
+        ${item.seriesName}: <b>${Number(item.value).toFixed(2)}%</b><br/>
+      `;
+        });
+
+        return result;
+      },
     },
     legend: { show: false },
     toolbox: {
@@ -217,7 +236,7 @@ const ProductionEff = ({ companyName }) => {
         fontSize: 11,
         fontWeight: 600,
         color: "#9ca3af",
-        formatter: (value) => value.toLocaleString("en-IN"),
+        formatter: "{value}%",
       },
     },
     series,

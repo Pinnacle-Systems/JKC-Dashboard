@@ -412,7 +412,7 @@ const OrderEntryBuyerPoNoWiseTable = ({
                   setSelectedBpoNo(e.target.value);
                   resetPage();
                 }}
-                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-28"
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-44"
               >
                 {bpoNosList.map((code) => (
                   <option key={code} value={code}>

@@ -459,12 +459,12 @@ const TAReportStatus = ({ companyName, finYear }) => {
                   </tr>
 
                   {/* Remarks row */}
-                  <tr style={{ background: "#fafafa" }}>
+                  {/* <tr style={{ background: "#fafafa" }}>
                     <td style={tdStyle("left", true)}>Remarks</td>
                     {activityKeys.map((key) => (
                       <td key={key} style={tdStyle("center")} />
                     ))}
-                  </tr>
+                  </tr> */}
                 </tbody>
               </table>
             </Box>

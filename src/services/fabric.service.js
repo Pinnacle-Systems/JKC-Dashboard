@@ -126,7 +126,7 @@ export async function getFabricDetails(req, res) {
 
     const sql = `
       SELECT *
-      FROM FABINHOUSE_DETAILS_V2
+      FROM FABINHOUSE_DETAILS_V3
       WHERE ORDERNO = :ORDERNO
     `;
 

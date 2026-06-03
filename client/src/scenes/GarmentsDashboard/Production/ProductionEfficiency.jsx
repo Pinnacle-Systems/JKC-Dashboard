@@ -658,7 +658,7 @@ const ProductionEfficiency = ({ companyName }) => {
   };
 
   const [date, setDate] = useState(formatDate(new Date()));
-  const [selectedProcess, setSelectedProcess] = useState("CUTTING");
+  const [selectedProcess, setSelectedProcess] = useState("ALL");
   const [tableParams, setTableParams] = useState(null);
 
   const processOptions = [
