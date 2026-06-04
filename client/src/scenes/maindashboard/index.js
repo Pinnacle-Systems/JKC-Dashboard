@@ -41,7 +41,8 @@ import HomeOTWages from "./OTWages/HomeOT.jsx";
 import { useGetuserpagesQuery } from "../../redux/service/Rolemaster.js";
 import { getCommonParams } from "../../utils/hleper.js";
 // import CompanywiseEsi from "./DetailedDashboard/companywiseEsi.js";
-
+import { useExecuteMISHRMutation } from "../../redux/service/misDashboardService";
+import { useState } from "react";
 const Main_Dashboad = () => {
   const params = getCommonParams();
   const { userId } = params;
@@ -51,11 +52,29 @@ const Main_Dashboad = () => {
   );
   console.log(allPages, "allPages");
   console.log(usernames, "checkingname");
+  const [refreshing, setRefreshing] = useState(false);
+  const [executeMISHR] = useExecuteMISHRMutation();
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await executeMISHR({}).unwrap();
+      // alert("Data refreshed successfully!");
+    } catch (err) {
+      console.error("Refresh failed:", err);
+      // alert("Refresh failed. Please try again.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
   return (
     <div className="w-full  mx-auto rounded-md shadow-lg py-1 overflow-y-auto">
       <Grid container spacing={2}>
         <Grid item xs={12} md={12}>
-          <DashboardHeader usernames={usernames} />
+          <DashboardHeader
+            usernames={usernames}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+          />
         </Grid>
         <Grid item xs={12} md={4}>
           <Trophy />

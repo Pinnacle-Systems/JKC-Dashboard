@@ -13,7 +13,10 @@ import {
 } from "react-icons/fa";
 import { IoMaleFemale } from "react-icons/io5";
 import * as XLSX from "xlsx";
-import { useGetEsiPf1Query, useGetEsiPfQuery } from "../../redux/service/misDashboardService";
+import {
+  useGetEsiPf1Query,
+  useGetEsiPfQuery,
+} from "../../redux/service/misDashboardService";
 import FinYear from "../FinYear";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -27,11 +30,10 @@ const BloodGroupDetails = ({
   selectedBuyer,
   selectedYear,
   color,
-  HeadData
+  HeadData,
 }) => {
-
-
-
+  console.log(HeadData, "HeadData");
+  console.log(search, "search");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedState, setSelectedState] = useState("");
@@ -73,11 +75,9 @@ const BloodGroupDetails = ({
   const handleGenderFilter = (gender) => {
     setSelectedGender(gender);
   };
- 
 
   const filteredData = Array.isArray(HeadData)
-    ? HeadData
-      .filter((row) =>
+    ? HeadData.filter((row) =>
         Object.keys(search || {}).every((key) => {
           const searchValue = (search[key] || "").toString().trim();
           if (!searchValue) return true;
@@ -94,57 +94,55 @@ const BloodGroupDetails = ({
               return age >= minAge && age <= maxAge;
             }
 
-
             if (searchValue.endsWith("+")) {
               const minAge = Number(searchValue.replace("+", ""));
               return age >= minAge;
             }
 
-
             return age === Number(searchValue);
           }
           if (key == "BGF") {
-            if (searchValue.toLowerCase().includes("na")) {
-              // return rows where BGF is null or empty
-              return rowValue === null || rowValue === "";
-            }
-            else {
-              return rowValue
-                ?.toString()
-                .toLowerCase()
-                .includes(searchValue.toLowerCase());
-            }
-            // for other values, use case-insensitive includes
+            const isNA =
+              rowValue === null ||
+              rowValue === undefined ||
+              rowValue === "" ||
+              rowValue === "NA";
 
+            if (searchValue.toLowerCase() === "na") {
+              // Show rows where BGF is null, undefined, empty, or literally "NA"
+              return isNA;
+            }
+
+            return rowValue
+              ?.toString()
+              .toLowerCase()
+              .includes(searchValue.toLowerCase());
           }
 
-
-          console.log(rowValue, 'rowValue')
+          console.log(rowValue, "rowValue");
           return rowValue
             ?.toString()
             .toLowerCase()
             .includes(searchValue.toLowerCase());
-        })
+        }),
       )
-      .filter((row) => {
-        if (selectedState === "Labour") return row?.PAYCAT !== "STAFF";
-        if (selectedState === "Staff") return row?.PAYCAT === "STAFF";
-        return true;
-      })
-      .filter((row) => {
-        if (selectedGender === "Male") return row?.GENDER !== "FEMALE";
-        if (selectedGender === "Female") return row?.GENDER === "FEMALE";
-        return true;
-      })
-
-
+        .filter((row) => {
+          if (selectedState === "Labour") return row?.PAYCAT !== "STAFF";
+          if (selectedState === "Staff") return row?.PAYCAT === "STAFF";
+          return true;
+        })
+        .filter((row) => {
+          if (selectedGender === "Male") return row?.GENDER !== "FEMALE";
+          if (selectedGender === "Female") return row?.GENDER === "FEMALE";
+          return true;
+        })
     : [];
 
   console.log(filteredData, "filteredData1");
 
   const totalNetPay = filteredData.reduce(
     (sum, row) => sum + (Number(row.EXP) || 0),
-    0
+    0,
   );
   console.log(totalNetPay, "Total Net Pay");
 
@@ -153,7 +151,7 @@ const BloodGroupDetails = ({
 
   const currentRecords = filteredData.slice(
     (currentPage - 1) * recordsPerPage,
-    currentPage * recordsPerPage
+    currentPage * recordsPerPage,
   );
 
   const { minNetPay, maxNetPay } = currentRecords.reduce(
@@ -161,12 +159,12 @@ const BloodGroupDetails = ({
       minNetPay: Math.min(acc.minNetPay, item.EXP),
       maxNetPay: Math.max(acc.maxNetPay, item.EXP),
     }),
-    { minNetPay: Infinity, maxNetPay: -Infinity }
+    { minNetPay: Infinity, maxNetPay: -Infinity },
   );
   console.log("Selected Month:", selectmonths);
   console.log("ESI Data count:", HeadData.length);
   console.log("Filtered count:", filteredData.length);
- const downloadExcel = async () => {
+  const downloadExcel = async () => {
     if (filteredData.length === 0) {
       alert("No data to export!");
       return;
@@ -211,7 +209,7 @@ const BloodGroupDetails = ({
       "Experience",
       "State",
       "BloodGroup",
-      "EmpType"
+      "EmpType",
     ]);
 
     const headerRow = worksheet.getRow(3);
@@ -258,7 +256,10 @@ const BloodGroupDetails = ({
         row.GENDER,
         row.DEPARTMENT,
         row.DESIGNATION,
-        row.EXP, row.STATE, row.BGF || "N/A", row.EMPTYPE
+        row.EXP,
+        row.STATE,
+        row.BGF || "N/A",
+        row.EMPTYPE,
       ]);
     });
 
@@ -270,16 +271,51 @@ const BloodGroupDetails = ({
 
       row.height = 22;
 
-      row.getCell(1).alignment = { horizontal: "right", vertical: "middle", indent: 1 };
-      row.getCell(2).alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-      row.getCell(3).alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-      row.getCell(4).alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-      row.getCell(5).alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-      row.getCell(6).alignment = { horizontal: "right", vertical: "middle", indent: 1 };
-      row.getCell(7).alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-      row.getCell(8).alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-      row.getCell(9).alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-
+      row.getCell(1).alignment = {
+        horizontal: "right",
+        vertical: "middle",
+        indent: 1,
+      };
+      row.getCell(2).alignment = {
+        horizontal: "left",
+        vertical: "middle",
+        indent: 1,
+      };
+      row.getCell(3).alignment = {
+        horizontal: "left",
+        vertical: "middle",
+        indent: 1,
+      };
+      row.getCell(4).alignment = {
+        horizontal: "left",
+        vertical: "middle",
+        indent: 1,
+      };
+      row.getCell(5).alignment = {
+        horizontal: "left",
+        vertical: "middle",
+        indent: 1,
+      };
+      row.getCell(6).alignment = {
+        horizontal: "right",
+        vertical: "middle",
+        indent: 1,
+      };
+      row.getCell(7).alignment = {
+        horizontal: "left",
+        vertical: "middle",
+        indent: 1,
+      };
+      row.getCell(8).alignment = {
+        horizontal: "left",
+        vertical: "middle",
+        indent: 1,
+      };
+      row.getCell(9).alignment = {
+        horizontal: "left",
+        vertical: "middle",
+        indent: 1,
+      };
     });
 
     /* =======================
@@ -291,10 +327,7 @@ const BloodGroupDetails = ({
        7️⃣ EXPORT FILE
     ======================= */
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(
-      new Blob([buffer]),
-      "Blood Group wise HeadCount Report.xlsx"
-    );
+    saveAs(new Blob([buffer]), "Blood Group wise HeadCount Report.xlsx");
   };
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[9999]">
@@ -335,10 +368,11 @@ const BloodGroupDetails = ({
               <button
                 onClick={() => handleFilterClick("Labour")}
                 className={`flex items-center gap-2 px-1.5 py-0.5 text-[11px] font-semibold rounded-full shadow-md transition-all 
-        ${selectedState === "Labour"
-                    ? "bg-blue-600 text-white scale-105"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }
+        ${
+          selectedState === "Labour"
+            ? "bg-blue-600 text-white scale-105"
+            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+        }
         focus:outline-none focus:ring-2 focus:ring-blue-400`}
               >
                 <FaUserTie size={14} /> Employees
@@ -347,10 +381,11 @@ const BloodGroupDetails = ({
               <button
                 onClick={() => handleFilterClick("Staff")}
                 className={`flex items-center gap-2 px-1.5 py-0.5 text-xs font-semibold rounded-full shadow-md transition-all 
-        ${selectedState === "Staff"
-                    ? "bg-blue-600 text-white scale-105"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }
+        ${
+          selectedState === "Staff"
+            ? "bg-blue-600 text-white scale-105"
+            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+        }
         focus:outline-none focus:ring-2 focus:ring-blue-400`}
               >
                 <FaUsers size={14} /> Staff
@@ -359,10 +394,11 @@ const BloodGroupDetails = ({
               <button
                 onClick={() => handleFilterClick("All")}
                 className={`flex items-center gap-2 px-1.5 py-0.5 text-[11px] font-semibold rounded-full shadow-md transition-all 
-        ${selectedState === "All"
-                    ? "bg-blue-600 text-white scale-105"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }
+        ${
+          selectedState === "All"
+            ? "bg-blue-600 text-white scale-105"
+            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+        }
         focus:outline-none focus:ring-2 focus:ring-blue-400`}
               >
                 All
@@ -373,10 +409,11 @@ const BloodGroupDetails = ({
               <button
                 onClick={() => handleGenderFilter("Male")}
                 className={`flex items-center gap-2 px-1.5 py-0.5 text-[11px] font-semibold rounded-full shadow-md transition-all 
-                ${selectedGender === "Male"
+                ${
+                  selectedGender === "Male"
                     ? "bg-blue-600 text-white scale-105"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                }`}
               >
                 <FaMars size={14} className="text-blue-500" /> Male
               </button>
@@ -384,20 +421,22 @@ const BloodGroupDetails = ({
               <button
                 onClick={() => handleGenderFilter("Female")}
                 className={`flex items-center gap-2 px-1.5 py-0.5 text-[11px] font-semibold rounded-full shadow-md transition-all 
-                ${selectedGender === "Female"
+                ${
+                  selectedGender === "Female"
                     ? "bg-blue-600 text-white scale-105"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                }`}
               >
                 <FaVenus size={14} className="text-pink-500" /> Female
               </button>
               <button
                 onClick={() => handleGenderFilter("Both")}
                 className={`flex items-center gap-2 px-2 py-0.5 text-[11px] font-semibold rounded-full shadow-md transition-all 
-                ${selectedGender === "Both"
+                ${
+                  selectedGender === "Both"
                     ? "bg-blue-600 text-white scale-105"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                }`}
               >
                 <IoMaleFemale size={14} className="text-green-500" /> Both
               </button>
@@ -407,7 +446,16 @@ const BloodGroupDetails = ({
 
         <div className="flex justify-between items-start">
           <div className="grid grid-cols-8 gap-1 mb-3">
-            {["IDCARD", "FNAME", "DEPARTMENT", "DESIGNATION", "EXP", "STATE", "BGF", "EMPTYPE"].map((key) => (
+            {[
+              "IDCARD",
+              "FNAME",
+              "DEPARTMENT",
+              "DESIGNATION",
+              "EXP",
+              "STATE",
+              "BGF",
+              "EMPTYPE",
+            ].map((key) => (
               <div key={key} className="relative">
                 <input
                   type="text"
@@ -528,7 +576,6 @@ const BloodGroupDetails = ({
                         {row.EMPTYPE}
                       </td> */}
 
-
                       <td className="border p-1 text-[10px] w-[25px]">
                         {serialNo}
                       </td>
@@ -580,7 +627,6 @@ const BloodGroupDetails = ({
                       >
                         {row.EMPTYPE}
                       </td>
-
                     </tr>
                   );
                 })}
@@ -687,10 +733,11 @@ const BloodGroupDetails = ({
               <button
                 onClick={() => setCurrentPage(1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-blue-600 hover:bg-gray-200"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === 1
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-blue-600 hover:bg-gray-200"
+                }`}
               >
                 <FaStepBackward size={16} />
               </button>
@@ -698,10 +745,11 @@ const BloodGroupDetails = ({
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-blue-600 hover:bg-gray-200"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === 1
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-blue-600 hover:bg-gray-200"
+                }`}
               >
                 <FaChevronLeft size={16} />
               </button>
@@ -715,10 +763,11 @@ const BloodGroupDetails = ({
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-blue-600 hover:bg-gray-200"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === totalPages
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-blue-600 hover:bg-gray-200"
+                }`}
               >
                 <FaChevronRight size={16} />
               </button>
@@ -726,10 +775,11 @@ const BloodGroupDetails = ({
               <button
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-blue-600 hover:bg-gray-200"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === totalPages
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-blue-600 hover:bg-gray-200"
+                }`}
               >
                 <FaStepForward size={16} />
               </button>

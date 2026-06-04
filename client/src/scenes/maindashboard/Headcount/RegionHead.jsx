@@ -29,13 +29,13 @@ const RegionHead = ({
     MIDCARD: "",
     DEPARTMENT: "",
     COMPCODE: "",
-    STATE: ""
+    STATE: "",
   });
   const [showTable, setShowTable] = useState(false);
 
   const [selectedYear, setSelectedYear] = useState(selectedYear1);
   const [filterBuyer, setFilterBuyer] = useState(companyName);
-  const [filterHeadData, setFilteredHeadData] = useState([])
+  const [filterHeadData, setFilteredHeadData] = useState([]);
   const [selectedGender, setSelectedGender] = useState();
 
   const { data: regiondata } = useGetRegioncountQuery({
@@ -51,8 +51,6 @@ const RegionHead = ({
   });
   console.log(stateWiise, "stateWiise");
 
-
-
   useEffect(() => {
     setFilterBuyer(companyName);
   }, [companyName]);
@@ -60,8 +58,6 @@ const RegionHead = ({
   useEffect(() => {
     setSelectedYear(selectedYear1);
   }, [selectedYear1]);
-
-
 
   //   const filteredData = Array.isArray(regiondata?.data)
   //     ? regiondata?.data.filter((row) => {
@@ -85,7 +81,6 @@ const RegionHead = ({
   //   return acc;
   // }, {});
 
-
   //   const groupdata = filteredData?.reduce((acc, emp) => {
   //     const code = emp.GENDER || "Unknown";
   //     acc[code] = (acc[code] || 0) + (Math.round(emp.EMPLOYER_CON) || 0);
@@ -102,9 +97,6 @@ const RegionHead = ({
   // SAFE: no crash even if API returns null or empty
   const first = regiondata?.data?.[0] || {};
 
-
-
-
   const pieData = [
     { name: "Female", y: first.tn_female ?? 0 },
     { name: "Male", y: first.tn_male ?? 0 },
@@ -114,11 +106,6 @@ const RegionHead = ({
     { name: "Female", y: first.non_female ?? 0 },
     { name: "Male", y: first.non_male ?? 0 },
   ];
-
-
-
-
-
 
   const options = {
     chart: {
@@ -174,8 +161,6 @@ const RegionHead = ({
               }));
 
               setShowTable(true);
-
-
             },
           },
         },
@@ -301,48 +286,57 @@ const RegionHead = ({
     </Box>
   );
 
+  console.log(
+    HeadData?.filter?.((i) => !i.STATE),
+    "FILTEREEEEE",
+  );
 
-  console.log(HeadData?.filter?.(i  => !i.STATE),"FILTEREEEEE");
-  
   const filterDataBySearch = (param) => {
-    console.log(param, "paramparam")
-    const filtered = HeadData?.filter(row => {
-      const bgf = row?.STATE?.toLowerCase();
-      console.log(search, "searchsearch")
-      if(param == "NA"){
-        return !bgf
+    const filtered = HeadData?.filter((row) => {
+      const state = row?.STATE;
+      const isNA =
+        state === null || state === undefined || state === "" || state === "NA";
+
+      if (
+        param === "NA" ||
+        param === null ||
+        param === undefined ||
+        param === ""
+      ) {
+        return isNA;
       }
 
-      return bgf == param.toLocaleLowerCase();
+      return state?.toLowerCase() === param.toLowerCase();
     });
+
     setFilteredHeadData(filtered);
-  }
+  };
 
   const stateData = [
     { state: "Tamil Nadu", male: 120, female: 80 },
     { state: "Karnataka", male: 40, female: 30 },
     { state: "Kerala", male: 25, female: 20 },
     { state: "Andhra Pradesh", male: 60, female: 45 },
-    { state: "Maharashtra", male: 30, female: 20 }
+    { state: "Maharashtra", male: 30, female: 20 },
   ];
 
   // Prepare Highcharts options
   const options1 = {
     chart: {
-      type: "column"
+      type: "column",
     },
     xAxis: {
-      categories: stateWiise?.data?.map((item) => item.STATE)
+      categories: stateWiise?.data?.map((item) => item.STATE ?? "NA"),
     },
     yAxis: {
       min: 0,
       title: {
-        text: "Headcount"
-      }
+        text: "Headcount",
+      },
     },
     legend: {
       align: "center",
-      verticalAlign: "bottom"
+      verticalAlign: "bottom",
     },
     title: null,
 
@@ -351,21 +345,25 @@ const RegionHead = ({
         point: {
           events: {
             click: function () {
-              const clickedState = this.category;   // X-axis category → STATE
+              const clickedState = this.category; // X-axis category → STATE
               const clickedGender = this.series.name; // Series name → Male/Female
               const clickedValue = this.y; // Value
 
-              console.log("Clicked:", clickedState, clickedGender, clickedValue);
+              console.log(
+                "Clicked:",
+                clickedState,
+                clickedGender,
+                clickedValue,
+              );
 
               setSearch((prev) => ({
                 ...prev,
                 STATE: clickedState,
               }));
-              setSelectedGender(clickedGender)
+              setSelectedGender(clickedGender);
               filterDataBySearch(clickedState);
 
               setShowTable(true);
-
             },
           },
         },
@@ -375,14 +373,14 @@ const RegionHead = ({
       {
         name: "Male",
         data: stateWiise?.data?.map((item) => item.MALE),
-        color: "#2196F3"
+        color: "#2196F3",
       },
       {
         name: "Female",
         data: stateWiise?.data?.map((item) => item.FEMALE),
-        color: "#E91E63"
-      }
-    ]
+        color: "#E91E63",
+      },
+    ],
   };
 
   // useEffect(() => {
@@ -396,9 +394,6 @@ const RegionHead = ({
 
   //   setFilteredHeadData(filtered);
   // }, [search]);
-
-
-
 
   return (
     <>

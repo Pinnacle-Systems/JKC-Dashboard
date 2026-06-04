@@ -6,7 +6,7 @@ import { useGetFnameQuery } from "../../redux/service/user";
 import { useState } from "react";
 import { useEffect } from "react";
 
-const DashboardHeader = ({ usernames }) => {
+const DashboardHeader = ({ usernames, onRefresh, refreshing }) => {
   const [user, setUser] = useState(null);
   const params = getCommonParams();
 
@@ -83,7 +83,36 @@ const DashboardHeader = ({ usernames }) => {
         >
           Add Requests
         </Button>
+
+        {/* ── Refresh Button ── */}
+        <Button
+          variant="contained"
+          onClick={onRefresh}
+          disabled={refreshing}
+          startIcon={
+            <span
+              style={{
+                fontSize: "16px",
+                display: "inline-block",
+                animation: refreshing ? "spin 1s linear infinite" : "none",
+              }}
+            >
+              ↻
+            </span>
+          }
+          sx={{
+            backgroundColor: refreshing ? "#e5e7eb" : "#2563eb",
+            color: refreshing ? "#9ca3af" : "#fff",
+            textTransform: "none",
+            fontWeight: 600,
+            "&:hover": { backgroundColor: "#1d4ed8" },
+            "&:disabled": { backgroundColor: "#e5e7eb", color: "#9ca3af" },
+          }}
+        >
+          {refreshing ? "Refreshing..." : "Refresh"}
+        </Button>
       </Stack>
+      <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
     </Box>
   );
 };

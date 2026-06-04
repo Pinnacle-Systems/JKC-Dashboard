@@ -60,14 +60,12 @@
 //     Headcount: y,
 //   }));
 
-
 //   // const Chartdata =  Object.entries(totalsByComp || [])?.map(d => ({
 //   //   label: d.Agerange,
 //   //   value: d.Headcount
 //   // }));
 
 //   console.log(Chartdata, "Chartdata");
-
 
 //   const options = {
 //     chart: {
@@ -157,7 +155,7 @@
 
 // // When selected value is "NA"
 // if (search.BGF == "NA") {
-//   return !bgf 
+//   return !bgf
 // }
 
 // return bgf === search.BGF;
@@ -211,7 +209,10 @@ import { useGetMisDashboardOrdersInHandQuery } from "../../../redux/service/misD
 import { Box, Card, CardHeader } from "@mui/material";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
-import { useGetOverAllSupplierContributionQuery, useGetTopItemsQuery } from "../../../redux/service/poData";
+import {
+  useGetOverAllSupplierContributionQuery,
+  useGetTopItemsQuery,
+} from "../../../redux/service/poData";
 import HeadDetailedCom from "../../../components/Headcount/HeadDetail";
 import ExpHeadDetail from "../../../components/Headcount/Expdetail";
 import BloodGroupDetails from "../../../components/Headcount/BloogGroupDetail";
@@ -228,7 +229,7 @@ const BGhead = ({ companyName, selectedState, HeadData }) => {
   const [showTable, setShowTable] = useState(false);
 
   const [filterBuyer, setFilterBuyer] = useState(companyName);
-  const [filterHeadData, setFilteredHeadData] = useState([])
+  const [filterHeadData, setFilteredHeadData] = useState([]);
   const [selectedGender, setSelectedGender] = useState();
 
   useEffect(() => {
@@ -239,16 +240,18 @@ const BGhead = ({ companyName, selectedState, HeadData }) => {
   });
   const { data: BGdata } = useGetTopItemsQuery({ filterBuyer: filterBuyer });
 
-
   const totalsByComp = BGdata?.data?.reduce((acc, emp) => {
-    const code = emp.BGF || "Unknown";   // Use BGF as the key
+    // Treat null, undefined, empty string all as "NA"
+    const code =
+      emp.BGF === null || emp.BGF === undefined || emp.BGF === ""
+        ? "NA"
+        : emp.BGF;
 
     acc[code] = (acc[code] || 0) + Number(emp.headcount || 0);
 
     return acc;
   }, {});
   console.log(totalsByComp, "totalsByComp");
-
 
   //   const Chartdata = Object.entries(totalsByComp || [])?.map(([x, y]) => ({
   //     Agerange: x,
@@ -274,115 +277,117 @@ const BGhead = ({ companyName, selectedState, HeadData }) => {
     "#4BC3E6",
   ];
 
-const options = {
-  chart: {
-    type: "column",
-    height: 305,
-    backgroundColor: "#FFFFFF",
-    borderRadius: "10px",
-    marginBottom: 60,
-  },
+  const options = {
+    chart: {
+      type: "column",
+      height: 305,
+      backgroundColor: "#FFFFFF",
+      borderRadius: "10px",
+      marginBottom: 60,
+    },
 
-  title: null,
-  legend: { enabled: false },
+    title: null,
+    legend: { enabled: false },
 
-  tooltip: {
-    headerFormat:
-      '<b><span style="color: #2d2d2d;">Blood Group: {point.key}</span></b><br/>',
-    pointFormat: `
+    tooltip: {
+      headerFormat:
+        '<b><span style="color: #2d2d2d;">Blood Group: {point.key}</span></b><br/>',
+      pointFormat: `
       <span style="color: {point.color}; font-size: 12px;">\u25CF</span> 
       Employees: <span style="color: #2d2d2d;"><b>{point.y}</b></span>`,
-    style: { fontSize: "10px", color: "black" },
-  },
+      style: { fontSize: "10px", color: "black" },
+    },
 
-  xAxis: {
-    categories: xdata,
-    labels: { style: { fontSize: "10px", color: "#6B7280" } },
-    title: {
-      text: "Blood Group",
-      align: "middle",
-      style: {
-        fontSize: "13px",
-        fontWeight: "600",
-        color: "#374151",
+    xAxis: {
+      categories: xdata,
+      labels: { style: { fontSize: "10px", color: "#6B7280" } },
+      title: {
+        text: "Blood Group",
+        align: "middle",
+        style: {
+          fontSize: "13px",
+          fontWeight: "600",
+          color: "#374151",
+        },
+        margin: 12,
       },
-      margin: 12,
     },
-  },
 
-  yAxis: {
-    title: {
-      text: "Headcount",
-      align: "middle",
-      style: {
-        fontSize: "13px",
-        fontWeight: "600",
-        color: "#374151",
+    yAxis: {
+      title: {
+        text: "Headcount",
+        align: "middle",
+        style: {
+          fontSize: "13px",
+          fontWeight: "600",
+          color: "#374151",
+        },
+        margin: 18,
       },
-      margin: 18,
+      labels: { style: { fontSize: "10px", color: "#6B7280" } },
     },
-    labels: { style: { fontSize: "10px", color: "#6B7280" } },
-  },
 
-  plotOptions: {
-    column: {
-      borderRadius: 5,
-      colorByPoint: true,
-    },
-    series: {
-      point: {
-        events: {
-          click: function () {
-            console.log("Clicked:", this.category, this.y);
+    plotOptions: {
+      column: {
+        borderRadius: 5,
+        colorByPoint: true,
+      },
+      series: {
+        point: {
+          events: {
+            click: function () {
+              console.log("Clicked:", this.category, this.y);
 
-            setSearch((prev) => ({
-              ...prev,
-              BGF: this.category,
-            }));
+              setSearch((prev) => ({
+                ...prev,
+                BGF: this.category,
+              }));
 
-            filterDataBySearch(this.category);
-            setShowTable(true);
+              filterDataBySearch(this.category);
+              setShowTable(true);
+            },
           },
         },
       },
     },
-  },
 
-  colors: colorArray,
+    colors: colorArray,
 
-  series: [
-    {
-      name: "",
-      data: ydata,
-      dataLabels: {
-        enabled: true,
-        style: { fontSize: "10px", color: "#333" },
+    series: [
+      {
+        name: "",
+        data: ydata,
+        dataLabels: {
+          enabled: true,
+          style: { fontSize: "10px", color: "#333" },
+        },
       },
-    },
-  ],
-};
-
-
-
-
+    ],
+  };
 
   const filterDataBySearch = (param) => {
-    console.log(param, "paramparam")
-    const filtered = HeadData?.filter(row => {
-      const bgf = row?.BGF?.toLowerCase();
-      console.log(search, "searchsearch")
+    const filtered = HeadData?.filter((row) => {
+      const bgf = row?.BGF;
 
-      // When selected value is "NA"
-      if (param == "NA") {
-        return !bgf
+      // Treat null, undefined, empty string as "NA"
+      const isNA =
+        bgf === null || bgf === undefined || bgf === "" || bgf === "NA";
+
+      if (
+        param === "NA" ||
+        param === null ||
+        param === undefined ||
+        param === ""
+      ) {
+        return isNA;
       }
 
-      return bgf == param.toLocaleLowerCase();
-
+      return bgf == param;
     });
-    setFilteredHeadData(filtered);
-  }
 
+    setFilteredHeadData(filtered);
+  };
+  console.log(filterHeadData, "filterHeadData");
   return (
     <>
       <Card

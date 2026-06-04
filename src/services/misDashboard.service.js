@@ -80,14 +80,14 @@ export async function get(req, res) {
       type,
       filterYear,
       filterBuyer,
-      filterMonth
+      filterMonth,
     );
     const totalTurnOver1 = await getEmployees1(
       connection,
       type,
       filterYear,
       filterBuyer,
-      filterMonth
+      filterMonth,
     );
 
     const profit = await getProfit(
@@ -95,14 +95,14 @@ export async function get(req, res) {
       type,
       filterYear,
       filterBuyer,
-      filterMonth
+      filterMonth,
     );
     const profit1 = await getProfit1(
       connection,
       type,
       filterYear,
       filterBuyer,
-      filterMonth
+      filterMonth,
     );
 
     const newCustomers = await getNewCustomers(
@@ -110,14 +110,14 @@ export async function get(req, res) {
       type,
       filterYear,
       filterBuyer,
-      filterMonth
+      filterMonth,
     );
     const topCustomers = await getTopCustomers(
       connection,
       type,
       filterYear,
       filterBuyer,
-      filterMonth
+      filterMonth,
     );
 
     const loss = await getLoss(connection, type, filterYear, filterMonth);
@@ -398,7 +398,7 @@ export async function getSalaryAgewise(req, res) {
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -505,7 +505,7 @@ ORDER BY STDT1, STDT, SLAP, PAYCAT
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -589,7 +589,7 @@ export async function getSalarydet(req, res) {
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -672,6 +672,32 @@ A.STDT1, A.STDT
   }
 }
 
+export async function executeMISHRProcedure(req, res) {
+  const connection = await getConnection(res);
+
+  try {
+    console.log("Starting MISHR procedure...");
+
+    await connection.execute(
+      `BEGIN MISHR('JKC'); END;`, // dummy value, procedure ignores it internally
+      {},
+      { autoCommit: true },
+    );
+
+    console.log("✅ MISHR procedure completed");
+    return res.json({
+      statusCode: 0,
+      message: "Procedure executed successfully",
+    });
+  } catch (err) {
+    console.error("Error executing MISHR procedure:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message });
+    }
+  } finally {
+    await connection.close();
+  }
+}
 export async function getOTwagesdet(req, res) {
   const connection = await getConnection(res);
   const { filterBuyer, search = {}, filterYear } = req.query;
@@ -797,7 +823,7 @@ ORDER BY A.STDT1, A.STDT
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -869,7 +895,7 @@ export async function getpfdet(req, res) {
     queryResult.metaData.reduce((acc, column, index) => {
       acc[column.name] = row[index];
       return acc;
-    }, {})
+    }, {}),
   );
 
   res.status(200).json({ success: true, data: mappedResult });
@@ -1070,7 +1096,7 @@ export async function getesidet(req, res) {
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res
@@ -1131,7 +1157,7 @@ export async function getattdet(req, res) {
     queryResult.metaData.reduce((acc, column, index) => {
       acc[column.name] = row[index];
       return acc;
-    }, {})
+    }, {}),
   );
 
   res.status(200).json({ success: true, data: result });
@@ -1179,7 +1205,7 @@ export async function getnewjoin(req, res) {
     queryResult.metaData.reduce((acc, column, index) => {
       acc[column.name] = row[index];
       return acc;
-    }, {})
+    }, {}),
   );
 
   res.status(200).json({ success: true, data: result });
@@ -1228,7 +1254,7 @@ export async function getattdetTable(req, res) {
     queryResult.metaData.reduce((acc, column, index) => {
       acc[column.name] = row[index];
       return acc;
-    }, {})
+    }, {}),
   );
 
   res.status(200).json({ success: true, data: result });
@@ -1326,7 +1352,7 @@ export async function getretdetTable(req, res) {
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -1372,7 +1398,7 @@ WHERE ${whereClause}
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -1424,7 +1450,7 @@ ${whereClause}
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -1472,7 +1498,7 @@ WHERE  ${whereClause}
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -1517,7 +1543,7 @@ ORDER BY A.EMPID,YEAR,DAY
     queryResult.metaData.reduce((acc, column, index) => {
       acc[column.name] = row[index];
       return acc;
-    }, {})
+    }, {}),
   );
 
   res.status(200).json({ success: true, data: result });
@@ -1558,7 +1584,7 @@ ORDER BY A.EMPID,YEAR,DAY
     queryResult.metaData.reduce((acc, column, index) => {
       acc[column.name] = row[index];
       return acc;
-    }, {})
+    }, {}),
   );
 
   res.status(200).json({ success: true, data: result });
@@ -1712,7 +1738,7 @@ ORDER BY 1
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -1776,11 +1802,11 @@ export async function getActualVsBudgetValueMonthWise(req, res) {
             and extract(MONTH from BPODATE) = extract(MONTH from ADD_MONTHS(CURRENT_DATE, ${i}))
             ) AS ACTUAL
             FROM DUAL
-        `
+        `,
     );
     const sql = monthArr.join("union");
     let result = await connection.execute(
-      `select * from (${sql}) order by yearOnly,monthOnly`
+      `select * from (${sql}) order by yearOnly,monthOnly`,
     );
     result = result.rows.map((row) => ({
       date: row[0],
@@ -1928,7 +1954,7 @@ export async function getYearlyComp(req, res) {
       GROUP BY A.COMPCODE
       
     `;
-    console.log(sql, "sqlgetYearlyComp")
+    console.log(sql, "sqlgetYearlyComp");
     const result = await connection.execute(sql);
 
     const resp = result.rows.map((po) => ({
@@ -2020,7 +2046,7 @@ ORDER BY COMPCODE
 
     `;
 
-    console.log(sql, "getregionCount")
+    console.log(sql, "getregionCount");
 
     const result = await connection.execute(sql);
 
@@ -2336,7 +2362,7 @@ ORDER BY A.STDT1, A.STDT
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -2463,7 +2489,7 @@ ORDER BY A.STDT1, A.STDT
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     // console.log(result, "resultsalry");
@@ -2605,7 +2631,7 @@ ORDER BY A.STDT1, A.STDT
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -3096,7 +3122,7 @@ A.FNAME,
       queryResult.metaData.reduce((acc, column, index) => {
         acc[column.name] = row[index];
         return acc;
-      }, {})
+      }, {}),
     );
 
     res.status(200).json({ success: true, data: result });
@@ -3111,9 +3137,7 @@ A.FNAME,
 }
 
 export async function getStateWiseHeadCount(req, res) {
-
-  console.log(111111, "getStateWiseHeadCount")
-
+  console.log(111111, "getStateWiseHeadCount");
 
   const month = [
     "January",
@@ -3142,7 +3166,7 @@ export async function getStateWiseHeadCount(req, res) {
   try {
     const { filterBuyer } = req.query;
 
-    let whereClause
+    let whereClause;
     if (filterBuyer) {
       whereClause = `${filterBuyer}`;
     }
@@ -3175,7 +3199,7 @@ ORDER BY NVL(TRIM(A.STATE), 'NA')
 
 `;
 
-    console.log(sql, "getStateWiseHeadCount")
+    console.log(sql, "getStateWiseHeadCount");
 
     const result = await connection.execute(sql);
 
@@ -3184,9 +3208,7 @@ ORDER BY NVL(TRIM(A.STATE), 'NA')
       STATE: po[1],
       MALE: po[2],
       FEMALE: po[3],
-      TOTAL: po[4]
-
-
+      TOTAL: po[4],
     }));
 
     return res.json({ statusCode: 0, data: resp });
