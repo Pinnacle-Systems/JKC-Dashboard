@@ -13,69 +13,153 @@ const HeadCount = () => {
   const [detailedpage, setDetailedpage] = useState(false);
   const theme = useTheme();
   const [chartData, setChartData] = useState({ male: [], female: [] });
- 
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
   const { data: result } = useGetYearlyCompQuery({ params: {} });
   // console.log(result, "result");
-;
-
   const categories = result?.data.map((item) => item.customer);
-  
+
   const totalvalue = result?.data.map((item) => item.total);
   const headcount = totalvalue?.reduce((sum, val) => sum + val, 0);
 
+  // const options = {
+  //   chart: {
+  //     type: "bar",
+  //     animations: { enabled: true, easing: "easeinout", speed: 800 },
+  //     events: {
+  //       dataPointSelection: (event, chartContext, config) => {
+  //         const company = categories[config.dataPointIndex];
+  //         // console.log(company,"compamnu");
+
+  //         dispatch(
+  //           push({
+  //             id: `Headcount`,
+  //             name: `Headcount`,
+  //             component: "DetailedHeadcount",
+  //             data: { companyName: company },
+  //           }),
+  //         );
+  //       },
+  //     },
+  //   },
+
+  //   tooltip: {
+  //     y: {
+  //       formatter: function (value) {
+  //         return value.toLocaleString(); // format number with commas
+  //       },
+  //     },
+  //     x: {
+  //       formatter: function (value) {
+  //         return value; // category (company name)
+  //       },
+  //     },
+  //   },
+
+  //   grid: {
+  //     padding: {
+  //       bottom: -35,
+  //       top: 0,
+  //     },
+  //   },
+  //   plotOptions: {
+  //     bar: {
+  //       borderRadius: 5,
+  //       horizontal: false,
+  //       distributed: true,
+  //       barHeight: "100%",
+  //       columnWidth: "55%",
+  //     },
+  //   },
+  //   colors: [
+  //     "#F44F5E",
+  //     "#E55A89",
+  //     "#D863B1",
+  //     "#CA6CD8",
+  //     "#B57BED",
+  //     "#8D95EB",
+  //     "#62ACEA",
+  //     "#4BC3E6",
+  //   ],
+  //   dataLabels: {
+  //     enabled: false,
+  //     formatter: function (val, opt) {
+  //       return opt.w.globals.labels[opt.dataPointIndex];
+  //     },
+  //   },
+  //   xaxis: {
+  //     categories: categories,
+  //     tickPlacement: "on",
+  //     labels: {
+  //       show: true,
+  //       hideOverlappingLabels: false,
+  //       trim: false,
+  //     },
+  //   },
+  //   legend: {
+  //     show: false,
+  //   },
+  // };
   const options = {
     chart: {
       type: "bar",
-      animations: { enabled: true, easing: "easeinout", speed: 800 },
+      toolbar: {
+        show: false, // optional: hides zoom/home icons and saves space
+      },
+      animations: {
+        enabled: true,
+        easing: "easeinout",
+        speed: 800,
+      },
       events: {
         dataPointSelection: (event, chartContext, config) => {
           const company = categories[config.dataPointIndex];
-          // console.log(company,"compamnu");
-          
+
           dispatch(
             push({
               id: `Headcount`,
               name: `Headcount`,
               component: "DetailedHeadcount",
               data: { companyName: company },
-            })
+            }),
           );
         },
       },
     },
 
     tooltip: {
-  y: {
-    formatter: function (value) {
-      return value.toLocaleString();   // format number with commas
-    }
-  },
-  x: {
-    formatter: function (value) {
-      return value; // category (company name)
-    }
-  }
-},
+      y: {
+        formatter: function (value) {
+          return value.toLocaleString();
+        },
+      },
+      x: {
+        formatter: function (value) {
+          return value;
+        },
+      },
+    },
 
     grid: {
       padding: {
-        bottom: -35,
-        top: 0,
+        top: -10, // reduce space below title
+        bottom: -25, // reduce space above Overall Head Count
+        left: 0,
+        right: 0,
       },
     },
+
     plotOptions: {
       bar: {
         borderRadius: 5,
         horizontal: false,
         distributed: true,
-        barHeight: "100%",
         columnWidth: "55%",
       },
     },
+
     colors: [
       "#F44F5E",
       "#E55A89",
@@ -86,20 +170,37 @@ const HeadCount = () => {
       "#62ACEA",
       "#4BC3E6",
     ],
+
     dataLabels: {
       enabled: false,
-      formatter: function (val, opt) {
-        return opt.w.globals.labels[opt.dataPointIndex];
+    },
+
+    xaxis: {
+      categories: categories || [],
+      tickPlacement: "on",
+      labels: {
+        show: true,
+        rotate: -30,
+        rotateAlways: true,
+        trim: false,
+        hideOverlappingLabels: false,
+        style: {
+          fontSize: "12px",
+          fontWeight: 500,
+        },
       },
     },
-    xaxis: {
-      categories: categories,
+
+    yaxis: {
+      labels: {
+        show: true,
+      },
     },
+
     legend: {
       show: false,
     },
   };
-
   const series = [
     {
       name: "",
@@ -111,10 +212,9 @@ const HeadCount = () => {
     <>
       <Card
         sx={{
-          
           borderRadius: 3,
           boxShadow: 4,
-                 }}
+        }}
       >
         <CardHeader
           title="Employee Strength as on date"
@@ -155,7 +255,7 @@ const HeadCount = () => {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            OverAll Head Count : {headcount?.toLocaleString('en-IN')}
+            OverAll Head Count : {headcount?.toLocaleString("en-IN")}
           </Typography>
         </Box>
       </Card>
