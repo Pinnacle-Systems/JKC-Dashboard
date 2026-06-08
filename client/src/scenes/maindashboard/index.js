@@ -21,14 +21,9 @@ import Table from "../../scenes/maindashboard/Table.js";
 import Trophy from "../../scenes/maindashboard/Trophy.js";
 // import TotalEarning from '../../scenes/maindashboard/TotalEarning.js'
 import StatisticsCard from "../../scenes/maindashboard/StatisticsCard.js";
-import WeeklyOverview from "../maindashboard/WeeklyOverview.js";
-import DepositWithdraw from "../../scenes/maindashboard/DepositWithdraw.js";
-import { Poll } from "@mui/icons-material";
-import DashboardHeader from "./DashboardHeader.js";
-// import LeaveDetailsCard from './EmployeeDetail/LeaveDetailsCard.js'
 
-// import SalesByCountries from 'src/views/dashboard/SalesByCountries'
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import DashboardHeader from "./DashboardHeader.js";
+
 import PfData from "../MisDashboard/PfData/EsiPf.jsx";
 import HeadCount from "./Headcount/HeadCount.jsx";
 import HomeAttrition from "./Attrition/HomeAttrition.jsx";
