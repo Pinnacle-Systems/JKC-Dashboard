@@ -218,17 +218,7 @@ export async function executeProcedure(req, res) {
 //   );
 
 //   res.status(200).json({ success: true, data: result });
-// 
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
-}
+// }
 
 export async function getSalaryAgewise(req, res) {
   const connection = await getConnection(res);
@@ -420,16 +410,6 @@ export async function getSalaryAgewise(req, res) {
       error,
     });
   }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 
 export async function getAgewiseESI(req, res) {
@@ -537,16 +517,6 @@ ORDER BY STDT1, STDT, SLAP, PAYCAT
       error,
     });
   }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getSalarydet(req, res) {
   const connection = await getConnection(res);
@@ -631,16 +601,6 @@ export async function getSalarydet(req, res) {
       error,
     });
   }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 
 export async function getLastSalarydet(req, res) {
@@ -709,16 +669,6 @@ A.STDT1, A.STDT
       message: "Error fetching salary details",
       error,
     });
-  }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
   }
 }
 
@@ -885,16 +835,6 @@ ORDER BY A.STDT1, A.STDT
       error,
     });
   }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 
 export async function getpfdet(req, res) {
@@ -959,16 +899,6 @@ export async function getpfdet(req, res) {
   );
 
   res.status(200).json({ success: true, data: mappedResult });
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 
 // export async function getpfdet(req, res) {
@@ -1105,17 +1035,7 @@ export async function getpfdet(req, res) {
 //   );
 
 //   res.status(200).json({ success: true, data: result });
-// 
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
-}
+// }
 
 export async function getesidet(req, res) {
   const connection = await getConnection(res);
@@ -1186,16 +1106,6 @@ export async function getesidet(req, res) {
     console.error("Error in getesidet:", error);
     res.status(500).json({ success: false, message: error.message });
   }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 
 export async function getattdet(req, res) {
@@ -1251,16 +1161,6 @@ export async function getattdet(req, res) {
   );
 
   res.status(200).json({ success: true, data: result });
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getnewjoin(req, res) {
   const connection = await getConnection(res);
@@ -1309,16 +1209,6 @@ export async function getnewjoin(req, res) {
   );
 
   res.status(200).json({ success: true, data: result });
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getattdetTable(req, res) {
   const connection = await getConnection(res);
@@ -1368,16 +1258,6 @@ export async function getattdetTable(req, res) {
   );
 
   res.status(200).json({ success: true, data: result });
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getretdetTable(req, res) {
   const connection = await getConnection(res);
@@ -1480,16 +1360,6 @@ export async function getretdetTable(req, res) {
     console.error("Error executing SQL:", error);
     res.status(500).json({ success: false, error: error.message });
   }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getagedet(req, res) {
   const connection = await getConnection(res);
@@ -1535,16 +1405,6 @@ WHERE ${whereClause}
   } catch (error) {
     console.error("Error executing query:", error);
     res.status(500).json({ success: false, error: error.message });
-  }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
   }
 }
 export async function getexpdet(req, res) {
@@ -1598,16 +1458,6 @@ ${whereClause}
     console.error("Error executing query:", error);
     res.status(500).json({ success: false, error: error.message });
   }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getbgdet(req, res) {
   const connection = await getConnection(res);
@@ -1656,16 +1506,6 @@ WHERE  ${whereClause}
     console.error("Error executing query:", error);
     res.status(500).json({ success: false, error: error.message });
   }
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getPfDataDet(req, res) {
   const connection = await getConnection(res);
@@ -1707,16 +1547,6 @@ ORDER BY A.EMPID,YEAR,DAY
   );
 
   res.status(200).json({ success: true, data: result });
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getEsiDataDet(req, res) {
   const connection = await getConnection(res);
@@ -1758,16 +1588,6 @@ ORDER BY A.EMPID,YEAR,DAY
   );
 
   res.status(200).json({ success: true, data: result });
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getEmployeesDetail(req, res) {
   const connection = await getConnection(res);
@@ -1832,16 +1652,6 @@ export async function getEmployeesDetail(req, res) {
   }
 
   return res.status(200).json({ success: true, data: result });
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getEmployeesDetail1(req, res) {
   const connection = await getConnection(res);
@@ -1897,16 +1707,6 @@ export async function getEmployeesDetail1(req, res) {
   }
 
   return res.status(200).json({ success: true, data: result });
-
-  finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
 }
 export async function getOrdersInHand(req, res) {
   const connection = await getConnection(res);
