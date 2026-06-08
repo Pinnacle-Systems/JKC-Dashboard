@@ -82,7 +82,8 @@ const Main_Dashboad = () => {
         <Grid item xs={12} md={8}>
           <StatisticsCard />
         </Grid>
-        <Grid container spacing={1} sx={{ mt: 1, ml: 1 }}>
+
+        {/* <Grid container spacing={1} sx={{ mt: 1, ml: 1 }}>
           <Grid item xs={12} md={3}>
             <CardStatisticsVerticalComponent
               stats="$78"
@@ -124,7 +125,7 @@ const Main_Dashboad = () => {
               subtitle="Weekly Profit"
             />
           </Grid>
-        </Grid>
+        </Grid> */}
 
         <Grid item xs={12} md={7}>
           <HomeSalary />

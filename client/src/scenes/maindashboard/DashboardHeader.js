@@ -14,7 +14,6 @@ const DashboardHeader = ({ usernames, onRefresh, refreshing }) => {
   // console.log(employeeId);
 
   const { data: userName } = useGetFnameQuery({ params: { employeeId } });
-  console.log(userName, "userNamecheck");
 
   useEffect(() => {
     if (
@@ -102,6 +101,7 @@ const DashboardHeader = ({ usernames, onRefresh, refreshing }) => {
           }
           sx={{
             backgroundColor: refreshing ? "#e5e7eb" : "#2563eb",
+            width: "140px",
             color: refreshing ? "#9ca3af" : "#fff",
             textTransform: "none",
             fontWeight: 600,
