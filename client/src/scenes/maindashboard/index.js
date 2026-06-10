@@ -45,8 +45,7 @@ const Main_Dashboad = () => {
   const usernames = [...new Set(allPages?.map((item) => item.username))].join(
     ", ",
   );
-  console.log(allPages, "allPages");
-  console.log(usernames, "checkingname");
+
   const [refreshing, setRefreshing] = useState(false);
   const [executeMISHR] = useExecuteMISHRMutation();
   const handleRefresh = async () => {

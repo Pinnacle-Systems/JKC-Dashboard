@@ -148,20 +148,7 @@ export async function get(req, res) {
     await connection.close();
   }
 }
-export async function executeProcedure(req, res) {
-  const connection = await getConnection(res);
-  try {
-    await connection.execute(`BEGIN MISHR('aa'); END;`);
 
-    res.json({ success: true, message: "Data refetch executed successfully" });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  } finally {
-    if (connection) {
-      await connection.close();
-    }
-  }
-}
 // export async function getSalarydet(req, res) {
 //   const connection = await getConnection(res);
 //   const { filterBuyer, search = {} } = req.query;
@@ -602,7 +589,20 @@ export async function getSalarydet(req, res) {
     });
   }
 }
+export async function executeProcedure(req, res) {
+  const connection = await getConnection(res);
+  try {
+    await connection.execute(`BEGIN MISHR('JKC'); END;`);
 
+    res.json({ success: true, message: "Data refetch executed successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) {
+      await connection.close();
+    }
+  }
+}
 export async function getLastSalarydet(req, res) {
   const connection = await getConnection(res);
   const sql = `
@@ -669,6 +669,8 @@ A.STDT1, A.STDT
       message: "Error fetching salary details",
       error,
     });
+  } finally {
+    await connection.close();
   }
 }
 

@@ -2,7 +2,7 @@ import Grid from "@mui/material/Grid";
 import CurrencyUsd from "mdi-material-ui/CurrencyUsd";
 import CardStatisticsVerticalComponent from "../../components/CardStatsVertical.js";
 import Trophy from "../../scenes/GarmentsDashboard/Trophy.js";
-import StatisticsCard from "../../scenes/maindashboard/StatisticsCard.js";
+import StatisticsCard from "../../scenes/GarmentsDashboard/StatisticsCard.js";
 import { Poll } from "@mui/icons-material";
 import DashboardHeader from "./DashboardHeader.js";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";

@@ -99,7 +99,7 @@ const PurchaseHome = ({ companyName, autoFocusBuyer, filterBuyerList }) => {
                 <button
                   key={type}
                   onClick={() => dispatch(setPoType(type))}
-                  className={`flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-full shadow-md transition-all ${
+                  className={`flex items-center gap-2 px-4 py-1.5 text-sm font-semibold rounded-full shadow-md transition-all ${
                     poType === type
                       ? "bg-blue-600 text-white scale-105"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"

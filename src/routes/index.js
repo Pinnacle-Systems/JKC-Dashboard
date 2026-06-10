@@ -15,3 +15,4 @@ export { default as orderEntry } from "./orderEntry.route.js";
 export { default as production } from "./production.route.js";
 export { default as fabric } from "./fabric.route.js";
 export { default as taReport } from "./taReport.route.js";
+export { default as attendenceReport } from "./attendencReport.js";
