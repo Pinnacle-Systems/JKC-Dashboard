@@ -159,6 +159,7 @@ const AttendenceDesignationTable = ({
   const [selectedDesignation, setSelectedDesignation] = useState(
     designationProp || "ALL",
   ); // ✅ replaces gender
+  const [selectedPayType, setSelectedPayType] = useState("ALL");
   console.log(designationProp, selectedDesignation, "designationProp");
   const [page, setPage] = useState(1);
 
@@ -214,12 +215,14 @@ const AttendenceDesignationTable = ({
           (selectedDesignation === "ALL" ||
             (r.DESIGNATION || "").toUpperCase() ===
               selectedDesignation.toUpperCase()) &&
+          (selectedPayType === "ALL" ||
+            (r.PAYTYPE || "").toUpperCase() === selectedPayType) &&
           textMatch(r, "FNAME", search.fname) &&
           textMatch(r, "IDCARD", search.idcard) &&
           textMatch(r, "DEPARTMENT", search.department) &&
           textMatch(r, "DESIGNATION", search.designation),
       ),
-    [rawData, search, selectedDesignation, selectedGender],
+    [rawData, search, selectedDesignation, selectedGender, selectedPayType],
   );
 
   const counts = useMemo(() => {
@@ -435,7 +438,24 @@ const AttendenceDesignationTable = ({
                   </option>
                 ))}
               </select>
-
+              <div className="flex items-center gap-2">
+                {PAYTYPE_OPTIONS.map((payType) => (
+                  <button
+                    key={payType}
+                    onClick={() => {
+                      setSelectedPayType(payType);
+                      resetPage();
+                    }}
+                    className={`flex items-center gap-2 px-4 py-1.5 text-[10px] font-semibold rounded-full shadow-md transition-all ${
+                      selectedPayType === payType
+                        ? "bg-green-600 text-white scale-105"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    {payType}
+                  </button>
+                ))}
+              </div>
               {/* Gender */}
               <div className="flex items-center gap-2">
                 {GENDER_OPTIONS.map((gender) => (
