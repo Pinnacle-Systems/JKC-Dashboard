@@ -1,506 +1,3 @@
-// import { useState, useMemo } from "react";
-// import {
-//   FaTimes,
-//   FaChevronLeft,
-//   FaChevronRight,
-//   FaStepBackward,
-//   FaStepForward,
-//   FaSearch,
-// } from "react-icons/fa";
-// import ExcelJS from "exceljs";
-// import { saveAs } from "file-saver";
-// import { useGetAttendenceTableQuery } from "../../../../redux/service/attendenceReport";
-// import moment from "moment";
-
-// const RECORDS = 34;
-// const fmtDate = (d) => (d ? moment(d).format("DD-MM-YYYY") : "");
-// const fmtDOB = (d) => (d ? moment(d).format("DD-MM-YYYY") : "");
-
-// /* ── Pagination ── */
-// const Pagination = ({ page, total, setPage }) => (
-//   <div
-//     className="flex justify-end items-center mt-4 space-x-2 text-[11px]"
-//     style={{ position: "absolute", bottom: "5px", right: "0px" }}
-//   >
-//     <button
-//       onClick={() => setPage(1)}
-//       disabled={page === 1}
-//       className={`p-2 rounded-md ${page === 1 ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-gray-200"}`}
-//     >
-//       <FaStepBackward size={16} />
-//     </button>
-//     <button
-//       onClick={() => setPage((p) => Math.max(p - 1, 1))}
-//       disabled={page === 1}
-//       className={`p-2 rounded-md ${page === 1 ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-gray-200"}`}
-//     >
-//       <FaChevronLeft size={16} />
-//     </button>
-//     <span className="text-xs font-semibold px-3">
-//       Page {page} of {total || 1}
-//     </span>
-//     <button
-//       onClick={() => setPage((p) => Math.min(p + 1, total))}
-//       disabled={page === total || !total}
-//       className={`p-2 rounded-md ${page === total || !total ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-gray-200"}`}
-//     >
-//       <FaChevronRight size={16} />
-//     </button>
-//     <button
-//       onClick={() => setPage(total)}
-//       disabled={page === total || !total}
-//       className={`p-2 rounded-md ${page === total || !total ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-gray-200"}`}
-//     >
-//       <FaStepForward size={16} />
-//     </button>
-//   </div>
-// );
-
-// /* ── SearchBar ── */
-// const SearchBar = ({ keys, state, setState }) => (
-//   <div className="flex gap-x-4 mb-3 flex-wrap">
-//     {keys.map((key) => (
-//       <div key={key} className="relative">
-//         <input
-//           type="text"
-//           placeholder={`Search ${key}...`}
-//           value={state[key] || ""}
-//           onChange={(e) => setState({ ...state, [key]: e.target.value })}
-//           className="w-full h-6 p-1 pl-8 text-gray-900 text-[11px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
-//         />
-//         <FaSearch className="absolute left-2 top-1.5 text-gray-500 text-sm" />
-//       </div>
-//     ))}
-//   </div>
-// );
-
-// /* ── TH ── */
-// const TH = ({ children, cls = "" }) => (
-//   <th className={`border p-1 text-center ${cls}`}>{children}</th>
-// );
-
-// /* ── Status Badge ── */
-// const statusColor = {
-//   PRESENT: "text-green-600",
-//   ONDUTY: "text-blue-600",
-//   ABSENT: "text-red-600",
-//   WEEKOFF: "text-gray-500",
-// };
-// const StatusBadge = ({ status }) => (
-//   <span className={`font-semibold ${statusColor[status] || "text-gray-700"}`}>
-//     {status}
-//   </span>
-// );
-
-// /* ── Loading / Empty rows ── */
-// const LoadingRow = ({ cols }) => (
-//   <tr>
-//     <td colSpan={cols} className="text-center py-10 text-gray-400 text-xs">
-//       Loading...
-//     </td>
-//   </tr>
-// );
-// const EmptyRow = ({ cols }) => (
-//   <tr>
-//     <td colSpan={cols} className="text-center py-10 text-gray-500 text-xs">
-//       No data found
-//     </td>
-//   </tr>
-// );
-
-// /* ── Options ── */
-// const STATUS_OPTIONS = ["ALL", "PRESENT", "ONDUTY", "ABSENT", "WEEKOFF"];
-// const GENDER_OPTIONS = ["ALL", "MALE", "FEMALE"];
-
-// /* ── Main ── */
-// const AttendenceDistributionTable = ({
-//   compCode,
-//   date,
-//   statusFilter: statusFilterProp,
-//   gender: genderProp, // ← NEW prop
-//   closeTable,
-// }) => {
-//   const [selectedComp, setSelectedComp] = useState(compCode || "");
-//   const [selectedDate, setSelectedDate] = useState(date || "");
-//   const [selectedStatus, setSelectedStatus] = useState(
-//     statusFilterProp || "ALL",
-//   );
-//   const [selectedGender, setSelectedGender] = useState(genderProp || "ALL"); // ← NEW state
-//   const [page, setPage] = useState(1);
-
-//   const [search, setSearch] = useState({
-//     fname: "",
-//     idcard: "",
-//     department: "",
-//     designation: "",
-//   });
-
-//   const resetPage = () => setPage(1);
-
-//   const skip = !selectedComp || !selectedDate;
-
-//   /* ── API ── */
-//   const {
-//     data: apiRes,
-//     isLoading,
-//     isFetching,
-//   } = useGetAttendenceTableQuery(
-//     {
-//       params: {
-//         company: selectedComp,
-//         date: selectedDate,
-//         statusFilter: selectedStatus,
-//       },
-//     },
-//     { skip },
-//   );
-//   console.log(apiRes, "apiRes");
-
-//   const rawData = useMemo(
-//     () => (Array.isArray(apiRes?.data) ? apiRes.data : []),
-//     [apiRes],
-//   );
-
-//   /* ── Text filter ── */
-//   const textMatch = (row, field, val) =>
-//     !val ||
-//     String(row[field] ?? "")
-//       .toLowerCase()
-//       .includes(val.toLowerCase());
-
-//   const filtered = useMemo(
-//     () =>
-//       rawData.filter(
-//         (r) =>
-//           (selectedGender === "ALL" ||
-//             (r.GENDER || "").toUpperCase() === selectedGender) &&
-//           textMatch(r, "FNAME", search.fname) &&
-//           textMatch(r, "IDCARD", search.idcard) &&
-//           textMatch(r, "DEPARTMENT", search.department) &&
-//           textMatch(r, "DESIGNATION", search.designation),
-//       ),
-//     [rawData, search, selectedGender],
-//   );
-
-//   /* ── Status counts ── */
-//   const counts = useMemo(() => {
-//     const c = { PRESENT: 0, ONDUTY: 0, ABSENT: 0, WEEKOFF: 0 };
-//     filtered.forEach((r) => {
-//       if (r.STATUS in c) c[r.STATUS]++;
-//     });
-//     return c;
-//   }, [filtered]);
-
-//   /* ── Pagination ── */
-//   const totalPages = Math.ceil(filtered.length / RECORDS) || 1;
-//   const currentRows = filtered.slice((page - 1) * RECORDS, page * RECORDS);
-
-//   /* ── Excel export ── */
-//   const handleExport = async () => {
-//     if (!filtered.length) {
-//       alert("No data");
-//       return;
-//     }
-
-//     const wb = new ExcelJS.Workbook();
-//     const ws = wb.addWorksheet("Attendance Distribution");
-
-//     const columns = [
-//       { header: "S.No", key: "sno", width: 6 },
-//       { header: "Emp ID", key: "EMPID", width: 14 },
-//       { header: "ID Card No", key: "IDCARDNO", width: 14 },
-//       { header: "Name", key: "FNAME", width: 28 },
-//       { header: "Gender", key: "GENDER", width: 10 },
-//       { header: "DOB", key: "DOB", width: 14 },
-//       { header: "Emp Type", key: "EMPTYPE", width: 14 },
-//       { header: "Department", key: "DEPARTMENT", width: 22 },
-//       { header: "Designation", key: "DESIGNATION", width: 22 },
-//       { header: "Date", key: "DOCDATE", width: 14 },
-//       { header: "In Time", key: "INTIME", width: 12 },
-//       { header: "Out Time", key: "OUTTIME", width: 12 },
-//       { header: "OT (hrs)", key: "OTH", width: 10 },
-//       { header: "Status", key: "STATUS", width: 12 },
-//     ];
-
-//     ws.columns = columns;
-//     const mergeEnd = String.fromCharCode(64 + columns.length);
-
-//     ws.insertRow(1, [
-//       `Attendance – ${selectedComp} | ${fmtDate(selectedDate)} | ${selectedStatus} | ${selectedGender}`,
-//     ]);
-//     ws.mergeCells(`A1:${mergeEnd}1`);
-//     const tc = ws.getCell("A1");
-//     tc.font = { bold: true, size: 13 };
-//     tc.alignment = { horizontal: "center", vertical: "middle" };
-//     ws.getRow(1).height = 28;
-
-//     const hr = ws.getRow(2);
-//     hr.height = 24;
-//     hr.eachCell((cell) => {
-//       cell.font = { bold: true };
-//       cell.alignment = { horizontal: "center", vertical: "middle" };
-//       cell.fill = {
-//         type: "pattern",
-//         pattern: "solid",
-//         fgColor: { argb: "FFD9D9D9" },
-//       };
-//       cell.border = {
-//         top: { style: "thin" },
-//         bottom: { style: "thin" },
-//         left: { style: "thin" },
-//         right: { style: "thin" },
-//       };
-//     });
-
-//     filtered.forEach((r, i) => {
-//       ws.addRow({
-//         sno: i + 1,
-//         EMPID: r.EMPID,
-//         IDCARDNO: r.IDCARDNO,
-//         FNAME: r.FNAME,
-//         GENDER: r.GENDER,
-//         DOB: fmtDOB(r.DOB),
-//         EMPTYPE: r.EMPTYPE,
-//         DEPARTMENT: r.DEPARTMENT,
-//         DESIGNATION: r.DESIGNATION,
-//         DOCDATE: fmtDate(r.DOCDATE),
-//         INTIME: r.INTIME,
-//         OUTTIME: r.OUTTIME,
-//         OTH: Number(r.OTH || 0).toFixed(2),
-//         STATUS: r.STATUS,
-//       });
-//     });
-
-//     ws.eachRow((row, rn) => {
-//       if (rn <= 2) return;
-//       row.height = 20;
-//       row.eachCell((cell) => {
-//         cell.alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-//       });
-//     });
-
-//     ws.views = [{ state: "frozen", ySplit: 2 }];
-//     const buf = await wb.xlsx.writeBuffer();
-//     saveAs(
-//       new Blob([buf], {
-//         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//       }),
-//       `Attendance_${selectedStatus}_${selectedGender}_${selectedComp}_${selectedDate}.xlsx`,
-//     );
-//   };
-
-//   /* ── Render ── */
-//   return (
-//     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex justify-center items-center">
-//       <div className="bg-white w-[1360px] h-[630px] p-4 rounded-xl relative">
-//         {/* ── HEADER ── */}
-//         <div className="flex justify-between items-center">
-//           <h2 className="font-bold uppercase text-sm">
-//             Attendance Distribution –{" "}
-//             <span className="text-blue-600">{selectedComp}</span>
-//           </h2>
-
-//           <div className="flex gap-2 items-center">
-//             <div className="bg-gray-300 rounded-lg shadow-2xl flex gap-x-2 p-2 flex-wrap items-center">
-//               {/* Company */}
-//               <select
-//                 value={selectedComp}
-//                 onChange={(e) => {
-//                   setSelectedComp(e.target.value);
-//                   resetPage();
-//                 }}
-//                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-24"
-//               >
-//                 <option value="JKC">JKC</option>
-//               </select>
-//               {/* Date */}
-//               <input
-//                 type="date"
-//                 value={selectedDate}
-//                 onChange={(e) => {
-//                   setSelectedDate(e.target.value);
-//                   resetPage();
-//                 }}
-//                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600"
-//               />
-
-//               {/* Status */}
-//               <select
-//                 value={selectedStatus}
-//                 onChange={(e) => {
-//                   setSelectedStatus(e.target.value);
-//                   resetPage();
-//                 }}
-//                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-28"
-//               >
-//                 {STATUS_OPTIONS.map((s) => (
-//                   <option key={s} value={s}>
-//                     {s === "ALL" ? "All Status" : s}
-//                   </option>
-//                 ))}
-//               </select>
-
-//               {/* Gender ← NEW dropdown */}
-//               <select
-//                 value={selectedGender}
-//                 onChange={(e) => {
-//                   setSelectedGender(e.target.value);
-//                   resetPage();
-//                 }}
-//                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-28"
-//               >
-//                 {GENDER_OPTIONS.map((g) => (
-//                   <option key={g} value={g}>
-//                     {g === "ALL" ? "ALL" : g}
-//                   </option>
-//                 ))}
-//               </select>
-
-//               {/* Excel */}
-//               <button
-//                 onClick={handleExport}
-//                 className="p-0 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
-//                 title="Download Excel"
-//               >
-//                 <img
-//                   src="https://cdn-icons-png.flaticon.com/512/732/732220.png"
-//                   alt="Excel"
-//                   className="w-7 h-7 rounded-lg"
-//                 />
-//               </button>
-//             </div>
-
-//             <button className="text-red-600" onClick={closeTable}>
-//               <FaTimes size={18} />
-//             </button>
-//           </div>
-//         </div>
-
-//         {/* ── COUNTS ── */}
-//         <div className="flex gap-6 mt-0.5 flex-wrap">
-//           <p className="text-xs font-semibold text-gray-600">
-//             Total: <span className="text-blue-600">{filtered.length}</span>
-//           </p>
-//           <p className="text-xs font-semibold text-gray-600">
-//             Present: <span className="text-green-600">{counts.PRESENT}</span>
-//           </p>
-//           <p className="text-xs font-semibold text-gray-600">
-//             On Duty: <span className="text-blue-600">{counts.ONDUTY}</span>
-//           </p>
-//           <p className="text-xs font-semibold text-gray-600">
-//             Absent: <span className="text-red-600">{counts.ABSENT}</span>
-//           </p>
-//           <p className="text-xs font-semibold text-gray-600">
-//             Week Off: <span className="text-gray-500">{counts.WEEKOFF}</span>
-//           </p>
-//         </div>
-
-//         {/* ── SEARCH ── */}
-//         <div className="flex justify-between items-start mt-2">
-//           <SearchBar
-//             keys={["fname", "idcard", "department", "designation"]}
-//             state={search}
-//             setState={(val) => {
-//               setSearch(val);
-//               resetPage();
-//             }}
-//           />
-//         </div>
-
-//         {/* ── TABLE ── */}
-//         <div
-//           className="overflow-x-auto border border-gray-300"
-//           style={{
-//             height: "460px",
-//             border: "1px solid gray",
-//             borderRadius: "16px",
-//           }}
-//         >
-//           <table className="w-[1800px] border-collapse text-[11px] table-fixed">
-//             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
-//               <tr>
-//                 <TH cls="w-8">S.No</TH>
-//                 {/* <TH cls="w-20">Emp ID</TH> */}
-
-//                 <TH cls="w-44">Name</TH>
-//                 <TH cls="w-32">ID Card</TH>
-//                 <TH cls="w-16">Gender</TH>
-//                 <TH cls="w-24">DOB</TH>
-//                 <TH cls="w-24">Emp Type</TH>
-//                 <TH cls="w-32">Department</TH>
-//                 <TH cls="w-32">Designation</TH>
-//                 <TH cls="w-28">Disability</TH>
-//                 <TH cls="w-20">In Date</TH>
-//                 <TH cls="w-20">In Time</TH>
-//                 <TH cls="w-20">Lunch Out</TH>
-//                 <TH cls="w-20">Lunch In</TH>
-//                 <TH cls="w-20">Out Date</TH>
-//                 <TH cls="w-20">Out Time</TH>
-//                 <TH cls="w-16">OT (hrs)</TH>
-//                 <TH cls="w-20">Shift Count</TH>
-//                 <TH cls="w-20">Status</TH>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {isLoading || isFetching ? (
-//                 <LoadingRow cols={14} />
-//               ) : currentRows.length === 0 ? (
-//                 <EmptyRow cols={14} />
-//               ) : (
-//                 currentRows.map((row, i) => (
-//                   <tr
-//                     key={i}
-//                     className="text-gray-800 bg-white even:bg-gray-100 hover:bg-blue-50 transition-colors"
-//                   >
-//                     <td className="border p-1 text-center text-gray-500">
-//                       {(page - 1) * RECORDS + i + 1}
-//                     </td>
-//                     <td className="border p-1 pl-2 ">{row.FNAME}</td>
-
-//                     <td className="border p-1 pl-2">{row.IDCARD}</td>
-
-//                     <td className="border p-1 text-left pl-2">{row.GENDER}</td>
-//                     <td className="border p-1 text-left pl-2">
-//                       {fmtDOB(row.DOB)}
-//                     </td>
-//                     <td className="border p-1 pl-2">{row.EMPTYPE}</td>
-//                     <td className="border p-1 pl-2">{row.DEPARTMENT}</td>
-//                     <td className="border p-1 pl-2">{row.DESIGNATION}</td>
-//                     <td className="border p-1 pl-2">{row.DISABILITY}</td>
-//                     <td className="border p-1 text-left pl-2">
-//                       {fmtDate(row.INDATE)}
-//                     </td>
-//                     <td className="border p-1 text-left pl-2">{row.INTIME}</td>
-//                     <td className="border p-1 text-left pl-2">{row.LOUTIME}</td>
-//                     <td className="border p-1 text-left pl-2">{row.LINTIME}</td>
-//                     <td className="border p-1 text-left pl-2">
-//                       {fmtDate(row.OUTDATE)}
-//                     </td>
-//                     <td className="border p-1 text-left pl-2">{row.OUTTIME}</td>
-//                     <td className="border p-1 text-right pr-2">
-//                       {Number(row.OTH || 0).toFixed(2)}
-//                     </td>
-//                     <td className="border p-1 text-right pr-2">
-//                       {Number(row.SHIFTCNT || 0)}
-//                     </td>
-//                     <td className="border p-1 text-left pl-2">
-//                       <StatusBadge status={row.STATUS} />
-//                     </td>
-//                   </tr>
-//                 ))
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-
-//         {/* ── PAGINATION ── */}
-//         <Pagination page={page} total={totalPages} setPage={setPage} />
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AttendenceDistributionTable;
 import { useState, useMemo } from "react";
 import {
   FaTimes,
@@ -624,6 +121,7 @@ const EmptyRow = ({ cols }) => (
 /* ── Options ── */
 const STATUS_OPTIONS = ["ALL", "PRESENT", "ONDUTY", "ABSENT", "WEEKOFF"];
 const GENDER_OPTIONS = ["ALL", "MALE", "FEMALE"];
+const PAYTYPE_OPTIONS = ["ALL", "STAFF", "LABOUR"];
 
 /* ── Column definitions (single source of truth for table + Excel) ── */
 const COLUMNS = [
@@ -634,6 +132,8 @@ const COLUMNS = [
   { header: "Gender", key: "GENDER", width: 16, align: "left" },
   { header: "DOB", key: "DOB", width: 18, align: "left" },
   { header: "Emp Type", key: "EMPTYPE", width: 18, align: "left" },
+  { header: "Emp Category", key: "PAYTYPE", width: 24, align: "left" },
+  { header: "DOJ", key: "DOJ", width: 18, align: "left" },
   { header: "Department", key: "DEPARTMENT", width: 24, align: "left" },
   { header: "Designation", key: "DESIGNATION", width: 24, align: "left" },
   { header: "Disability", key: "DISABILITY", width: 18, align: "left" },
@@ -653,7 +153,8 @@ const AttendenceDistributionTable = ({
   compCode,
   date,
   statusFilter: statusFilterProp,
-  gender: genderProp,
+
+  payType: payTypeProp,
   closeTable,
 }) => {
   const [selectedComp, setSelectedComp] = useState(compCode || "");
@@ -661,7 +162,8 @@ const AttendenceDistributionTable = ({
   const [selectedStatus, setSelectedStatus] = useState(
     statusFilterProp || "ALL",
   );
-  const [selectedGender, setSelectedGender] = useState(genderProp || "ALL");
+  const [selectedGender, setSelectedGender] = useState("ALL");
+  const [selectedPayType, setSelectedPayType] = useState(payTypeProp || "ALL");
   const [page, setPage] = useState(1);
 
   const [search, setSearch] = useState({
@@ -708,12 +210,14 @@ const AttendenceDistributionTable = ({
         (r) =>
           (selectedGender === "ALL" ||
             (r.GENDER || "").toUpperCase() === selectedGender) &&
+          (selectedPayType === "ALL" ||
+            (r.PAYTYPE || "").toUpperCase() === selectedPayType) &&
           textMatch(r, "FNAME", search.fname) &&
           textMatch(r, "IDCARD", search.idcard) &&
           textMatch(r, "DEPARTMENT", search.department) &&
           textMatch(r, "DESIGNATION", search.designation),
       ),
-    [rawData, search, selectedGender],
+    [rawData, search, selectedGender, selectedPayType],
   );
 
   /* ── Status counts ── */
@@ -768,6 +272,8 @@ const AttendenceDistributionTable = ({
       dynamicValue: selectedStatus,
       secondDynamicField: "Gender",
       seconddynamicValue: selectedGender,
+      thirdDynamicField: "Pay Type",
+      thirdDynamicValue: selectedPayType,
     });
 
     /* ── Row 3: Header ── */
@@ -800,6 +306,8 @@ const AttendenceDistributionTable = ({
         GENDER: r.GENDER,
         DOB: fmtDOB(r.DOB) + (birthday ? " 🎂" : ""),
         EMPTYPE: r.EMPTYPE,
+        PAYTYPE: r.PAYTYPE,
+        DOJ: fmtDOB(r.DOJ),
         DEPARTMENT: r.DEPARTMENT,
         DESIGNATION: r.DESIGNATION,
         DISABILITY: r.DISABILITY,
@@ -911,7 +419,24 @@ const AttendenceDistributionTable = ({
                   </option>
                 ))}
               </select>
-
+              <div className="flex items-center gap-2">
+                {PAYTYPE_OPTIONS.map((payType) => (
+                  <button
+                    key={payType}
+                    onClick={() => {
+                      setSelectedPayType(payType);
+                      resetPage();
+                    }}
+                    className={`flex items-center gap-2 px-4 py-1.5 text-[10px] font-semibold rounded-full shadow-md transition-all ${
+                      selectedPayType === payType
+                        ? "bg-green-600 text-white scale-105"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    {payType}
+                  </button>
+                ))}
+              </div>
               {/* Gender */}
               <div className="flex items-center gap-2">
                 {GENDER_OPTIONS.map((gender) => (
@@ -991,16 +516,17 @@ const AttendenceDistributionTable = ({
             borderRadius: "16px",
           }}
         >
-          <table className="w-[1900px] border-collapse text-[11px] table-fixed">
+          <table className="w-[1950px] border-collapse text-[11px] table-fixed">
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-8">S.No</TH>
                 <TH cls="w-32">ID Card</TH>
                 <TH cls="w-60">Name</TH>
-
                 <TH cls="w-16">Gender</TH>
                 <TH cls="w-24">DOB</TH>
                 <TH cls="w-24">Emp Type</TH>
+                <TH cls="w-28">Emp Category</TH>
+                <TH cls="w-24">DOJ</TH>
                 <TH cls="w-32">Department</TH>
                 <TH cls="w-32">Designation</TH>
                 <TH cls="w-28">Disability</TH>
@@ -1055,6 +581,8 @@ const AttendenceDistributionTable = ({
                       </td>
 
                       <td className="border p-1 pl-2">{row.EMPTYPE}</td>
+                      <td className="border p-1 pl-2">{row.PAYTYPE}</td>
+                      <td className="border p-1 pl-2">{fmtDOB(row.DOJ)}</td>
                       <td className="border p-1 pl-2">{row.DEPARTMENT}</td>
                       <td className="border p-1 pl-2">{row.DESIGNATION}</td>
                       <td className="border p-1 pl-2">{row.DISABILITY}</td>

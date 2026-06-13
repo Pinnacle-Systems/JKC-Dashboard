@@ -1,7 +1,7 @@
 import oracledb from "oracledb";
 import { getConnection } from "../constants/db.connection.js";
 
-// 1. Attendance Overview and Attendance Distribution
+// 1. Attendance Overview parent chart
 
 export async function getAttendenceCount(req, res) {
   let connection;
@@ -127,7 +127,132 @@ FROM
   }
 }
 
-// 2. Attendance Distribution Table Data
+// 2.  Attendance Distribution
+
+export async function getAttendenceCountDistribution(req, res) {
+  let connection;
+
+  try {
+    connection = await getConnection(res);
+
+    const { company, date } = req.query;
+
+    const sql = `
+   SELECT
+    SUM(CASE WHEN STATUS = 'PRESENT' THEN 1 ELSE 0 END) PRESENT_COUNT,
+    SUM(CASE WHEN STATUS = 'PRESENT' AND PAYTYPE = 'STAFF' THEN 1 ELSE 0 END) PRESENT_STAFF,
+    SUM(CASE WHEN STATUS = 'PRESENT' AND PAYTYPE = 'LABOUR' THEN 1 ELSE 0 END) PRESENT_LABOUR,
+
+    SUM(CASE WHEN STATUS = 'ABSENT' THEN 1 ELSE 0 END) ABSENT_COUNT,
+    SUM(CASE WHEN STATUS = 'ABSENT' AND PAYTYPE = 'STAFF' THEN 1 ELSE 0 END) ABSENT_STAFF,
+    SUM(CASE WHEN STATUS = 'ABSENT' AND PAYTYPE = 'LABOUR' THEN 1 ELSE 0 END) ABSENT_LABOUR,
+
+    SUM(CASE WHEN STATUS = 'ONDUTY' THEN 1 ELSE 0 END) ONDUTY_COUNT,
+    SUM(CASE WHEN STATUS = 'ONDUTY' AND PAYTYPE = 'STAFF' THEN 1 ELSE 0 END) ONDUTY_STAFF,
+    SUM(CASE WHEN STATUS = 'ONDUTY' AND PAYTYPE = 'LABOUR' THEN 1 ELSE 0 END) ONDUTY_LABOUR,
+
+    SUM(CASE WHEN STATUS = 'WEEKOFF' THEN 1 ELSE 0 END) WEEKOFF_COUNT,
+    SUM(CASE WHEN STATUS = 'WEEKOFF' AND PAYTYPE = 'STAFF' THEN 1 ELSE 0 END) WEEKOFF_STAFF,
+    SUM(CASE WHEN STATUS = 'WEEKOFF' AND PAYTYPE = 'LABOUR' THEN 1 ELSE 0 END) WEEKOFF_LABOUR
+FROM
+(
+    SELECT
+        UPPER(NVL(B.PAYTYPE,'UNKNOWN')) PAYTYPE,
+
+        CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM HRONDUTY AA
+                JOIN HRONDUTYDET BB1
+                    ON BB1.HRONDUTYID = AA.HRONDUTYID
+                JOIN HREMPLOYMAST DD
+                    ON DD.HREMPLOYMASTID = BB1.IDCARD
+                WHERE BB1.ODATE = D.ATT_DATE
+                  AND DD.IDCARDNO = B.IDCARD
+            ) THEN 'ONDUTY'
+
+            WHEN EXISTS (
+                SELECT 1
+                FROM HRWOFFBAS W
+                JOIN HRWOFFDET WD
+                    ON WD.HRWOFFBASID = W.HRWOFFBASID
+                WHERE TRIM(W.DAYS) = TO_CHAR(D.ATT_DATE,'FMDAY')
+                  AND WD.IDCARDNO = B.IDCARD
+            ) THEN 'WEEKOFF'
+
+            WHEN A.EMPID IS NOT NULL THEN 'PRESENT'
+
+            ELSE 'ABSENT'
+        END STATUS
+
+    FROM
+    (
+        SELECT TO_DATE(:DATEVAL,'YYYY-MM-DD') ATT_DATE
+        FROM DUAL
+    ) D
+
+    CROSS JOIN HREMPLOYDETAILS B
+
+    JOIN HREMPLOYMAST BB
+      ON BB.HREMPLOYMASTID = B.HREMPLOYMASTID
+
+    LEFT JOIN JKCHDATTA A
+      ON TRUNC(A.DOCDATE) = D.ATT_DATE
+     AND A.EMPID = B.IDCARD
+     AND A.COMPCODE = :COMPCODE
+) T
+    `;
+
+    const result = await connection.execute(
+      sql,
+      {
+        DATEVAL: date,
+        // TODATE: toDate,
+        COMPCODE: company,
+      },
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+      },
+    );
+
+    return res.json({
+      statusCode: 0,
+      data: result.rows?.[0] || {
+        PRESENT_COUNT: 0,
+        PRESENT_STAFF: 0,
+        PRESENT_LABOUR: 0,
+
+        ABSENT_COUNT: 0,
+        ABSENT_STAFF: 0,
+        ABSENT_LABOUR: 0,
+
+        ONDUTY_COUNT: 0,
+        ONDUTY_STAFF: 0,
+        ONDUTY_LABOUR: 0,
+
+        WEEKOFF_COUNT: 0,
+        WEEKOFF_STAFF: 0,
+        WEEKOFF_LABOUR: 0,
+      },
+    });
+  } catch (err) {
+    console.error("Error retrieving attendance count:", err);
+
+    return res.status(500).json({
+      statusCode: 1,
+      error: err.message,
+    });
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (closeErr) {
+        console.error("Error closing connection:", closeErr);
+      }
+    }
+  }
+}
+// 3. Attendance Distribution Table Data
 
 export async function getAttendenceDistributionTable(req, res) {
   let connection;
@@ -161,7 +286,8 @@ export async function getAttendenceDistributionTable(req, res) {
               A.LINTIME,
               A.OUTDT OUTDATE,
               A.OUTTIME,
-
+              B.DOJ,
+              B.PAYTYPE,
               CASE
                   WHEN EXISTS (
                       SELECT 1
@@ -201,10 +327,10 @@ export async function getAttendenceDistributionTable(req, res) {
               (A.OT / 60) OTH,
               A.PER,
 
-              (
-                SELECT DEPARTMENT
-                FROM GTDEPTMAST S1
-                WHERE B.DEPTNAME = S1.GTDEPTMASTID
+       (
+                SELECT DISPNAME
+                FROM GTDEPTDESGMAST S1
+                WHERE B.DEPTNAME = S1.GTDEPTDESGMASTID
               ) DEPARTMENT,
 
               (
@@ -443,7 +569,8 @@ export async function getAttendenceDesignationTable(req, res) {
               A.LINTIME,
               A.OUTDT OUTDATE,
               A.OUTTIME,
-
+              B.DOJ,
+              B.PAYTYPE,
               CASE
                   WHEN EXISTS (
                       SELECT 1
@@ -483,10 +610,10 @@ export async function getAttendenceDesignationTable(req, res) {
               (A.OT / 60) OTH,
               A.PER,
 
-              (
-                SELECT DEPARTMENT
-                FROM GTDEPTMAST S1
-                WHERE B.DEPTNAME = S1.GTDEPTMASTID
+                (
+                SELECT DISPNAME
+                FROM GTDEPTDESGMAST S1
+                WHERE B.DEPTNAME = S1.GTDEPTDESGMASTID
               ) DEPARTMENT,
 
               (
@@ -559,6 +686,42 @@ export async function getDesignation(req, res) {
     connection = await getConnection(res);
     const sql = `
     SELECT DISTINCT DESIGNATION FROM GTDESIGNATIONMAST
+    `;
+    const result = await connection.execute(
+      sql,
+      {},
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+      },
+    );
+    return res.json({
+      statusCode: 0,
+      count: result.rows.length,
+      data: result.rows || [],
+    });
+  } catch (err) {
+    console.error("Error retrieving attendance distribution:", err);
+
+    return res.status(500).json({
+      statusCode: 1,
+      error: err.message,
+    });
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (closeErr) {
+        console.error("Error closing connection:", closeErr);
+      }
+    }
+  }
+}
+export async function getDepartment(req, res) {
+  let connection;
+  try {
+    connection = await getConnection(res);
+    const sql = `
+    SELECT DISTINCT DISPNAME  FROM GTDEPTDESGMAST
     `;
     const result = await connection.execute(
       sql,

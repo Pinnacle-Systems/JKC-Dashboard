@@ -117,6 +117,7 @@ const EmptyRow = ({ cols }) => (
 
 const STATUS_OPTIONS = ["ALL", "PRESENT", "ONDUTY", "ABSENT", "WEEKOFF"];
 const GENDER_OPTIONS = ["ALL", "MALE", "FEMALE"];
+const PAYTYPE_OPTIONS = ["ALL", "STAFF", "LABOUR"];
 
 const COLUMNS = [
   { header: "S.No", key: "sno", width: 6, align: "center" },
@@ -125,6 +126,8 @@ const COLUMNS = [
   { header: "Gender", key: "GENDER", width: 16, align: "left" },
   { header: "DOB", key: "DOB", width: 18, align: "left" },
   { header: "Emp Type", key: "EMPTYPE", width: 18, align: "left" },
+  { header: "Emp Category", key: "PAYTYPE", width: 24, align: "left" },
+  { header: "DOJ", key: "DOJ", width: 18, align: "left" },
   { header: "Department", key: "DEPARTMENT", width: 24, align: "left" },
   { header: "Designation", key: "DESIGNATION", width: 24, align: "left" },
   { header: "Disability", key: "DISABILITY", width: 18, align: "left" },
@@ -301,6 +304,8 @@ const AttendenceDesignationTable = ({
         GENDER: r.GENDER,
         DOB: fmtDOB(r.DOB) + (birthday ? " 🎂" : ""),
         EMPTYPE: r.EMPTYPE,
+        PAYTYPE: r.PAYTYPE,
+        DOJ: fmtDOB(r.DOJ),
         DEPARTMENT: r.DEPARTMENT,
         DESIGNATION: r.DESIGNATION,
         DISABILITY: r.DISABILITY,
@@ -510,7 +515,7 @@ const AttendenceDesignationTable = ({
             borderRadius: "16px",
           }}
         >
-          <table className="w-[1900px] border-collapse text-[11px] table-fixed">
+          <table className="w-[1950px] border-collapse text-[11px] table-fixed">
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-8">S.No</TH>
@@ -519,6 +524,9 @@ const AttendenceDesignationTable = ({
                 <TH cls="w-16">Gender</TH>
                 <TH cls="w-24">DOB</TH>
                 <TH cls="w-24">Emp Type</TH>
+                <TH cls="w-28">Emp Category</TH>
+                <TH cls="w-24">DOJ</TH>
+
                 <TH cls="w-32">Department</TH>
                 <TH cls="w-32">Designation</TH>
                 <TH cls="w-28">Disability</TH>
@@ -569,6 +577,8 @@ const AttendenceDesignationTable = ({
                         )}
                       </td>
                       <td className="border p-1 pl-2">{row.EMPTYPE}</td>
+                      <td className="border p-1 pl-2">{row.PAYTYPE}</td>
+                      <td className="border p-1 pl-2">{fmtDOB(row.DOJ)}</td>
                       <td className="border p-1 pl-2">{row.DEPARTMENT}</td>
                       <td className="border p-1 pl-2">{row.DESIGNATION}</td>
                       <td className="border p-1 pl-2">{row.DISABILITY}</td>

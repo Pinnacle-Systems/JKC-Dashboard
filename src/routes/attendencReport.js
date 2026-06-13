@@ -8,9 +8,11 @@ import {
   getAttendenceDesignationWiseCount,
   getAttendenceDesignationTable,
   getDesignation,
+  getAttendenceCountDistribution,
 } from "../services/attendence.service.js";
 
 router.get("/getAttendenceCount", getAttendenceCount);
+router.get("/getAttendenceDistributionCount", getAttendenceCountDistribution);
 router.get("/getAttendenceTable", getAttendenceDistributionTable);
 router.get("/getAttendenceDesignationCount", getAttendenceDesignationWiseCount);
 router.get("/getAttendenceDesignationTable", getAttendenceDesignationTable);

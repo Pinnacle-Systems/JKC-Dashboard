@@ -21,6 +21,19 @@ const attendence = createApi({
       },
       providesTags: ["attendence"],
     }),
+    getAttendenceDistributionCount: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ATTENDENCE + "/getAttendenceDistributionCount",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["attendence"],
+    }),
     getAttendenceTable: builder.query({
       query: ({ params }) => {
         return {
@@ -78,6 +91,7 @@ const attendence = createApi({
 
 export const {
   useGetAttendenceCountQuery,
+  useGetAttendenceDistributionCountQuery,
   useGetAttendenceTableQuery,
   useGetAttendenceDesignationCountQuery,
   useGetAttendenceDesignationTableQuery,

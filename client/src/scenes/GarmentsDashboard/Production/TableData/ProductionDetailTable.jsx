@@ -252,7 +252,10 @@ const ProductionDetailTable = ({
   const [page, setPage] = useState(1);
   const [selectedComp, setSelectedComp] = useState(companyName);
   const [isSummaryMode, setIsSummaryMode] = useState(false); // ← toggle state
-
+  // Add this near other useState declarations
+  const [summaryDate, setSummaryDate] = useState(
+    new Date().toISOString().split("T")[0], // today's date as default
+  );
   const [search, setSearch] = useState({
     ORDERNO: "",
     BUYERNAME: "",
@@ -296,8 +299,7 @@ const ProductionDetailTable = ({
     {
       params: {
         compCode: selectedComp,
-        fromDate,
-        toDate,
+        date: summaryDate,
         storeId: selectedStore,
       },
     },
@@ -583,12 +585,10 @@ const ProductionDetailTable = ({
       totalColumns: columns.length,
       localCompany: selectedComp,
       disableFinYear: true,
-      dynamicField: "From Date",
-      dynamicValue: fmtDate(fromDate),
-      secondDynamicField: "To Date",
-      seconddynamicValue: fmtDate(toDate),
-      thirdDynamicField: "Unit",
-      thirdDynamicValue: selectedStore,
+      dynamicField: "Date", // ← changed label
+      dynamicValue: fmtDate(summaryDate), // ← single date
+      secondDynamicField: "Unit",
+      seconddynamicValue: selectedStore,
     });
 
     // Header row styling
@@ -761,40 +761,61 @@ const ProductionDetailTable = ({
                 <option value="JKC">JKC</option>
                 <option value="PSS">PSS</option>
               </select>
-              {/* FROM DATE */}
-              <input
-                type="date"
-                value={fromDate}
-                max={toDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
-                  resetPage();
-                }}
-                style={{
-                  fontSize: "11px",
-                  padding: "0px 6px",
-                  borderRadius: "6px",
-                  border: "2px solid #2563eb",
-                }}
-              />
-              {/* TO DATE */}
-              <input
-                type="date"
-                value={toDate}
-                min={fromDate}
-                onChange={(e) => {
-                  if (new Date(e.target.value) >= new Date(fromDate)) {
-                    setToDate(e.target.value);
+              {/* FROM DATE — hidden in summary mode */}
+              {!isSummaryMode && (
+                <input
+                  type="date"
+                  value={fromDate}
+                  max={toDate}
+                  onChange={(e) => {
+                    setFromDate(e.target.value);
                     resetPage();
-                  }
-                }}
-                style={{
-                  fontSize: "11px",
-                  padding: "0px 6px",
-                  borderRadius: "6px",
-                  border: "2px solid #2563eb",
-                }}
-              />
+                  }}
+                  style={{
+                    fontSize: "11px",
+                    padding: "0px 6px",
+                    borderRadius: "6px",
+                    border: "2px solid #2563eb",
+                  }}
+                />
+              )}
+              {/* TO DATE — hidden in summary mode */}
+              {!isSummaryMode && (
+                <input
+                  type="date"
+                  value={toDate}
+                  min={fromDate}
+                  onChange={(e) => {
+                    if (new Date(e.target.value) >= new Date(fromDate)) {
+                      setToDate(e.target.value);
+                      resetPage();
+                    }
+                  }}
+                  style={{
+                    fontSize: "11px",
+                    padding: "0px 6px",
+                    borderRadius: "6px",
+                    border: "2px solid #2563eb",
+                  }}
+                />
+              )}
+              {/* SINGLE DATE — summary mode only */}
+              {isSummaryMode && (
+                <input
+                  type="date"
+                  value={summaryDate}
+                  onChange={(e) => {
+                    setSummaryDate(e.target.value);
+                    resetPage();
+                  }}
+                  style={{
+                    fontSize: "11px",
+                    padding: "0px 6px",
+                    borderRadius: "6px",
+                    border: "2px solid #2563eb",
+                  }}
+                />
+              )}
               {/* PROCESS — hidden in summary mode */}
               {!isSummaryMode && (
                 <select

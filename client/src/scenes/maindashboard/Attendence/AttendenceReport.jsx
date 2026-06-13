@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useGetAttendenceCountQuery } from "../../../redux/service/attendenceReport";
+import { useGetAttendenceDistributionCountQuery } from "../../../redux/service/attendenceReport";
 import ReactApexcharts from "react-apexcharts";
 import {
   Box,
@@ -21,10 +21,10 @@ const CATEGORY_TO_STATUS = {
 };
 
 /* ── Map series index → backend gender value ── */
-const SERIES_TO_GENDER = {
+const SERIES_TO_PAYTYPE = {
   0: "ALL",
-  1: "MALE",
-  2: "FEMALE",
+  1: "STAFF",
+  2: "LABOUR",
 };
 
 const AttendenceReport = ({ companyName, date }) => {
@@ -47,7 +47,7 @@ const AttendenceReport = ({ companyName, date }) => {
     data: attendenceData,
     isLoading,
     error,
-  } = useGetAttendenceCountQuery(
+  } = useGetAttendenceDistributionCountQuery(
     { params: { company: companyName, date } },
     { skip: !companyName || !date },
   );
@@ -77,31 +77,32 @@ const AttendenceReport = ({ companyName, date }) => {
     attendance.ABSENT_COUNT || 0,
     attendance.WEEKOFF_COUNT || 0,
   ];
-  const menData = [
-    attendance.PRESENT_MALE || 0,
-    attendance.ONDUTY_MALE || 0,
-    attendance.ABSENT_MALE || 0,
-    attendance.WEEKOFF_MALE || 0,
+  const staffData = [
+    attendance.PRESENT_STAFF || 0,
+    attendance.ONDUTY_STAFF || 0,
+    attendance.ABSENT_STAFF || 0,
+    attendance.WEEKOFF_STAFF || 0,
   ];
-  const womenData = [
-    attendance.PRESENT_FEMALE || 0,
-    attendance.ONDUTY_FEMALE || 0,
-    attendance.ABSENT_FEMALE || 0,
-    attendance.WEEKOFF_FEMALE || 0,
+
+  const labourData = [
+    attendance.PRESENT_LABOUR || 0,
+    attendance.ONDUTY_LABOUR || 0,
+    attendance.ABSENT_LABOUR || 0,
+    attendance.WEEKOFF_LABOUR || 0,
   ];
 
   let filteredCategories = allCategories;
   let filteredTotalData = totalData;
-  let filteredMenData = menData;
-  let filteredWomenData = womenData;
+  let filteredStaffData = staffData;
+  let filteredLabourData = labourData;
 
   if (filterCategory !== "All") {
     const idx = allCategories.indexOf(filterCategory);
     if (idx !== -1) {
       filteredCategories = [allCategories[idx]];
       filteredTotalData = [totalData[idx]];
-      filteredMenData = [menData[idx]];
-      filteredWomenData = [womenData[idx]];
+      filteredStaffData = [staffData[idx]];
+      filteredLabourData = [labourData[idx]];
     }
   }
 
@@ -111,10 +112,9 @@ const AttendenceReport = ({ companyName, date }) => {
     if (!catLabel) return;
 
     const statusFilter = CATEGORY_TO_STATUS[catLabel] || "ALL";
-    // seriesIndex: 0 = All, 1 = Men, 2 = Women
-    const gender = SERIES_TO_GENDER[config.seriesIndex] ?? "ALL";
+    const payType = SERIES_TO_PAYTYPE[config.seriesIndex] ?? "ALL";
 
-    setTableConfig({ statusFilter, gender });
+    setTableConfig({ statusFilter, payType });
   };
 
   const chartOptions = {
@@ -151,8 +151,8 @@ const AttendenceReport = ({ companyName, date }) => {
 
   const chartSeries = [
     { name: "All", data: filteredTotalData },
-    { name: "Male", data: filteredMenData },
-    { name: "Female", data: filteredWomenData },
+    { name: "Staff", data: filteredStaffData },
+    { name: "Labour", data: filteredLabourData },
   ];
 
   return (
@@ -211,7 +211,7 @@ const AttendenceReport = ({ companyName, date }) => {
           compCode={company}
           date={selectedDate}
           statusFilter={tableConfig.statusFilter}
-          gender={tableConfig.gender}
+          payType={tableConfig.payType}
           closeTable={() => setTableConfig(null)}
         />
       )}
