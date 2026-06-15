@@ -160,6 +160,7 @@ const AttendenceDesignationTable = ({
     designationProp || "ALL",
   ); // ✅ replaces gender
   const [selectedPayType, setSelectedPayType] = useState("ALL");
+  const [showOnlyBirthdays, setShowOnlyBirthdays] = useState(false);
   console.log(designationProp, selectedDesignation, "designationProp");
   const [page, setPage] = useState(1);
 
@@ -210,6 +211,7 @@ const AttendenceDesignationTable = ({
     () =>
       rawData.filter(
         (r) =>
+          (!showOnlyBirthdays || isBirthday(r.DOB)) &&
           (selectedGender === "ALL" ||
             (r.GENDER || "").toUpperCase() === selectedGender.toUpperCase()) &&
           (selectedDesignation === "ALL" ||
@@ -222,7 +224,14 @@ const AttendenceDesignationTable = ({
           textMatch(r, "DEPARTMENT", search.department) &&
           textMatch(r, "DESIGNATION", search.designation),
       ),
-    [rawData, search, selectedDesignation, selectedGender, selectedPayType],
+    [
+      rawData,
+      search,
+      selectedDesignation,
+      selectedGender,
+      selectedPayType,
+      showOnlyBirthdays,
+    ],
   );
 
   const counts = useMemo(() => {
@@ -276,8 +285,10 @@ const AttendenceDesignationTable = ({
       dynamicValue: selectedStatus,
       secondDynamicField: "Designation",
       seconddynamicValue: selectedDesignation,
-      thirdDynamicField: "Gender",
-      thirdDynamicValue: selectedGender,
+      thirdDynamicField: "Pay Type",
+      thirdDynamicValue: selectedPayType,
+      fourthDynamicField: "Gender",
+      fourthDynamicValue: selectedGender,
     });
 
     const hr = ws.getRow(3);
@@ -366,19 +377,12 @@ const AttendenceDesignationTable = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex justify-center items-center">
-      <div className="bg-white w-[1360px] h-[630px] p-4 rounded-xl relative">
+      <div className="bg-white w-[1400px] h-[630px] p-4 rounded-xl relative">
         {/* ── HEADER ── */}
         <div className="flex justify-between items-center">
           <h2 className="font-bold uppercase text-sm">
             Attendance Designation Wise –{" "}
             <span className="text-blue-600">{selectedComp}</span>
-            {/* ✅ show clicked designation in title */}
-            {selectedDesignation && selectedDesignation !== "ALL" && (
-              <>
-                {" "}
-                | <span className="text-purple-600">{selectedDesignation}</span>
-              </>
-            )}
           </h2>
 
           <div className="flex gap-2 items-center">
@@ -456,6 +460,7 @@ const AttendenceDesignationTable = ({
                   </button>
                 ))}
               </div>
+              <div>|</div>
               {/* Gender */}
               <div className="flex items-center gap-2">
                 {GENDER_OPTIONS.map((gender) => (
@@ -535,20 +540,38 @@ const AttendenceDesignationTable = ({
             borderRadius: "16px",
           }}
         >
-          <table className="w-[1950px] border-collapse text-[11px] table-fixed">
+          <table className="w-[2100px] border-collapse text-[11px] table-fixed">
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-8">S.No</TH>
                 <TH cls="w-32">ID Card</TH>
                 <TH cls="w-60">Name</TH>
-                <TH cls="w-16">Gender</TH>
-                <TH cls="w-24">DOB</TH>
+                <TH cls="w-20">Gender</TH>
+                <TH cls="w-24">
+                  <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                    <span>DOB</span>
+                    <input
+                      type="checkbox"
+                      checked={showOnlyBirthdays}
+                      onChange={(e) => {
+                        setShowOnlyBirthdays(e.target.checked);
+                        resetPage();
+                      }}
+                      title="Filter today's birthdays"
+                      className="cursor-pointer w-3 h-3 flex-shrink-0 focus:ring-0 focus:outline-none accent-pink-500"
+                    />
+                    <FaBirthdayCake
+                      className="text-pink-500 flex-shrink-0"
+                      size={12}
+                      title="Happy Birthday!"
+                    />
+                  </div>
+                </TH>
                 <TH cls="w-24">Emp Type</TH>
                 <TH cls="w-28">Emp Category</TH>
                 <TH cls="w-24">DOJ</TH>
-
-                <TH cls="w-32">Department</TH>
-                <TH cls="w-32">Designation</TH>
+                <TH cls="w-44">Department</TH>
+                <TH cls="w-44">Designation</TH>
                 <TH cls="w-28">Disability</TH>
                 <TH cls="w-20">In Date</TH>
                 <TH cls="w-20">In Time</TH>
@@ -556,7 +579,7 @@ const AttendenceDesignationTable = ({
                 <TH cls="w-20">Lunch In</TH>
                 <TH cls="w-20">Out Date</TH>
                 <TH cls="w-20">Out Time</TH>
-                <TH cls="w-16">OT (hrs)</TH>
+                <TH cls="w-20">OT (hrs)</TH>
                 <TH cls="w-20">Shift Count</TH>
                 <TH cls="w-20">Status</TH>
               </tr>

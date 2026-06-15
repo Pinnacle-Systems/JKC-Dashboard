@@ -164,6 +164,7 @@ const AttendenceDistributionTable = ({
   );
   const [selectedGender, setSelectedGender] = useState("ALL");
   const [selectedPayType, setSelectedPayType] = useState(payTypeProp || "ALL");
+  const [showOnlyBirthdays, setShowOnlyBirthdays] = useState(false);
   const [page, setPage] = useState(1);
 
   const [search, setSearch] = useState({
@@ -208,6 +209,7 @@ const AttendenceDistributionTable = ({
     () =>
       rawData.filter(
         (r) =>
+          (!showOnlyBirthdays || isBirthday(r.DOB)) &&
           (selectedGender === "ALL" ||
             (r.GENDER || "").toUpperCase() === selectedGender) &&
           (selectedPayType === "ALL" ||
@@ -217,7 +219,7 @@ const AttendenceDistributionTable = ({
           textMatch(r, "DEPARTMENT", search.department) &&
           textMatch(r, "DESIGNATION", search.designation),
       ),
-    [rawData, search, selectedGender, selectedPayType],
+    [rawData, search, selectedGender, selectedPayType, showOnlyBirthdays],
   );
 
   /* ── Status counts ── */
@@ -270,10 +272,10 @@ const AttendenceDistributionTable = ({
       localCompany: selectedComp,
       dynamicField: "Status",
       dynamicValue: selectedStatus,
-      secondDynamicField: "Gender",
-      seconddynamicValue: selectedGender,
-      thirdDynamicField: "Pay Type",
-      thirdDynamicValue: selectedPayType,
+      thirdDynamicField: "Gender",
+      thirdDynamicValue: selectedGender,
+      secondDynamicField: "Pay Type",
+      seconddynamicValue: selectedPayType,
     });
 
     /* ── Row 3: Header ── */
@@ -437,6 +439,7 @@ const AttendenceDistributionTable = ({
                   </button>
                 ))}
               </div>
+              <div>|</div>
               {/* Gender */}
               <div className="flex items-center gap-2">
                 {GENDER_OPTIONS.map((gender) => (
@@ -516,19 +519,34 @@ const AttendenceDistributionTable = ({
             borderRadius: "16px",
           }}
         >
-          <table className="w-[1950px] border-collapse text-[11px] table-fixed">
+          <table className="w-[2100px] border-collapse text-[11px] table-fixed">
             <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
               <tr>
                 <TH cls="w-8">S.No</TH>
                 <TH cls="w-32">ID Card</TH>
                 <TH cls="w-60">Name</TH>
-                <TH cls="w-16">Gender</TH>
-                <TH cls="w-24">DOB</TH>
+                <TH cls="w-20">Gender</TH>
+                <TH cls="w-24">
+                  <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                    <span>DOB</span>
+                    <input
+                      type="checkbox"
+                      checked={showOnlyBirthdays}
+                      onChange={(e) => {
+                        setShowOnlyBirthdays(e.target.checked);
+                        resetPage();
+                      }}
+                      title="Filter today's birthdays"
+                      className="cursor-pointer w-3 h-3 flex-shrink-0 focus:ring-0 focus:outline-none accent-pink-500"
+                    />
+                    <FaBirthdayCake className="text-pink-500 flex-shrink-0" size={12} title="Happy Birthday!" />
+                  </div>
+                </TH>
                 <TH cls="w-24">Emp Type</TH>
                 <TH cls="w-28">Emp Category</TH>
                 <TH cls="w-24">DOJ</TH>
-                <TH cls="w-32">Department</TH>
-                <TH cls="w-32">Designation</TH>
+                <TH cls="w-44">Department</TH>
+                <TH cls="w-44">Designation</TH>
                 <TH cls="w-28">Disability</TH>
                 <TH cls="w-20">In Date</TH>
                 <TH cls="w-20">In Time</TH>
@@ -536,7 +554,7 @@ const AttendenceDistributionTable = ({
                 <TH cls="w-20">Lunch In</TH>
                 <TH cls="w-20">Out Date</TH>
                 <TH cls="w-20">Out Time</TH>
-                <TH cls="w-16">OT (hrs)</TH>
+                <TH cls="w-20">OT (hrs)</TH>
                 <TH cls="w-20">Shift Count</TH>
                 <TH cls="w-20">Status</TH>
               </tr>
