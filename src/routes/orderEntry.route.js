@@ -7,6 +7,8 @@ import {
   getOrderEntryBuyerWisePoNoQty,
   getOrderEntryStyleWisePoNoQty,
   getOrderEntryColorWiseQty,
+  getOrderEntryProfitLossdropdown,
+  getOrderEntryProfitLossReport,
 } from "../services/orderEntry.service.js";
 import {
   getOrderEntryStatusTable,
@@ -32,6 +34,8 @@ router.get("/getOrderEntryBuyerWiseQty", getOrderEntryBuyerQtyWise);
 router.get("/getOrderEntryBuyerWisePoNoQty", getOrderEntryBuyerWisePoNoQty);
 router.get("/getOrderEntryStyleWiseQty", getOrderEntryStyleWisePoNoQty);
 router.get("/getOrderEntryColorWiseQty", getOrderEntryColorWiseQty);
+router.get("/getOrderEntryProfitLossOrderNo", getOrderEntryProfitLossdropdown);
+router.get("/getOrderEntryProfitLossReport", getOrderEntryProfitLossReport);
 
 // Table Services
 

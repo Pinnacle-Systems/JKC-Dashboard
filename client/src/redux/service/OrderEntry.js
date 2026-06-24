@@ -99,6 +99,32 @@ const purchase = createApi({
       },
       providesTags: ["orderEntry"],
     }),
+    getOrderEntryProfitLossOrderNo: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryProfitLossOrderNo",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
+    getOrderEntryProfitLossReport: builder.query({
+      query: ({ params }) => {
+        return {
+          url: ORDER_ENTRY + "/getOrderEntryProfitLossReport",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["orderEntry"],
+    }),
 
     // table
 
@@ -269,6 +295,8 @@ export const {
   useGetOrderEntryBuyerWisePoNoQtyQuery,
   useGetOrderEntryStyleWiseQtyQuery,
   useGetOrderEntryColorWiseQtyQuery,
+  useGetOrderEntryProfitLossOrderNoQuery,
+  useGetOrderEntryProfitLossReportQuery,
 
   // table
 
