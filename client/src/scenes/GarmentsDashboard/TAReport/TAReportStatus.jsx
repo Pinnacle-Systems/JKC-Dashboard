@@ -383,12 +383,15 @@ const TAReportStatus = ({ companyName, finYear }) => {
               py: 8,
               color: "text.secondary",
               fontSize: 13,
+              height: "440px",
             }}
           >
             Select an order to view the T&A delay report
           </Box>
         ) : isLoading ? (
-          <Box sx={{ textAlign: "center", py: 8 }}>Loading...</Box>
+          <Box sx={{ textAlign: "center", py: 8, height: "440px" }}>
+            Loading...
+          </Box>
         ) : (
           <>
             {/* ── Plan / Actual / Remarks table ── */}
