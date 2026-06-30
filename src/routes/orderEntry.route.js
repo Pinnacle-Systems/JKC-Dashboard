@@ -25,6 +25,8 @@ import {
   getOrderEntryStatusTableWithStatus,
 } from "../services/orderEntryTable.service.js";
 
+import { getOrderReport } from "../services/profitAndLoss.service.js";
+
 const router = Router();
 
 router.get("/getOrderEntryCount", getOrderEntryCount);
@@ -72,5 +74,6 @@ router.get(
   getOrderEntryStyleItemGroupWiseQtyTable,
 );
 router.get("/getOrderEntryColorWiseTable", getOrderEntryColorWiseQtyTable);
+router.get("/getOrderEntryProfitLossTable", getOrderReport);
 
 export default router;

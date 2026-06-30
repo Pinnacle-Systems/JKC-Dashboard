@@ -23,7 +23,7 @@ export async function initPool() {
       poolMax: 25, // ⬆ was 13 — allows more concurrent queries
       poolIncrement: 2, // grow gradually instead of large jumps
       poolTimeout: 180,
-      queueTimeout: 30000, // fail faster (30s) instead of silently queuing for 2min
+      queueTimeout: 60000, // fail faster (30s) instead of silently queuing for 2min
       queueMax: 500, // cap the wait queue to avoid unbounded memory growth
     });
 
