@@ -5,10 +5,12 @@ import {
   useGetOrderEntryProfitLossOrderNoQuery,
   useGetOrderEntryProfitLossReportQuery,
 } from "../../../redux/service/OrderEntry";
+import ProfitLossTable from "./TableData/ProfitLossTable";
 
 const ProfitLossReport = ({ companyName, finYear }) => {
   const theme = useTheme();
   const [selectedOrderNO, setSelectedOrderNo] = useState("");
+  const [tableConfig, setTableConfig] = useState(null);
 
   /* ── Fetch ── */
   const { data: orderDropdown } = useGetOrderEntryProfitLossOrderNoQuery(
@@ -20,11 +22,19 @@ const ProfitLossReport = ({ companyName, finYear }) => {
     { params: { orderNo: selectedOrderNO } },
     { skip: !selectedOrderNO },
   );
-
+  const handleChartClick = (params) => {
+    setTableConfig({
+      orderNo: selectedOrderNO,
+    });
+  };
   /* ── Chart: delay days per activity ── */
   const chartData = response?.data ?? [];
-  
-  const isLoss = chartData.some((item) => item.PROCESSNAME === "LOSS %" || (item.PROCESSNAME === "PROFIT" && item.ACTUALQTY < 0));
+
+  const isLoss = chartData.some(
+    (item) =>
+      item.PROCESSNAME === "LOSS %" ||
+      (item.PROCESSNAME === "PROFIT" && item.ACTUALQTY < 0),
+  );
   const actualLegendColor = isLoss ? "#ef4444" : "#22c55e";
 
   const chartOptions = {
@@ -34,11 +44,16 @@ const ProfitLossReport = ({ companyName, finYear }) => {
         type: "shadow",
       },
       formatter: (params) => {
-        let res = params[0].name + '<br/>';
+        let res = params[0].name + "<br/>";
         const isLast = params[0].dataIndex === chartData.length - 1;
-        params.forEach(item => {
-          let valStr = isLast ? `${item.value.toLocaleString()}%` : item.value.toLocaleString("en-IN", { style: "currency", currency: "INR" });
-          res += item.marker + " " + item.seriesName + ": " + valStr + '<br/>';
+        params.forEach((item) => {
+          let valStr = isLast
+            ? `${item.value.toLocaleString()}%`
+            : item.value.toLocaleString("en-IN", {
+                style: "currency",
+                currency: "INR",
+              });
+          res += item.marker + " " + item.seriesName + ": " + valStr + "<br/>";
         });
         return res;
       },
@@ -71,7 +86,12 @@ const ProfitLossReport = ({ companyName, finYear }) => {
     yAxis: {
       type: "value",
       axisLabel: {
-        formatter: (value) => value.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }),
+        formatter: (value) =>
+          value.toLocaleString("en-IN", {
+            style: "currency",
+            currency: "INR",
+            maximumFractionDigits: 0,
+          }),
         fontSize: 10,
         color: "#94a3b8",
       },
@@ -90,7 +110,12 @@ const ProfitLossReport = ({ companyName, finYear }) => {
           fontWeight: 600,
           formatter: (p) => {
             const isLast = p.dataIndex === chartData.length - 1;
-            return isLast ? `${p.value.toLocaleString()}%` : p.value.toLocaleString("en-IN", { style: "currency", currency: "INR" });
+            return isLast
+              ? `${p.value.toLocaleString()}%`
+              : p.value.toLocaleString("en-IN", {
+                  style: "currency",
+                  currency: "INR",
+                });
           },
         },
         itemStyle: {
@@ -117,7 +142,12 @@ const ProfitLossReport = ({ companyName, finYear }) => {
           fontWeight: 600,
           formatter: (p) => {
             const isLast = p.dataIndex === chartData.length - 1;
-            return isLast ? `${p.value.toLocaleString()}%` : p.value.toLocaleString("en-IN", { style: "currency", currency: "INR" });
+            return isLast
+              ? `${p.value.toLocaleString()}%`
+              : p.value.toLocaleString("en-IN", {
+                  style: "currency",
+                  currency: "INR",
+                });
           },
         },
       },
@@ -126,74 +156,84 @@ const ProfitLossReport = ({ companyName, finYear }) => {
 
   /* ── Render ── */
   return (
-    <Card
-      sx={{
-        mt: 1,
-        ml: 1,
-        borderRadius: 3,
-        background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
-      }}
-    >
-      <CardHeader
-        title="Profit and Loss Report"
-        titleTypographyProps={{ sx: { fontSize: ".95rem", fontWeight: 700 } }}
-        action={
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedOrderNO}
-              onChange={(e) => setSelectedOrderNo(e.target.value)}
-              className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-52"
-            >
-              <option value="">Select Order</option>
-              {orderDropdown?.data?.map((item) => (
-                <option key={item.orderNo} value={item.orderNo}>
-                  {item.orderNo}
-                </option>
-              ))}
-            </select>
-          </div>
-        }
-        sx={{ p: 1, borderBottom: `2px solid ${theme.palette.divider}` }}
-      />
+    <>
+      <Card
+        sx={{
+          mt: 1,
+          ml: 1,
+          borderRadius: 3,
+          background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
+        }}
+      >
+        <CardHeader
+          title="Profit and Loss Report"
+          titleTypographyProps={{ sx: { fontSize: ".95rem", fontWeight: 700 } }}
+          action={
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedOrderNO}
+                onChange={(e) => setSelectedOrderNo(e.target.value)}
+                className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-52"
+              >
+                <option value="">Select Order</option>
+                {orderDropdown?.data?.map((item) => (
+                  <option key={item.orderNo} value={item.orderNo}>
+                    {item.orderNo}
+                  </option>
+                ))}
+              </select>
+            </div>
+          }
+          sx={{ p: 1, borderBottom: `2px solid ${theme.palette.divider}` }}
+        />
 
-      <CardContent sx={{ p: 1 }}>
-        {!selectedOrderNO ? (
-          <Box
-            sx={{
-              textAlign: "center",
-              py: 8,
-              color: "text.secondary",
-              fontSize: 13,
-              height: "460px",
-            }}
-          >
-            Select an order to view the Profit and Loss report
-          </Box>
-        ) : isLoading ? (
-          <Box sx={{ textAlign: "center", py: 8, height: "460px" }}>
-            Loading...
-          </Box>
-        ) : (
-          <>
-            {/* ── Delay bar chart ── */}
+        <CardContent sx={{ p: 1 }}>
+          {!selectedOrderNO ? (
             <Box
               sx={{
-                border: "1px solid #e2e8f0",
-                borderRadius: 2,
-                p: 1,
-                background: "#fff",
+                textAlign: "center",
+                py: 8,
+                color: "text.secondary",
+                fontSize: 13,
+                height: "460px",
               }}
             >
-              <ReactECharts
-                option={chartOptions}
-                style={{ height: "440px", cursor: "default" }}
-              />
+              Select an order to view the Profit and Loss report
             </Box>
-          </>
-        )}
-      </CardContent>
-    </Card>
+          ) : isLoading ? (
+            <Box sx={{ textAlign: "center", py: 8, height: "460px" }}>
+              Loading...
+            </Box>
+          ) : (
+            <>
+              {/* ── Delay bar chart ── */}
+              <Box
+                sx={{
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 2,
+                  p: 1,
+                  background: "#fff",
+                }}
+              >
+                <ReactECharts
+                  option={chartOptions}
+                  style={{ height: "440px", cursor: "default" }}
+                  onEvents={{ click: handleChartClick }}
+                />
+              </Box>
+            </>
+          )}
+        </CardContent>
+      </Card>
+      {tableConfig && (
+        <ProfitLossTable
+          orderNo={tableConfig.orderNo}
+          closeTable={() => setTableConfig(null)}
+          orderDropdown={orderDropdown}
+        />
+      )}
+    </>
   );
 };
 
