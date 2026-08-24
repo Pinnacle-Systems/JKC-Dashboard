@@ -38,6 +38,7 @@ import ProductionHome from "../GarmentsDashboard/Production/ProductionHome.jsx";
 import FabricHome from "../GarmentsDashboard/Fabric/FabricHome.jsx";
 import TAReportHome from "../GarmentsDashboard/TAReport/TAReportHome.jsx";
 import AttendenceHome from "../maindashboard/Attendence/AttendenceHome.jsx";
+import ShipmentStatusHome from "../GarmentsDashboard/ShipmentStatus/ShipmentStatusHome.jsx";
 
 const ActiveTabList = () => {
   const { color } = useContext(ColorContext);
@@ -208,6 +209,20 @@ const ActiveTabList = () => {
       <PurchaseDashboard year={tabData?.year} />
     ),
     "Attendance Report": (tabData) => <AttendenceHome tabData={tabData} />,
+    "Shipment Status": (tabData) => (
+      <ShipmentStatusHome
+        companyName={tabData?.companyName}
+        finYear={tabData?.finYear}
+        selectedYear={tabData?.selectedYear}
+        filterBuyer={tabData?.filterBuyer}
+        user={tabData?.user}
+        selectMonths={tabData?.selectMonths}
+        filterBuyerList={tabData?.filterBuyerList}
+        finYr={tabData?.finYr}
+        poType={tabData?.poType}
+        autoFocusBuyer={tabData?.autoFocusBuyer}
+      />
+    ),
   };
 
   const innerWidth = window.innerWidth;

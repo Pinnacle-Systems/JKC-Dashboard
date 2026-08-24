@@ -22,3 +22,4 @@ export const PRODUCTION = "/production";
 export const FABRIC = "/fabric";
 export const TAReport = "/taReport";
 export const ATTENDENCE = "/attendence";
+export const SHIPMENT_STATUS = "/shipmentStatus";

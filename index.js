@@ -35,6 +35,7 @@ import {
   fabric,
   taReport,
   attendenceReport,
+  shipmentStatus,
 } from "./src/routes/index.js";
 import { PrismaClient } from "@prisma/client";
 import {
@@ -134,6 +135,7 @@ app.use("/fabric", fabric);
 app.use("/taReport", taReport);
 
 app.use("/attendence", attendenceReport);
+app.use("/shipmentStatus", shipmentStatus);
 
 // const PORT = 9008;
 const PORT = process.env.PORT || 9080;

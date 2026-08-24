@@ -12,6 +12,7 @@ import HomePF from "./PFdata/HomePF.jsx";
 // import TurnOver from "./salarydata/TurnOver.jsx";
 import PurchaseIndex from "./Purchase/index.jsx";
 import OrderEntryIndex from "./OrderEntry/index.jsx";
+import OrderShipmentStatusIndex from "./ShipmentStatus/index.jsx";
 
 import { useGetYearlyCompQuery } from "../../redux/service/misDashboardService";
 import { useEffect, useLayoutEffect, useState } from "react";
@@ -266,6 +267,22 @@ const GarmentsDashboard = () => {
         </Grid>
         <Grid item xs={12} md={6}>
           <TAReportIndex
+            filterBuyer={filterBuyer}
+            selectedYear={selectedYear}
+            selectMonths={selectMonths}
+            finYr={finYr}
+            user={user}
+            onFilterBuyerChange={(val) => dispatch(setFilterBuyer(val))}
+            onYearChange={(val) => dispatch(setSelectedYear(val))}
+            onMonthChange={(val) => dispatch(setSelectMonths(val))}
+            filterBuyerList={filterBuyerListPurchase}
+            poType={poType}
+            setPoType={setPoType}
+            onOpen={() => dispatch(setLastSection("purchase"))}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <OrderShipmentStatusIndex
             filterBuyer={filterBuyer}
             selectedYear={selectedYear}
             selectMonths={selectMonths}

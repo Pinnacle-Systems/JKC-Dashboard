@@ -17,3 +17,4 @@ export { default as production } from "./production.js";
 export { default as fabric } from "./fabric.js";
 export { default as taReport } from "./tareport.service.js";
 export { default as attendenceReport } from "./attendenceReport.js";
+export { default as shipmentStatus } from "./shipmentStatus.js";
