@@ -21,6 +21,19 @@ const shipmentStatus = createApi({
       },
       providesTags: ["shipmentStatus"],
     }),
+    getOrderEntryShipmentBuyerList: builder.query({
+      query: ({ params }) => {
+        return {
+          url: SHIPMENT_STATUS + "/getOrderEntryShipmentBuyerList",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["shipmentStatus"],
+    }),
 
     getOrderEntryShipmentReport: builder.query({
       query: ({ params }) => {
@@ -40,7 +53,7 @@ const shipmentStatus = createApi({
 
 export const {
   useGetOrderEntryShipmentCountQuery,
-
+  useGetOrderEntryShipmentBuyerListQuery,
   useGetOrderEntryShipmentReportQuery,
 } = shipmentStatus;
 

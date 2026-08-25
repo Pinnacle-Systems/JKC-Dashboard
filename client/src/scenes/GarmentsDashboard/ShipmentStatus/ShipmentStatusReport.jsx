@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, useTheme, Box } from "@mui/material";
-import ReactECharts from "echarts-for-react";
 import {
-  useGetTaMdReportDropdownQuery,
-  useGetTaMdReportQuery,
-} from "../../../redux/service/tareport.service";
+  useGetOrderEntryShipmentBuyerListQuery,
+  useGetOrderEntryShipmentReportQuery,
+} from "../../../redux/service/shipmentStatus";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { addInsightsRowTurnOver } from "../../../utils/hleper";
@@ -12,32 +11,14 @@ import { addInsightsRowTurnOver } from "../../../utils/hleper";
 /* ── Format ISO date to DD/MM/YYYY without timezone shift ── */
 const formatDate = (val) => {
   if (!val) return "";
-  // Already in DD-Mon-YYYY format — return as-is
   if (typeof val === "string" && /^\d{2}-[A-Za-z]{3}-\d{4}$/.test(val))
     return val;
-  // Fallback: handle ISO strings
   const datePart = typeof val === "string" ? val.split("T")[0] : null;
   if (!datePart) return "";
   const [y, m, d] = datePart.split("-");
   return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
 };
 
-/* ── Days between two ISO strings (positive = actual late) ── */
-const diffDays = (planVal, actualVal) => {
-  if (!planVal || !actualVal) return 0;
-  const parse = (v) => {
-    if (/^\d{2}-[A-Za-z]{3}-\d{4}$/.test(v)) {
-      const [d, mon, y] = v.split("-");
-      return new Date(`${mon} ${d} ${y}`);
-    }
-    return new Date(v.split("T")[0]);
-  };
-  return Math.round(
-    (parse(actualVal) - parse(planVal)) / (1000 * 60 * 60 * 24),
-  );
-};
-
-/* ── Table style helpers ── */
 const thStyle = (width, sticky = false) => ({
   border: "1px solid #cbd5e1",
   padding: "5px 8px",
@@ -47,10 +28,11 @@ const thStyle = (width, sticky = false) => ({
   whiteSpace: "nowrap",
   minWidth: width,
   background: "#bfdbfe",
+  position: "sticky",
+  top: 0,
+  zIndex: sticky ? 3 : 2,
   ...(sticky && {
-    position: "sticky",
     left: 0,
-    zIndex: 2,
     background: "#93c5fd",
   }),
 });
@@ -70,158 +52,115 @@ const tdStyle = (align, sticky = false) => ({
   }),
 });
 
-const ShipmentStatusReport = ({ companyName, finYear }) => {
+const ShipmentStatusReport = ({ companyName, finYear, selectedMonth }) => {
   const theme = useTheme();
-  const [selectedOrderNO, setSelectedOrderNo] = useState("");
+  const [selectedBuyer, setSelectedBuyer] = useState("ALL");
+  const initialMonth = selectedMonth ? selectedMonth.split(" ")[0] : "";
+  const [month, setMonth] = useState(initialMonth);
+  const [shipmentStatus, setShipmentStatus] = useState("NOT SHIPPED");
+
+  useEffect(() => {
+    setMonth(initialMonth);
+  }, [selectedMonth, initialMonth]);
 
   /* ── Fetch ── */
-  const { data: orderDropdown } = useGetTaMdReportDropdownQuery(
-    { params: { companyName } },
-    { skip: !companyName },
+  const { data: buyerDropdown } = useGetOrderEntryShipmentBuyerListQuery(
+    { params: { finYear } },
+    { skip: !finYear },
   );
 
-  const { data: response, isLoading } = useGetTaMdReportQuery(
-    { params: { orderNo: selectedOrderNO, companyName } },
-    { skip: !selectedOrderNO },
+  const { data: response, isLoading } = useGetOrderEntryShipmentReportQuery(
+    { params: { finYear, selectedBuyer, month, shipmentStatus } },
+    { skip: !selectedBuyer },
   );
 
-  /* ── Derive dynamic activity columns (everything except ORDERNO, TYPE) ── */
-  const activityKeys = useMemo(() => {
-    const rows = response?.data ?? [];
-    if (!rows.length) return [];
-    const excluded = new Set(["ORDERNO", "FORMAT"]);
-    const allKeys = new Set();
-    rows.forEach((r) => Object.keys(r).forEach((k) => allKeys.add(k)));
-    return [...allKeys].filter((k) => !excluded.has(k)).map((k) => k.trim());
-  }, [response]);
+  const tableData = response?.data || [];
 
-  /* ── Find PLAN and ACTUAL rows ── */
-  const planRow = useMemo(
-    () => response?.data?.find((r) => r.FORMAT === "ACTUAL") ?? {},
-    [response],
-  );
-  const actualRow = useMemo(
-    () => response?.data?.find((r) => r.FORMAT === "COMPLETED") ?? {},
-    [response],
-  );
+  const columns = [
+    { label: "S.No", key: "SNO", align: "center", width: "20px" },
 
-  /* ── Helper: get value from row by trimmed key ── */
-  const getVal = (row, key) => {
-    const match = Object.keys(row).find((k) => k.trim() === key);
-    return match ? row[match] : null;
-  };
+    { label: "Order No", key: "ORDERNO", align: "left", width: "200px" },
+    {
+      label: "Order Date",
+      key: "ORDERDATE",
+      align: "center",
+      width: "100px",
+      isDate: true,
+    },
+    { label: "Buyer Name", key: "BUYERNAME", align: "left", width: "300px" },
 
-  /* ── Chart: delay days per activity ── */
-  const chartData = useMemo(() => {
-    return activityKeys.map((key) => {
-      const plan = getVal(planRow, key);
-      const actual = getVal(actualRow, key);
-      const delay = diffDays(plan, actual);
-      return { key, delay };
-    });
-  }, [activityKeys, planRow, actualRow]);
+    { label: "Style Ref", key: "STYLEREFNO", align: "left", width: "100px" },
+    { label: "Color", key: "COLOR5", align: "left", width: "300px" },
+    { label: "Order Qty", key: "ORDERQTY", align: "right", width: "150px" },
+    { label: "BPO No", key: "BPONO", align: "right", width: "100px" },
+    { label: "Buyer Price", key: "BUYERPRICE", align: "right", width: "80px" },
+    { label: "Currency", key: "CURRNAME", align: "left", width: "80px" },
+    { label: "Conv Value", key: "CURCONVVALUE", align: "right", width: "80px" },
+    { label: "Amount (INR)", key: "INR", align: "right", width: "100px" },
+    { label: "Amount (USD)", key: "USD", align: "right", width: "100px" },
+    {
+      label: "Tot Prod Qty",
+      key: "TOTPRODQTY",
+      align: "right",
+      width: "100px",
+    },
 
-  const chartOptions = {
-    tooltip: {
-      trigger: "axis",
-      axisPointer: { type: "shadow" },
-      formatter: (params) => {
-        const p = params[0];
-        return `${p.name}<br/>Delay: <b>${p.value} days</b>`;
-      },
+    {
+      label: "Ship Date",
+      key: "SHIPDATE1",
+      align: "center",
+      width: "100px",
+      isDate: true,
     },
-    grid: {
-      left: "2%",
-      right: "2%",
-      bottom: "22%",
-      top: "10%",
-      containLabel: true,
+    {
+      label: "Shipment Status",
+      key: "PRODPACK",
+      align: "left",
+      width: "90px",
     },
-    xAxis: {
-      type: "category",
-      data: chartData.map((x) => x.key),
-      axisLabel: {
-        interval: 0,
-        rotate: 45,
-        fontSize: 10,
-        fontWeight: 600,
-        color: "#374151",
-      },
-    },
-    yAxis: {
-      type: "value",
-      name: "Delay (Days)",
-      nameTextStyle: { fontSize: 11, color: "#6b7280" },
-      axisLabel: { formatter: "{value}" },
-      splitLine: { lineStyle: { color: "#f1f5f9" } },
-    },
-    series: [
-      {
-        name: "Delay Days",
-        type: "bar",
-        barWidth: "55%",
-        data: chartData.map((x) => ({
-          value: x.delay,
-          itemStyle: {
-            color:
-              x.delay > 0 ? "#ef4444" : x.delay < 0 ? "#22c55e" : "#94a3b8",
-            borderRadius: [4, 4, 0, 0],
-          },
-        })),
-        label: {
-          show: true,
-          position: "top",
-          fontSize: 10,
-          fontWeight: 700,
-          color: "#111827",
-          formatter: (p) => p.value,
-        },
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowColor: "rgba(0,0,0,0.25)",
-          },
-        },
-      },
-    ],
-  };
+  ];
+
   const handleExport = async () => {
-    if (!activityKeys.length) {
+    if (!tableData.length) {
       alert("No data to export");
       return;
     }
 
     const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet("TA Report");
+    const ws = wb.addWorksheet("Shipment Status");
 
-    const columns = [
-      { header: "Activity", key: "ACTIVITY", width: 20 },
-      ...activityKeys.map((key) => ({ header: key, key, width: 18 })),
-    ];
+    const excelCols = columns.map((col) => ({
+      header: col.label,
+      key: col.key,
+      width: Math.max(15, parseInt(col.width) / 7),
+    }));
 
-    ws.columns = columns;
-    const mergeEnd = String.fromCharCode(64 + columns.length);
+    ws.columns = excelCols;
+    const mergeEnd = String.fromCharCode(64 + excelCols.length);
 
-    /* Row 1 — Title */
-    ws.insertRow(1, ["T&A MD Delay Report"]);
-    ws.mergeCells(`A1:${mergeEnd}1`);
+    ws.insertRow(1, ["Shipment Status Report"]);
+    if (excelCols.length > 1) {
+      ws.mergeCells(`A1:${mergeEnd}1`);
+    }
     const tc = ws.getCell("A1");
     tc.font = { bold: true, size: 13 };
     tc.alignment = { horizontal: "center", vertical: "middle" };
     ws.getRow(1).height = 28;
 
-    /* Row 2 — Insights */
     addInsightsRowTurnOver({
       worksheet: ws,
       startRow: 2,
       totalColumns: 4,
       selectedYear: finYear,
-      localCompany: companyName,
-      dynamicField: "Order No",
-      dynamicValue: selectedOrderNO,
+      localCompany: "JKC",
+      dynamicField: "Buyer",
+      dynamicValue: selectedBuyer,
+      secondDynamicField: "Month",
+      seconddynamicValue: month || "ALL",
+      thirdDynamicField: "Shipping Status",
+      thirdDynamicValue: shipmentStatus,
     });
 
-    /* Row 3 — Header */
     const hr = ws.getRow(3);
     hr.height = 24;
     hr.eachCell((cell) => {
@@ -240,94 +179,50 @@ const ShipmentStatusReport = ({ companyName, finYear }) => {
       };
     });
 
-    /* Plan row */
-    const planExcelRow = ws.addRow({
-      ACTIVITY: "Plan",
-      ...Object.fromEntries(
-        activityKeys.map((key) => [key, formatDate(getVal(planRow, key))]),
-      ),
-    });
-    planExcelRow.height = 20;
-    planExcelRow.eachCell((cell) => {
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFF0FDF4" },
-      };
-      cell.border = {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-      };
-    });
+    tableData.forEach((row, rIdx) => {
+      const rowData = {};
+      columns.forEach((col) => {
+        let val = row[col.key];
+        if (col.key === "SNO") val = rIdx + 1;
+        if (col.isDate) val = formatDate(val);
+        if (col.key === "PRODPACK") {
+          val = val === "YES" ? "SHIPPED" : val === "NO" ? "NOT SHIPPED" : val;
+        }
+        rowData[col.key] = val;
+      });
 
-    /* Actual row */
-    const actualExcelRow = ws.addRow({
-      ACTIVITY: "Actual",
-      ...Object.fromEntries(
-        activityKeys.map((key) => {
-          const plan = getVal(planRow, key);
-          const actual = getVal(actualRow, key);
-          const delay = actual ? diffDays(plan, actual) : null;
-          const dateStr = formatDate(actual);
-          return [
-            key,
-            delay !== null && delay !== 0
-              ? `${dateStr} (${delay > 0 ? "+" : ""}${delay}d)`
-              : dateStr,
-          ];
-        }),
-      ),
-    });
-    actualExcelRow.height = 20;
-    actualExcelRow.eachCell((cell, cn) => {
-      const key = columns[cn - 1]?.key;
-      const isDelayed =
-        typeof cell.value === "string" && cell.value.includes("+");
-      const isEarly =
-        typeof cell.value === "string" && cell.value.includes("(-");
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFF7ED" },
-      };
-      cell.border = {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-      };
-      if (key !== "ACTIVITY") {
-        cell.font = {
-          color: {
-            argb: isDelayed ? "FFDC2626" : isEarly ? "FF16A34A" : "FF000000",
-          },
+      const newRow = ws.addRow(rowData);
+      newRow.eachCell((cell, cn) => {
+        const colDef = columns[cn - 1];
+        cell.alignment = {
+          vertical: "middle",
+          horizontal: colDef ? colDef.align : "left",
+          indent: colDef && (colDef.align === "left" || colDef.align === "right") ? 1 : 0,
         };
-      }
-    });
+        
+        if (colDef && colDef.key === "INR") {
+          cell.numFmt = '"₹"#,##0.00';
+        } else if (colDef && colDef.key === "USD") {
+          cell.numFmt = '"$"#,##0.00';
+        } else if (typeof cell.value === "number") {
+          cell.numFmt = '#,##0.00';
+        }
+        
+        if (colDef && colDef.key === "PRODPACK") {
+          if (cell.value === "SHIPPED") {
+            cell.font = { color: { argb: "FF16A34A" }, bold: true };
+          } else if (cell.value === "NOT SHIPPED") {
+            cell.font = { color: { argb: "FFDC2626" }, bold: true };
+          }
+        }
 
-    /* Remarks row */
-    const remarksRow = ws.addRow({
-      ACTIVITY: "Remarks",
-      ...Object.fromEntries(activityKeys.map((key) => [key, ""])),
-    });
-    remarksRow.height = 20;
-    remarksRow.eachCell((cell) => {
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFAFAFA" },
-      };
-      cell.border = {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-      };
+        cell.border = {
+          top: { style: "thin" },
+          bottom: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
     });
 
     ws.views = [{ state: "frozen", ySplit: 3 }];
@@ -336,10 +231,10 @@ const ShipmentStatusReport = ({ companyName, finYear }) => {
       new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }),
-      `TAReport_${companyName}_${selectedOrderNO}.xlsx`,
+      `ShipmentStatus_${finYear}_${selectedBuyer}.xlsx`,
     );
   };
-  /* ── Render ── */
+
   return (
     <Card
       sx={{
@@ -356,19 +251,60 @@ const ShipmentStatusReport = ({ companyName, finYear }) => {
         action={
           <div className="flex items-center gap-2">
             <select
-              value={selectedOrderNO}
-              onChange={(e) => setSelectedOrderNo(e.target.value)}
-              className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-52"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-40"
             >
-              <option value="">Select Order</option>
-              {orderDropdown?.data?.map((item) => (
-                <option key={item.orderNo} value={item.orderNo}>
-                  {item.orderNo}
+              <option value="">Select Month</option>
+              <option value="ALL">ALL</option>
+              {[
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+              ].map((m) => (
+                <option key={m} value={m}>
+                  {m}
                 </option>
               ))}
             </select>
 
-            {selectedOrderNO && !isLoading && activityKeys.length > 0 && (
+            <select
+              value={selectedBuyer}
+              onChange={(e) => setSelectedBuyer(e.target.value)}
+              className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-52"
+            >
+              <option value="">Select Buyer</option>
+              <option value="ALL">ALL</option>
+              {buyerDropdown?.data?.map((item) => (
+                <option key={item.buyerName} value={item.buyerName}>
+                  {item.buyerName}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={shipmentStatus}
+              onChange={(e) => setShipmentStatus(e.target.value)}
+              className="px-2 py-1 text-xs border-2 rounded-md border-blue-600 w-32"
+            >
+              <option value="">Select</option>
+              {["ALL", "NOT SHIPPED", "SHIPPED"].map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            {!isLoading && tableData.length > 0 && (
               <button
                 onClick={handleExport}
                 className="p-0 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
@@ -387,7 +323,11 @@ const ShipmentStatusReport = ({ companyName, finYear }) => {
       />
 
       <CardContent sx={{ p: 1 }}>
-        {!selectedOrderNO ? (
+        {isLoading ? (
+          <Box sx={{ textAlign: "center", py: 8, height: "440px" }}>
+            Loading...
+          </Box>
+        ) : tableData.length === 0 ? (
           <Box
             sx={{
               textAlign: "center",
@@ -397,107 +337,98 @@ const ShipmentStatusReport = ({ companyName, finYear }) => {
               height: "440px",
             }}
           >
-            Select an order to view the T&A delay report
-          </Box>
-        ) : isLoading ? (
-          <Box sx={{ textAlign: "center", py: 8, height: "440px" }}>
-            Loading...
+            No data found.
           </Box>
         ) : (
-          <>
-            {/* ── Plan / Actual / Remarks table ── */}
-            <Box
-              sx={{
-                overflowX: "auto",
-                overflowY: "hidden",
-                mb: 2,
-                border: "1px solid #e2e8f0",
-                borderRadius: 2,
+          <Box
+            sx={{
+              overflowX: "auto",
+              overflowY: "auto",
+              height: "440px",
+              mb: 2,
+              border: "1px solid #e2e8f0",
+              borderRadius: 2,
+            }}
+          >
+            <table
+              style={{
+                borderCollapse: "collapse",
+                fontSize: 11,
+                width: "max-content",
+                minWidth: "100%",
               }}
             >
-              <table
-                style={{
-                  borderCollapse: "collapse",
-                  fontSize: 11,
-                  width: "max-content",
-                  minWidth: "100%",
-                }}
-              >
-                <thead>
-                  <tr>
-                    <th style={thStyle("130px", true)}>Activity</th>
-                    {activityKeys.map((key) => (
-                      <th key={key} style={thStyle("130px")}>
-                        {key}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Plan row */}
-                  <tr style={{ background: "#f0fdf4" }}>
-                    <td style={tdStyle("left", true)}>Plan</td>
-                    {activityKeys.map((key) => (
-                      <td key={key} style={tdStyle("center")}>
-                        {formatDate(getVal(planRow, key))}
-                      </td>
-                    ))}
-                  </tr>
-
-                  {/* Actual row */}
-                  <tr style={{ background: "#fff7ed" }}>
-                    <td style={tdStyle("left", true)}>Actual</td>
-                    {activityKeys.map((key) => {
-                      const plan = getVal(planRow, key);
-                      const actual = getVal(actualRow, key);
-                      const delay = actual ? diffDays(plan, actual) : null;
+              <thead>
+                <tr>
+                  {columns.map((col, idx) => (
+                    <th key={col.key} style={thStyle(col.width, false)}>
+                      {col.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableData.map((row, rIdx) => (
+                  <tr
+                    key={rIdx}
+                    style={{
+                      background: rIdx % 2 === 0 ? "#ffffff" : "#f8fafc",
+                    }}
+                  >
+                    {columns.map((col, cIdx) => {
+                      let val = row[col.key];
+                      if (col.key === "SNO") val = rIdx + 1;
+                      else if (col.isDate) val = formatDate(val);
+                      else if (col.key === "PRODPACK") {
+                        val =
+                          val === "YES"
+                            ? "SHIPPED"
+                            : val === "NO"
+                              ? "NOT SHIPPED"
+                              : val;
+                      } else if (typeof val === "number") {
+                        if (col.key === "INR") {
+                          val = val.toLocaleString("en-IN", {
+                            style: "currency",
+                            currency: "INR",
+                            maximumFractionDigits: 2,
+                          });
+                        } else if (col.key === "USD") {
+                          val = val.toLocaleString("en-IN", {
+                            style: "currency",
+                            currency: "USD",
+                            maximumFractionDigits: 2,
+                          });
+                        } else {
+                          val = val.toLocaleString("en-IN", {
+                            maximumFractionDigits: 2,
+                          });
+                        }
+                      }
                       return (
-                        <td key={key} style={tdStyle("center")}>
-                          <span>{formatDate(actual)}</span>
-                          {delay !== null && delay !== 0 && (
-                            <span
-                              style={{
-                                marginLeft: 4,
-                                fontSize: 9,
-                                fontWeight: 700,
-                                color: delay > 0 ? "#dc2626" : "#16a34a",
-                              }}
-                            >
-                              ({delay > 0 ? "+" : ""}
-                              {delay}d)
-                            </span>
-                          )}
+                        <td
+                          key={col.key}
+                          style={{
+                            ...tdStyle(col.align, false),
+                            color:
+                              col.key === "PRODPACK" && val === "SHIPPED"
+                                ? "#16a34a"
+                                : col.key === "PRODPACK" &&
+                                    val === "NOT SHIPPED"
+                                  ? "#dc2626"
+                                  : "inherit",
+                            fontWeight: col.key === "PRODPACK" ? 700 : 500,
+                          }}
+                        >
+                          {val || ""}
                         </td>
                       );
                     })}
                   </tr>
-
-                  {/* Remarks row */}
-                  {/* <tr style={{ background: "#fafafa" }}>
-                    <td style={tdStyle("left", true)}>Remarks</td>
-                    {activityKeys.map((key) => (
-                      <td key={key} style={tdStyle("center")} />
-                    ))}
-                  </tr> */}
-                </tbody>
-              </table>
-            </Box>
-
-            {/* ── Delay bar chart ── */}
-            <Box
-              sx={{
-                border: "1px solid #e2e8f0",
-                borderRadius: 2,
-                p: 1,
-                background: "#fff",
-              }}
-            >
-              <ReactECharts
-                option={chartOptions}
-                style={{ height: 320, cursor: "default" }}
-              />
-            </Box>
-          </>
+                ))}
+              </tbody>
+            </table>
+          </Box>
         )}
       </CardContent>
     </Card>

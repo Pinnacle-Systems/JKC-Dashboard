@@ -29,7 +29,7 @@ const ShipmentStatusHome = ({
     { params: { selectedYear } },
     { skip: !selectedYear },
   );
-  console.log(selectedYear, filterBuyer, "checking");
+  console.log(selectedYear, filterBuyer, companyName, "checking");
 
   useEffect(() => {
     setFocusBuyer(true);
@@ -72,7 +72,7 @@ const ShipmentStatusHome = ({
               variant="h4"
               sx={{ fontWeight: 600, textAlign: "start", pt: 0.5, ml: 1 }}
             >
-              Overview of Shipment Status - {filterBuyer}
+              Overview of Shipment Status - JKC
             </Typography>
           </Grid>
 
@@ -108,7 +108,8 @@ const ShipmentStatusHome = ({
               {/* COMPANY */}
               <select
                 ref={buyerRef}
-                value={filterBuyer || ""}
+                // value={filterBuyer || ""}
+                value={"JKC" || ""}
                 onChange={(e) => dispatch(setFilterBuyer(e.target.value))}
                 autoFocus={focusBuyer}
                 className="px-2 py-1 text-xs border-2 rounded-md border-blue-600"
@@ -134,6 +135,7 @@ const ShipmentStatusHome = ({
           <ShipmentStatusReport
             key={filterBuyer}
             companyName={filterBuyer}
+            selectedMonth={selectMonths}
             finYear={selectedYear}
             finYr={finYr}
             poType={poType}

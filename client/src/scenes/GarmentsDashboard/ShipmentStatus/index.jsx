@@ -13,7 +13,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { useGetOrderEntryShipmentCountQuery } from "../../../redux/service/shipmentStatus";
-import { setFilterBuyer } from "../../../redux/features/dashboardFiltersSlice";
+import { setFilterBuyer, setSelectMonths } from "../../../redux/features/dashboardFiltersSlice";
 
 const OrderShipmentStatusIndex = ({
   filterBuyer,
@@ -102,8 +102,8 @@ const OrderShipmentStatusIndex = ({
       categories: companies,
       crosshair: true,
       labels: {
-        style: { fontSize: "11px" }
-      }
+        style: { fontSize: "11px" },
+      },
     },
     yAxis: {
       min: 0,
@@ -133,20 +133,20 @@ const OrderShipmentStatusIndex = ({
         point: {
           events: {
             click() {
-              const selectedName = this.category;
+              const selectedName = this.category; // Month string
 
-              dispatch(setFilterBuyer(selectedName));
+              dispatch(setSelectMonths(selectedName));
               dispatch(
                 push({
                   id: `Shipment Status`,
                   name: "Shipment Status",
                   component: "ShipmentStatusHome",
                   data: {
-                    companyName: selectedName,
+                    companyName: filterBuyer, // Restore real company name
                     selectedYear,
-                    filterBuyer,
+                    filterBuyer: filterBuyer, // Restore real company name
                     user,
-                    selectMonths,
+                    selectMonths: selectedName, // Set the clicked month
                     filterBuyerList,
                     finYr,
                     poType,
