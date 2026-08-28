@@ -718,7 +718,8 @@ const StyleDetailsModal = ({ data, selectedRow, onClose }) => {
 
   const cols = [
     { key: "STYLEITEM", label: "Style Name", cls: "w-52 text-left" },
-
+    { key: "COLOR", label: "Color", cls: "w-52 text-left" },
+    { key: "ORDERNO", label: "Order No", cls: "w-52 text-left" },
     { key: "CUTTING", label: "Cutting", cls: "w-24" },
     { key: "SEWING", label: "Sewing", cls: "w-24" },
     { key: "POWERTABLE", label: "Power Table", cls: "w-24" },
